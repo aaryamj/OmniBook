@@ -1,10 +1,8 @@
-import React from 'react'
+import LandingPage from './LandingPage'
 
-const App = () => {
+function App() {
   return (
-    <div>
-      <div className='font-bold text-4xl'>HELLO WORLD</div>
-    </div>
+    <LandingPage />
   )
 }
 
