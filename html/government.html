@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html class="light" lang="en" style="">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>OmniBook Gov | Enterprise Citizen Service Solutions</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#434654",
+                        "on-primary-fixed-variant": "#003dab",
+                        "secondary-container": "#d6e4f3",
+                        "on-surface": "#151c27",
+                        "on-primary-fixed": "#00174d",
+                        "inverse-primary": "#b5c4ff",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "outline-variant": "#c3c5d7",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-container": "#e7eefe",
+                        "primary-container": "#1a56db",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "on-tertiary-container": "#68f5b8",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface-container-low": "#f0f3ff",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e2e8f8",
+                        "surface": "#f9f9ff",
+                        "secondary": "#53606c",
+                        "on-background": "#151c27",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#1353d8",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2a313d",
+                        "on-primary-container": "#d4dcff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-fixed": "#d6e4f3",
+                        "surface-variant": "#dce2f3",
+                        "outline": "#737686",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "background": "#f9f9ff",
+                        "tertiary-container": "#006f4b",
+                        "tertiary": "#005438",
+                        "primary": "#003fb1",
+                        "on-secondary-container": "#586672",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#d3daea",
+                        "surface-container-highest": "#dce2f3",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-tertiary-fixed": "#002113",
+                        "success-green": "#10B981"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "sm": "1rem",
+                        "base": "4px",
+                        "lg": "2rem",
+                        "md": "1.5rem",
+                        "xs": "0.5rem",
+                        "gutter": "24px",
+                        "xl": "3rem",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Geist"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f9f9ff;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+
+        .soft-shadow {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+
+        .soft-shadow-hover:hover {
+            box-shadow: 0 10px 30px rgba(26, 86, 219, 0.12);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="text-on-surface">
+    <!-- TopNavBar -->
+    <header class="fixed top-0 w-full z-50 nav-shadow bg-white">
+        <div class="flex justify-between items-center px-margin-desktop h-20 max-w-screen-2xl mx-auto">
+            <div class="flex items-center gap-2"><img alt="OmniBook Logo" class="object-contain h-[50px]"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIUUgmq-jwoOQcyY04fFyhd5k_j4Fgv9P2rAw9arVhO_XbPbyF0RCPkA7gWUwKrhBa1Ny5YlIfJyXcP2OfQSMLMbLFPui6ii3Vg9cpbnsFKrb3GVFB4eL46Octo-rNk9At3z9u34JbA5y1AAQGNlMLyH_X9UaI_zOOHoA16fH7eFwAxuQnhIcl5dbXJN_lFoOiJz6vIAKzFWqf6kvcGtJWE1fGuSUN_DOLYW9Q_2KLrEnHVqsw6Sg030QdYqYRCeu39oHIKHJy59Q">
+            </div>
+            <nav class="hidden md:flex items-center gap-lg"><a
+                    class="font-body-md text-body-md px-1 hover:text-primary text-on-surface" href="#">Platform</a>
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-1 font-body-md text-body-md hover:text-primary transition-colors duration-200 text-primary border-b-2 border-primary font-semibold">
+                        Industries
+                        <span class="material-symbols-outlined text-[20px]">expand_more</span>
+                    </button>
+                    <div
+                        class="absolute top-full left-0 mt-2 w-56 bg-surface shadow-xl rounded-xl border border-surface-variant opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <div class="p-2 space-y-1">
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Healthcare</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Beauty &amp; Wellness</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Government</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Education</a>
+                        </div>
+                    </div>
+                </div>
+                <a class="font-body-md text-body-md hover:text-primary transition-colors duration-200 text-on-surface"
+                    href="#">Features</a>
+                <a class="font-body-md text-body-md hover:text-primary transition-colors duration-200 text-on-surface"
+                    href="#">Pricing</a>
+            </nav>
+            <div class="flex items-center gap-sm"><button
+                    class="hidden sm:block font-label-md text-label-md hover:text-primary transition-colors text-on-surface">Log
+                    In</button><button
+                    class="px-6 py-2.5 bg-[#10B981] text-on-tertiary rounded-xl font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm">Get
+                    Started</button></div>
+        </div>
+    </header>
+    <!-- Hero Section -->
+    <header class="pb-xl px-margin-desktop bg-primary text-on-primary min-h-[70vh] flex flex-col justify-center pt-16">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-xl items-center">
+            <div class="space-y-lg">
+                <h1 class="text-display-lg font-display-lg leading-tight">
+                    Transform Citizen Services with Digital Queue Management.
+                </h1>
+                <p class="text-body-lg font-body-lg text-on-primary/90 max-w-xl">
+                    Eliminate physical lines and increase operational transparency with our enterprise-grade scheduling
+                    engine. Designed for the scale of modern government.
+                </p>
+                <div class="flex gap-md pt-sm flex-row items-center">
+                    <button
+                        class="bg-success-green text-white px-xl py-md rounded-xl font-label-md text-label-md font-bold text-lg hover:scale-105 transition-transform shadow-lg">
+                        Request an Enterprise Demo
+                    </button>
+                    <button
+                        class="border border-on-primary/30 bg-on-primary/10 backdrop-blur-sm text-on-primary px-xl py-md rounded-xl font-label-md text-label-md font-bold text-lg hover:bg-on-primary/20 transition-all">
+                        View Pricing
+                    </button>
+                </div>
+            </div>
+            <div class="relative group">
+                <div
+                    class="absolute -inset-4 bg-primary-container/20 rounded-3xl blur-2xl group-hover:bg-primary-container/30 transition-all">
+                </div>
+                <img alt="Digital Kiosk Interface"
+                    class="relative rounded-2xl shadow-2xl border border-on-primary/10 object-cover w-full h-auto"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHa-qtHmeTrIvHV3rAXbQWYDFCRJdox1Z-IRptACslZlLo20Ui3dEXjQlqGduv-BOpkvdm81FY1_ADRzAOoFkp-pxtTpSE1XfLPMysCyM1o9hCWEHlv4jgdrYwXxBAc7Bll5CwdQt45VDVMQ05_oxxFyap3LSuyUxzn_AOuywZH6VMhz5jOyo3MOJrytT1hatbEEgzdGGDrNjfVw_iI-E5XIyrS1xVhdvodk6PPt9J8kbvsbPYz-UxvK0WX3HQ4Kl-8bKfUxQ9AJ4">
+            </div>
+        </div>
+    </header>
+    <!-- Core Solutions Zig-Zag -->
+    <main class="py-xl space-y-xl">
+        <!-- Section 1: Real-Time Sync -->
+        <section class="max-w-7xl mx-auto px-margin-desktop">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center">
+                <div class="order-2 lg:order-1 space-y-md">
+                    <span
+                        class="bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full text-label-sm font-label-sm uppercase tracking-wider">Operational
+                        Efficiency</span>
+                    <h2 class="text-headline-lg font-headline-lg text-primary">Eliminate Crowds with Real-Time Sync</h2>
+                    <p class="text-body-md font-body-md text-on-surface-variant leading-relaxed">
+                        OmniBook synchronizes physical kiosk data with mobile interfaces instantly. Citizens can monitor
+                        their queue position from any device, reducing lobby congestion by up to 65% and improving the
+                        staff experience.
+                    </p>
+                    <ul class="space-y-sm pt-sm">
+                        <li class="flex items-start gap-sm">
+                            <span class="material-symbols-outlined text-success-green">check_circle</span>
+                            <span class="text-body-md font-body-md">Dynamic lobby display integration</span>
+                        </li>
+                        <li class="flex items-start gap-sm">
+                            <span class="material-symbols-outlined text-success-green">check_circle</span>
+                            <span class="text-body-md font-body-md">Automated SMS and WhatsApp notifications</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <div class="bg-surface-container rounded-3xl p-lg soft-shadow overflow-hidden">
+                        <img alt="Live Queue Display Board" class="rounded-xl shadow-lg w-full h-auto"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY6NGxRrnu_IuRa1tLlUM3EAR2-ZGhOtP4ThVDBCMkVMJ3SXcGJe0lNLdd5S2FOKhALJmd8ls3leZC_dsvGQPeSye3pXji-Il-ljkyYcjwZdH7JeC-aoAWhGFrE2_9xbmztV5D_2pvWwWQxAVok-8GG-eBE_f6RwBIVmrFzYlLhG223w7A-CweS1ZUc9vb-EhAw_gKDQ41Q-nQkJ_aoxsKssBKXJoP2OYmFtaLCw3YNbIVcSWg0ZtcBtExRl01Dcwgo_eAvxezdZA">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Section 2: Regional Selector -->
+        <section class="max-w-7xl mx-auto px-margin-desktop">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center">
+                <div class="bg-surface-container-high rounded-3xl p-lg soft-shadow overflow-hidden">
+                    <img alt="Regional Department Selector UI" class="rounded-xl shadow-lg w-full h-auto"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcO5KALnwWvK3kIvAxXn0Br5PVAGyaD8kulpYo5YPy0x7Dd3SHWkgwtr10gqFu40XyUMW_uOzV5mJz9bLrVpZycEh-tdbpJMumlZOlHBElr4f3nmShRK6OERBXOVL6sOjT0vmCJFEkY6uLA5dTjE3E6_DRywzHaGyYJ7Xacr6-pICqV_kpa9s6xfIUzjESqMuq7_31-wW8xUHLeffTsB9mmFpPlD663ApjneqoOOwbsYEBp1XB8bhxDpVQTCs5_EASW60VplNsAdU">
+                </div>
+                <div class="space-y-md">
+                    <span
+                        class="bg-secondary-container text-on-secondary-container px-sm py-xs rounded-full text-label-sm font-label-sm uppercase tracking-wider">Multi-Site
+                        Scalability</span>
+                    <h2 class="text-headline-lg font-headline-lg text-primary">Seamless Multi-Branch Allocation</h2>
+                    <p class="text-body-md font-body-md text-on-surface-variant leading-relaxed">
+                        Manage a nationwide network of offices from a single dashboard. Our regional selector allows
+                        administrators to load-balance traffic, reassign staff based on live demand, and maintain
+                        consistent service standards across all jurisdictions.
+                    </p>
+                    <button
+                        class="group flex items-center gap-xs text-primary font-bold font-label-md text-label-md mt-sm">
+                        Explore Governance Tools
+                        <span
+                            class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Administrative Oversight Section -->
+        <section class="bg-surface-container-low py-xl">
+            <div class="max-w-7xl mx-auto px-margin-desktop">
+                <div class="text-center max-w-3xl mx-auto mb-xl">
+                    <h2 class="text-headline-lg font-headline-lg text-on-surface mb-md">Administrative Oversight &amp;
+                        Analytics</h2>
+                    <p class="text-body-lg font-body-lg text-on-surface-variant">
+                        Gain deep insights into service performance with JasperReports-powered analytics and automated
+                        data reporting.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+                    <!-- Analytics Card 1 -->
+                    <div
+                        class="lg:col-span-2 bg-white rounded-3xl p-lg soft-shadow soft-shadow-hover border border-black/5 flex flex-col md:flex-row gap-lg items-center">
+                        <div class="flex-1 space-y-md">
+                            <h3 class="text-headline-md font-headline-md text-primary">Data-Driven Reporting</h3>
+                            <p class="text-body-md font-body-md text-on-surface-variant">
+                                Automatically generate compliance reports and performance summaries. Monitor average
+                                processing speeds and peak volume periods to optimize staffing schedules.
+                            </p>
+                            <div class="flex gap-sm pt-md">
+                                <span
+                                    class="bg-secondary-fixed text-on-secondary-fixed px-sm py-xs rounded-lg text-label-sm font-label-sm">PDF
+                                    Export</span>
+                                <span
+                                    class="bg-secondary-fixed text-on-secondary-fixed px-sm py-xs rounded-lg text-label-sm font-label-sm">Live
+                                    Dashboards</span>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/2 bg-secondary-container rounded-xl overflow-hidden p-xs">
+                            <img alt="Administrative Analytics Report Preview" class="rounded-lg w-full h-auto"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUI3jULpHXmqQns18mzw2MijN5o_5qDYpuMe531NRecoc3Z74p7mIRgsf-9Bia7uDFWr2flseeEloE9-IkcTguqsZs2qx0xK89XSuWqGb8D7u_Nk4bIkkIjAYGMm6l4OVa0C__u6TMRsxmjM2Pm4mhISrymJGe4Mz4YExt3l2epLNqarRQQNg2NilmdVQbS2jM3q7JNMPUEhklpyt7B8sMsBI-uz_E31gDYmF4JZ8LorHmEIOrZGeVUR-Jv3g2oeYlS4DHO1Hz9uk">
+                        </div>
+                    </div>
+                    <!-- Side Features -->
+                    <div class="flex flex-col gap-lg">
+                        <div class="bg-secondary-container rounded-3xl p-md flex-1 soft-shadow-hover transition-all">
+                            <span class="material-symbols-outlined text-primary-container text-4xl mb-sm"
+                                style="font-variation-settings: 'FILL' 1;">security</span>
+                            <h4 class="text-title-lg font-title-lg text-on-primary-fixed mb-xs">Government Security</h4>
+                            <p class="text-body-md font-body-md text-on-surface-variant">
+                                SOC2 Type II and FedRAMP compliant data handling protocols.
+                            </p>
+                        </div>
+                        <div
+                            class="bg-white rounded-3xl p-md flex-1 soft-shadow border border-black/5 soft-shadow-hover transition-all">
+                            <span class="material-symbols-outlined text-success-green text-4xl mb-sm">group</span>
+                            <h4 class="text-title-lg font-title-lg text-primary mb-xs">Accessibility First</h4>
+                            <p class="text-body-md font-body-md text-on-surface-variant">
+                                Fully WCAG 2.1 Level AA compliant user interfaces for all citizens.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Public Footer -->
+    <footer class="bg-surface-container-low">
+        <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter px-margin-desktop py-xl max-w-screen-2xl mx-auto">
+            <div class="space-y-md">
+                <div class="flex items-center gap-2 mb-4"><img alt="OmniBook Logo" class="object-contain h-10"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIUUgmq-jwoOQcyY04fFyhd5k_j4Fgv9P2rAw9arVhO_XbPbyF0RCPkA7gWUwKrhBa1Ny5YlIfJyXcP2OfQSMLMbLFPui6ii3Vg9cpbnsFKrb3GVFB4eL46Octo-rNk9At3z9u34JbA5y1AAQGNlMLyH_X9UaI_zOOHoA16fH7eFwAxuQnhIcl5dbXJN_lFoOiJz6vIAKzFWqf6kvcGtJWE1fGuSUN_DOLYW9Q_2KLrEnHVqsw6Sg030QdYqYRCeu39oHIKHJy59Q">
+                </div>
+                <p class="font-label-md text-label-md text-on-surface-variant max-w-xs">The unified operating system for
+                    modern appointment-based businesses.</p>
+                <div class="flex gap-sm"><a
+                        class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#"><span class="material-symbols-outlined text-xl">public</span></a><a
+                        class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#"><span class="material-symbols-outlined text-xl">mail</span></a><a
+                        class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#"><span class="material-symbols-outlined text-xl">call</span></a></div>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Resources</h4>
+                <ul class="space-y-sm">
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Documentation</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">API Reference</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Status</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Contact Support</a></li>
+                </ul>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Legal</h4>
+                <ul class="space-y-sm">
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Privacy Policy</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Terms of Service</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Security</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Cookie Policy</a></li>
+                </ul>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Stay Updated
+                </h4>
+                <p class="font-label-md text-label-md text-on-surface-variant">Get the latest news and features directly
+                    in your inbox.</p>
+                <form class="flex gap-2"><input
+                        class="flex-1 bg-white border border-outline-variant rounded-lg px-4 py-2 font-label-md text-label-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="email@company.com" type="email"><button
+                        class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all">Join</button>
+                </form>
+            </div>
+        </div>
+        <div class="px-margin-desktop py-lg border-t border-surface-variant/30 text-center">
+            <p class="font-label-md text-label-md text-on-surface-variant"> 2024 OmniBook Enterprise. All rights
+                reserved.</p>
+        </div>
+    </footer>
+    <!-- Simple Scroll Interaction -->
+    <script>
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('bg-opacity-95', 'backdrop-blur-md');
+            } else {
+                nav.classList.remove('bg-opacity-95', 'backdrop-blur-md');
+            }
+        });
+
+        // Initialize Material Icons weight
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+            if (icon.getAttribute('data-weight') === 'fill') {
+                icon.style.fontVariationSettings = "'FILL' 1";
+            }
+        });
+    </script>
+
+
+
+
+
+
+</body>
+
+</html>

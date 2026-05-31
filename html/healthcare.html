@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>OmniBook | Healthcare &amp; Clinic Solutions</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#434654",
+                        "on-secondary-fixed": "#0f1d27",
+                        "secondary-container": "#d6e4f3",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#002113",
+                        "outline-variant": "#c3c5d7",
+                        "surface-bright": "#f9f9ff",
+                        "surface-tint": "#1353d8",
+                        "surface-container-low": "#f0f3ff",
+                        "secondary": "#53606c",
+                        "inverse-surface": "#2a313d",
+                        "inverse-on-surface": "#ebf1ff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "primary-fixed": "#dbe1ff",
+                        "outline": "#737686",
+                        "on-secondary-container": "#586672",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#68f5b8",
+                        "tertiary": "#005438",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-fixed": "#d6e4f3",
+                        "primary-container": "#1a56db",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "on-background": "#151c27",
+                        "surface-container-high": "#e2e8f8",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface-variant": "#dce2f3",
+                        "surface-container": "#e7eefe",
+                        "surface": "#f9f9ff",
+                        "on-primary-fixed": "#00174d",
+                        "background": "#f9f9ff",
+                        "surface-dim": "#d3daea",
+                        "surface-container-highest": "#dce2f3",
+                        "tertiary-container": "#006f4b",
+                        "on-surface": "#151c27",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#d4dcff",
+                        "inverse-primary": "#b5c4ff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "primary": "#003fb1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "xs": "0.5rem",
+                        "gutter": "24px",
+                        "lg": "2rem",
+                        "margin-desktop": "40px",
+                        "base": "4px",
+                        "xl": "3rem",
+                        "md": "1.5rem",
+                        "sm": "1rem"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Geist"],
+                        "label-md": ["Geist"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .tonal-card {
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .tonal-card:hover {
+            box-shadow: 0 10px 30px rgba(26, 86, 219, 0.1);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at top right, rgba(219, 225, 255, 0.15), transparent), #003fb1;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+    <!-- TopNavBar -->
+    <header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md nav-shadow">
+        <div class="flex justify-between items-center px-margin-desktop h-20 max-w-screen-2xl mx-auto">
+            <div class="flex items-center gap-2">
+                <img alt="OmniBook Logo" class="object-contain h-[50px]"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-1KtHPt4Jhvaxbdxi4nmvCfUvSXFUBJvReSmC1YRYRrue49ZO_9O1V8U6IX3EFhRMNLdlJ__Vb3h7bNOcDFZPdcc-8jasAECQcYmDaskFiTKlmUwLsoBHbzRsy7D81LM7CxEfNElYT4v4F4Ks9VgVS3wXA2keJ_M7o4BAuTLyB-V5j1F_MO4qG_RJVdFPZH1AMfu0GrCBj-JncLxeLPgEqSnsrBl64mogcQYJWZkY_04FeHThxprCYA_2FQvB_puYQpNX9Na4wUQ">
+            </div>
+            <nav class="hidden md:flex items-center gap-lg">
+                <a class="font-body-md text-body-md px-1 text-secondary hover:text-primary" href="#">Platform</a>
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-1 font-body-md text-body-md hover:text-primary transition-colors duration-200 text-primary border-b-2 border-primary font-semibold">
+                        Industries
+                        <span class="material-symbols-outlined text-[20px]">expand_more</span>
+                    </button>
+                    <div
+                        class="absolute top-full left-0 mt-2 w-56 bg-surface shadow-xl rounded-xl border border-surface-variant opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                        <div class="p-2 space-y-1">
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Healthcare</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Beauty &amp; Wellness</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Government</a>
+                            <a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface"
+                                href="#">Education</a>
+                        </div>
+                    </div>
+                </div>
+                <a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors duration-200"
+                    href="#">Features</a>
+                <a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors duration-200"
+                    href="#">Pricing</a>
+            </nav>
+            <div class="flex items-center gap-sm">
+                <button
+                    class="hidden sm:block font-label-md text-label-md text-secondary hover:text-primary transition-colors">Log
+                    In</button>
+                <button
+                    class="px-6 py-2.5 bg-[#10B981] text-on-tertiary rounded-xl font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm">Get
+                    Started</button>
+            </div>
+        </div>
+    </header>
+    <main class="pt-20">
+        <!-- Hero Section -->
+        <section
+            class="hero-gradient min-h-[85vh] flex flex-col justify-center items-center relative overflow-hidden px-margin-desktop py-xl transition-all duration-700 ease-out">
+            <div class="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-xl items-center z-10">
+                <div class="space-y-md text-center lg:text-left">
+                    <h1 class="text-on-primary font-display-lg text-display-lg leading-tight">
+                        Streamline Patient Care with Intelligent Scheduling.
+                    </h1>
+                    <p class="text-on-primary/90 font-body-lg text-body-lg max-w-xl mx-auto lg:mx-0">
+                        OmniBook Enterprise delivers high-performance clinic management solutions, reducing
+                        administrative friction and elevating the patient experience through AI-driven coordination.
+                    </p>
+                    <div class="pt-sm flex flex-col sm:flex-row gap-md justify-center lg:justify-start">
+                        <button
+                            class="bg-[#10B981] text-white px-lg py-md rounded-xl font-title-lg text-title-lg font-bold hover:shadow-lg active:scale-95 transition-all">
+                            Register Your Clinic Today
+                        </button>
+                        <button
+                            class="border border-on-primary/30 text-on-primary px-lg py-md rounded-xl font-title-lg text-title-lg hover:bg-on-primary/10 transition-all flex items-center justify-center gap-xs">
+                            <span class="material-symbols-outlined">play_circle</span> Watch Demo
+                        </button>
+                    </div>
+                </div>
+                <div class="relative flex justify-center items-center">
+                    <div class="absolute inset-0 bg-primary-container/20 blur-3xl rounded-full scale-150"></div>
+                    <img alt="Device Mockup Dashboard" class="relative z-10 w-full max-w-xl drop-shadow-2xl rounded-xl"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyX2Vt9ksfAuI4XBwKInGLS18m8JmgX7uOmO6Dce4Ohynw6_Lt_3px3bjYLld0lrjgQXEkC03aOUli0uFqE6sok0ZBpSwcAF5JdUuwL-Y-5q4AVDilO1WK6wt3EZ1i0eofuwWveTnzwnRoXRSSFRHM6BApBMD8BvkZ5ornQT0w30OHPaJ1VtWEKtLQIA6t28DXV6i7cuGrw8AhgJk2C56ODQlsdWR2hpByBL7cjNPMLr1izH75sZ9G2tGYh10Qe0BBoGOdbZSnnDE">
+                </div>
+            </div>
+            <!-- Atmospheric decoration -->
+            <div class="absolute -bottom-10 left-0 w-full h-24 bg-background transform -skew-y-2 origin-bottom-right">
+            </div>
+        </section>
+        <!-- Zig-Zag Sections -->
+        <section class="py-xl px-margin-desktop space-y-xl max-w-7xl mx-auto transition-all duration-700 ease-out">
+            <!-- Row 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
+                <div class="space-y-md">
+                    <div
+                        class="inline-flex items-center gap-xs text-primary font-label-md text-label-md uppercase tracking-wider">
+                        <span class="h-1 w-8 bg-primary rounded-full"></span>
+                        Telehealth Ready
+                    </div>
+                    <h2 class="font-headline-lg text-headline-lg text-on-background">Virtual Consultations Made Easy
+                    </h2>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant">
+                        Our integrated telehealth module allows physicians to launch secure, high-definition video calls
+                        directly from the patient record. Simplify the patient journey from booking to digital waiting
+                        rooms.
+                    </p>
+                    <ul class="space-y-sm">
+                        <li class="flex items-center gap-xs font-body-md text-body-md text-on-surface-variant">
+                            <span class="material-symbols-outlined text-tertiary-container"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            One-click Zoom and Google Meet integration
+                        </li>
+                        <li class="flex items-center gap-xs font-body-md text-body-md text-on-surface-variant">
+                            <span class="material-symbols-outlined text-tertiary-container"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            Automated appointment reminders
+                        </li>
+                    </ul>
+                </div>
+                <div class="flex justify-center">
+                    <img alt="Virtual Consultations Mockup" class="w-full max-w-lg tonal-card rounded-xl p-base"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqDV2F-pW6ICtadksJqBMsAp8NHb7RQI_gLx2NNQICnnySEHqBF9cAcaefn-0yi2HEnkO_d3gPSmm0bxqpkE70KsAZ68nHxoDXajSewHLIwA1d0eKzWOvVjuvIL6a7EP8zTX09cDzuNsLQp4Jv-VmyFCsOcE3sSyA1AiWiyE0EZ3ShbfaULWj-PRkB_2kjHZg0LrkqZa69ol1kXrJ6yR0yljv69xt9Kwu6YhaduMeXbv_qFQm7vaiLucJ-jnaSkL1hAINEw7RkuxE">
+                </div>
+            </div>
+            <!-- Row 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
+                <div class="order-2 md:order-1 flex justify-center">
+                    <img alt="Security and RBAC Mockup" class="w-full max-w-lg tonal-card rounded-xl p-base"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX9SW8gh3AA3_QlcHJtoHO4SwVOxyBuXOM4z1M7SVV6yHrb4EtUZpXbTWJmUvuJBh0TTJT3E5Co2zGy8kxcAPJC-D9Yvfkso1UI3nh2SO2vbLq_UP4qIoBiFkuOISOPr__bVsTVWTEw6-GOZ7ryEsuQmXCn2z7gO0dxQrSbqKTx8xetY_YzzvCfy28HvqX5NjH_9DAg8gmtYfUR7Hb87QINpJZeQsp5vrhaG4XDSr9tvSreB_vWNsfAXJMeXs623b6FQEOEsH103A">
+                </div>
+                <div class="space-y-md order-1 md:order-2">
+                    <div
+                        class="inline-flex items-center gap-xs text-primary font-label-md text-label-md uppercase tracking-wider">
+                        <span class="h-1 w-8 bg-primary rounded-full"></span>
+                        Enterprise Security
+                    </div>
+                    <h2 class="font-headline-lg text-headline-lg text-on-background">Protect Patient Data with
+                        Role-Based Security</h2>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant">
+                        Built on Spring Security RBAC, OmniBook ensures that sensitive medical data is only accessible
+                        to authorized personnel. Implement granular controls for nurses, doctors, and administrative
+                        staff.
+                    </p>
+                    <div class="grid grid-cols-2 gap-md pt-sm">
+                        <div class="p-md rounded-xl bg-surface-container-low border border-outline-variant/30">
+                            <span class="material-symbols-outlined text-primary mb-xs">verified_user</span>
+                            <div class="font-label-md text-label-md font-bold">HIPAA Compliant</div>
+                        </div>
+                        <div class="p-md rounded-xl bg-surface-container-low border border-outline-variant/30">
+                            <span class="material-symbols-outlined text-primary mb-xs">lock</span>
+                            <div class="font-label-md text-label-md font-bold">Encrypted Storage</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Smart Scheduling Showcase -->
+        <section class="bg-[#E1EFFE] py-xl px-margin-desktop transition-all duration-700 ease-out">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center space-y-sm mb-xl">
+                    <h2 class="font-headline-lg text-headline-lg text-primary">Smart Scheduling Innovation</h2>
+                    <p class="font-body-lg text-body-lg text-on-secondary-container max-w-2xl mx-auto">
+                        Leverage predictive algorithms to optimize clinic flow and maximize provider availability.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <!-- Card 1 -->
+                    <div class="tonal-card p-md rounded-xl space-y-sm">
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">auto_schedule</span>
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-background">Smart Time Slot Recommendations</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant">
+                            Our AI analyzes historical patient check-in times and procedure durations to suggest optimal
+                            scheduling slots for every doctor.
+                        </p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="tonal-card p-md rounded-xl space-y-sm">
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">hourglass_empty</span>
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-background">No-Show Prediction</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant">
+                            Identify high-risk appointments and automatically trigger extra confirmation prompts to
+                            reduce costly idle time.
+                        </p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="tonal-card p-md rounded-xl space-y-sm">
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">dynamic_feed</span>
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-background">Dynamic Queue Management</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant">
+                            Real-time adjustments to patient wait times communicated directly to mobile devices for a
+                            stress-free lobby experience.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Bento Grid Feature Highlight -->
+        <section class="py-xl px-margin-desktop max-w-7xl mx-auto transition-all duration-700 ease-out">
+            <div class="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-gutter h-auto md:h-[600px]">
+                <div
+                    class="md:col-span-2 md:row-span-2 tonal-card rounded-xl p-lg flex flex-col justify-between overflow-hidden relative group">
+                    <div class="z-10">
+                        <h3 class="font-headline-md text-headline-md text-on-background mb-sm">Comprehensive Patient
+                            Records</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant mb-md">Unified view of history,
+                            vitals, and medication.</p>
+                        <button class="text-primary font-bold flex items-center gap-xs">Explore Module <span
+                                class="material-symbols-outlined">arrow_forward</span></button>
+                    </div>
+                    <div
+                        class="absolute -bottom-10 -right-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all">
+                    </div>
+                    <div
+                        class="mt-xl tonal-card rounded-lg p-md border-primary/10 bg-surface-container-lowest shadow-sm z-10">
+                        <div class="flex items-center gap-md mb-sm">
+                            <div class="h-10 w-10 rounded-full bg-primary/20"></div>
+                            <div class="flex-1 space-y-1">
+                                <div class="h-2 w-24 bg-primary/20 rounded"></div>
+                                <div class="h-2 w-16 bg-primary/10 rounded"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-sm">
+                            <div class="h-1 w-full bg-surface-container-high rounded"></div>
+                            <div class="h-1 w-full bg-surface-container-high rounded"></div>
+                            <div class="h-1 w-3/4 bg-surface-container-high rounded"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-span-2 tonal-card rounded-xl p-lg bg-[#EBF1FF] border-none">
+                    <h3 class="font-title-lg text-title-lg text-primary mb-sm">Revenue Cycle Management</h3>
+                    <p class="font-body-md text-body-md text-on-secondary-fixed-variant">Automated billing, insurance
+                        verification, and claim tracking for faster reimbursements.</p>
+                </div>
+                <div class="tonal-card rounded-xl p-lg flex flex-col items-center justify-center text-center">
+                    <span class="material-symbols-outlined text-4xl text-tertiary-container mb-sm">analytics</span>
+                    <div class="font-headline-md text-headline-md">15%</div>
+                    <div class="font-label-sm text-label-sm uppercase opacity-60">Wait reduction</div>
+                </div>
+                <div
+                    class="tonal-card rounded-xl p-lg flex flex-col items-center justify-center text-center bg-primary text-on-primary">
+                    <span class="material-symbols-outlined text-4xl mb-sm">groups</span>
+                    <div class="font-headline-md text-headline-md">500+</div>
+                    <div class="font-label-sm text-label-sm uppercase opacity-80">Clinics Served</div>
+                </div>
+            </div>
+        </section>
+        <!-- Newsletter Banner (Part of Footer Logic) -->
+        <section class="bg-primary-container px-margin-desktop py-xl transition-all duration-700 ease-out">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-lg">
+                <div class="text-on-primary-container max-w-md">
+                    <h2 class="font-headline-md text-headline-md">Stay updated with healthcare insights.</h2>
+                    <p class="font-body-md text-body-md opacity-90">Join 10,000+ medical professionals getting the
+                        latest on clinic tech.</p>
+                </div>
+                <div class="flex w-full md:w-auto gap-base">
+                    <input class="flex-1 md:w-80 rounded-lg border-none px-md py-sm focus:ring-2 focus:ring-primary"
+                        placeholder="Email address" type="email">
+                    <button class="bg-[#10B981] text-white px-lg py-sm rounded-lg font-bold">Subscribe</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-surface-container-low">
+        <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter px-margin-desktop py-xl max-w-screen-2xl mx-auto">
+            <div class="space-y-md">
+                <div class="flex items-center gap-2 mb-4">
+                    <img alt="OmniBook Logo" class="object-contain h-10"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP4ephWgJQHYr5YlTzUkLtivBDPqARV030Ij_PqfYSBs6ZtzMb_WP_3k5ESgBqL1eUdcpqgRgE77sQbXQxNOlQSl2IKlE3lLzuZzeB0Voa5gGYUzkjWO9AuuPcxDrUzd3E3jBttPg_704_ll_dyb-_aRu91T8ovPevTIYv7GuTH3sUYCgb0VakAIVzlxU1uibjq1iUw751Ba_aXZ1_1pYxW-uJ_0W6zvOXpupQWO8UdqZE7clSNVO2622P32Fvc8Zq6cNKA_wYVM8">
+                </div>
+                <p class="font-label-md text-label-md text-on-surface-variant max-w-xs">The unified operating system for
+                    modern appointment-based businesses.</p>
+                <div class="flex gap-sm">
+                    <a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#">
+                        <span class="material-symbols-outlined text-xl">public</span>
+                    </a>
+                    <a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#">
+                        <span class="material-symbols-outlined text-xl">mail</span>
+                    </a>
+                    <a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface"
+                        href="#">
+                        <span class="material-symbols-outlined text-xl">call</span>
+                    </a>
+                </div>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Resources</h4>
+                <ul class="space-y-sm">
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Documentation</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">API Reference</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Status</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Contact Support</a></li>
+                </ul>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Legal</h4>
+                <ul class="space-y-sm">
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Privacy Policy</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Terms of Service</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Security</a></li>
+                    <li class=""><a
+                            class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all"
+                            href="#">Cookie Policy</a></li>
+                </ul>
+            </div>
+            <div class="space-y-md">
+                <h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Stay Updated
+                </h4>
+                <p class="font-label-md text-label-md text-on-surface-variant">Get the latest news and features directly
+                    in your inbox.</p>
+                <form class="flex gap-2">
+                    <input
+                        class="flex-1 bg-white border border-outline-variant rounded-lg px-4 py-2 font-label-md text-label-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="email@company.com" type="email">
+                    <button
+                        class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all">Join</button>
+                </form>
+            </div>
+        </div>
+        <div class="px-margin-desktop py-lg border-t border-surface-variant/30 text-center">
+            <p class="font-label-md text-label-md text-on-surface-variant">© 2024 OmniBook Enterprise. All rights
+                reserved.</p>
+        </div>
+    </footer>
+
+
+
+
+
+</body>
+
+</html>

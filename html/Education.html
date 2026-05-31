@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook Education &amp; Colleges Solutions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#006f4b",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-variant": "#dce2f3",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#005438",
+                        "secondary-container": "#d6e4f3",
+                        "primary": "#003fb1",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface-container-high": "#e2e8f8",
+                        "outline-variant": "#c3c5d7",
+                        "on-primary-fixed": "#00174d",
+                        "outline": "#737686",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e7eefe",
+                        "surface-bright": "#f9f9ff",
+                        "on-surface-variant": "#434654",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "surface-dim": "#d3daea",
+                        "on-background": "#151c27",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#1a56db",
+                        "surface-container-low": "#f0f3ff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f9f9ff",
+                        "secondary": "#53606c",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-primary": "#b5c4ff",
+                        "inverse-surface": "#2a313d",
+                        "on-tertiary-container": "#68f5b8",
+                        "tertiary-fixed": "#6ffbbe",
+                        "background": "#f9f9ff",
+                        "on-primary": "#ffffff",
+                        "on-surface": "#151c27",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#dce2f3",
+                        "on-secondary-container": "#586672",
+                        "surface-tint": "#1353d8",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "secondary-fixed": "#d6e4f3",
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "on-primary-fixed-variant": "#003dab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "lg": "2rem",
+                        "margin-mobile": "166px",
+                        "gutter": "24px",
+                        "xl": "3rem",
+                        "sm": "1rem",
+                        "md": "1.5rem",
+                        "xs": "0.5rem",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Geist"],
+                        "headline-md": ["Inter"],
+                        "title-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .tonal-elevation {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(26, 86, 219, 0.1);
+        }
+        .zebra-striping div:nth-child(even) {
+            background-color: rgba(225, 239, 254, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<header class="fixed top-0 w-full z-50 nav-shadow bg-white"><div class="flex justify-between items-center px-margin-desktop h-20 max-w-screen-2xl mx-auto"><div class="flex items-center gap-2"><img alt="OmniBook Logo" class="object-contain h-[50px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIUUgmq-jwoOQcyY04fFyhd5k_j4Fgv9P2rAw9arVhO_XbPbyF0RCPkA7gWUwKrhBa1Ny5YlIfJyXcP2OfQSMLMbLFPui6ii3Vg9cpbnsFKrb3GVFB4eL46Octo-rNk9At3z9u34JbA5y1AAQGNlMLyH_X9UaI_zOOHoA16fH7eFwAxuQnhIcl5dbXJN_lFoOiJz6vIAKzFWqf6kvcGtJWE1fGuSUN_DOLYW9Q_2KLrEnHVqsw6Sg030QdYqYRCeu39oHIKHJy59Q"/></div><nav class="hidden md:flex items-center gap-lg"><a class="font-body-md text-body-md px-1 hover:text-primary transition-colors duration-200 text-on-surface" href="#">Platform</a>
+<div class="relative group">
+<button class="flex items-center gap-1 font-body-md text-body-md hover:text-primary transition-colors duration-200 text-primary border-b-2 border-primary font-semibold">
+                        Industries
+                        <span class="material-symbols-outlined text-[20px]">expand_more</span>
+</button>
+<div class="absolute top-full left-0 mt-2 w-56 bg-surface shadow-xl rounded-xl border border-surface-variant opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+<div class="p-2 space-y-1">
+<a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface" href="#">Healthcare</a>
+<a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface" href="#">Beauty &amp; Wellness</a>
+<a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface" href="#">Government</a>
+<a class="block p-3 rounded-lg hover:bg-surface-container-low transition-colors text-on-surface" href="#">Education</a>
+</div>
+</div>
+</div>
+<a class="font-body-md text-body-md hover:text-primary transition-colors duration-200 text-on-surface" href="#">Features</a>
+<a class="font-body-md text-body-md hover:text-primary transition-colors duration-200 text-on-surface" href="#">Pricing</a></nav><div class="flex items-center gap-sm"><button class="hidden sm:block font-label-md text-label-md hover:text-primary transition-colors text-on-surface">Log In</button><button class="px-6 py-2.5 bg-[#10B981] text-on-tertiary rounded-xl font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm">Get Started</button></div></div></header>
+<header class="relative bg-surface-container-lowest py-xl overflow-hidden min-h-[70vh] flex items-center">
+<div class="max-w-7xl mx-auto px-margin-desktop grid md:grid-cols-2 gap-xl items-center relative z-10">
+<div class="space-y-lg">
+<h1 class="font-display-lg text-display-lg text-on-background leading-tight">
+                    Simplify Campus Scheduling for Faculty and Students.
+                </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                    Hassle-free office hours, academic counseling, and lab resource bookings designed for modern universities.
+                </p>
+<div class="pt-sm">
+<button class="bg-tertiary text-white px-xl py-md font-bold text-lg rounded-xl shadow-lg hover:shadow-xl hover:bg-tertiary-container transition-all transform hover:-translate-y-1 active:scale-95">
+                        Deploy on Your Campus
+                    </button>
+</div>
+</div>
+<div class="relative rounded-2xl overflow-hidden tonal-elevation">
+<img class="w-full h-auto rounded-2xl" data-alt="A diverse group of university students and a faculty member sitting around a modern wooden table in a bright, airy campus lounge. They are looking at a sleek tablet device showing a clean calendar interface. The atmosphere is professional yet approachable, with soft morning sunlight streaming through large windows in a light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl5tsUMZAh769Bt5VoEfyc_OqyVp8f3qOKe-Zh8imcKSDhvNznNwTcvvPEVOQiVWVkbwWZcD_bUGwaZcLdvq2mJEP4S1n8UAxkI0AW9Hh3xVImb4iCp-5Bpu6bxf1igEyEGQab4s1yY0kNkzg8ZcEwWwMg1Jw3ugzvK1nicArevlL1ISv2FcX8kfpTKLYHzO-NoncI8iQqWD3BE4FPuTlLUR_Digc6ZUEeqJ68qEvDwacl90JYLJd6Q6Nrptn2M_Y9ahNW8poHuwc"/>
+</div>
+</div>
+<div class="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 transform translate-x-1/2 pointer-events-none"></div>
+</header>
+<section class="py-xl bg-surface">
+<div class="max-w-7xl mx-auto px-margin-desktop grid md:grid-cols-2 gap-xl items-center">
+<div class="order-2 md:order-1 space-y-md">
+<span class="bg-primary/10 text-primary px-sm py-xs rounded-full font-label-md text-label-md uppercase tracking-wider">Time Management</span>
+<h2 class="font-headline-lg text-headline-lg text-on-background">Traditional Control with Classic Calendars</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Empower faculty with intuitive calendar management. Define 15-minute thesis review slots, recurring office hours, or one-off academic counseling sessions with a single click.
+                </p>
+<ul class="space-y-xs font-body-md text-body-md text-on-surface-variant">
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-tertiary">check_circle</span> Instant slot availability</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-tertiary">check_circle</span> Automated buffer times</li>
+<li class="flex items-center gap-xs"><span class="material-symbols-outlined text-tertiary">check_circle</span> Department-wide synchronization</li>
+</ul>
+</div>
+<div class="order-1 md:order-2">
+<img class="w-full h-auto rounded-2xl tonal-elevation hover-lift transition-all" data-alt="A high-resolution close-up of a digital tablet displaying a highly organized weekly calendar interface. The UI features soft blue and green blocks representing different student appointments like Thesis Review and Lab Sessions. The design is minimalist with generous whitespace, crisp typography, and an elegant professional atmosphere, reflecting a modern corporate scheduling tool." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkMmHBMxWR-65JH5eXKQcr5v9FJ0PJS1HhyWEg4spuqqeM8Gr3-mNdX-kXzteI8PDPKa1UV3KmYZEA_wQnDrTWr3l-9TaRWhvlxo1Q-eRn6SOod-CDinTXKfv3iMY-w7gI-TaPu3IeFp0hHon2Nm3j6ASspz36nyt0BJgdJ8PF0S15VS7u7qlJ4jCYLNU2pxF_b7vPpW1VVJ6rcJzaQ65fFwZjb2uVam7AP-3uenzbEUsaTZnaRUMzFcXle2dSrwOyTUOLFAurtVo"/>
+</div>
+</div>
+</section>
+<section class="py-xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-margin-desktop grid md:grid-cols-2 gap-xl items-center">
+<div>
+<img class="w-full h-auto rounded-2xl tonal-elevation hover-lift transition-all" data-alt="A modern office workstation with a large high-definition monitor displaying a professional dashboard for communication management. The screen shows real-time notifications and email logs for university staff. The lighting is clean and cool, emphasizing a high-stakes enterprise environment. The desk is uncluttered, featuring a sleek keyboard and mouse on a light gray surface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN9ZikRq8v6Py8bJty3pw0E4YzRZ6w4ej3-dgMgKXq9M8bI6-xruMmM2DklCy8yyAf-pOpcijM8TaaISp4gh1CjGyY6aEwDgGjU0Vzsm9Z-W89xK1zCP964Z-iAYcaLfu5oAN60NncdWygnqt0sgqVNyEKIA32RDY1mReW00DZizFlM23gvJms904zHD9d_3W0IjnOEE0s8XB4JiP67IYsIw7uFWmiiTR519YiomWh9gktGS6ZhR0UTwc4NfPZ3R3xfiDLr_EsqFc"/>
+</div>
+<div class="space-y-md">
+<span class="bg-tertiary/10 text-tertiary px-sm py-xs rounded-full font-label-md text-label-md uppercase tracking-wider">Seamless Connectivity</span>
+<h2 class="font-headline-lg text-headline-lg text-on-background">Instant Communication Channels</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    Never miss a meeting with our robust notification engine. Integrated JavaMail protocols ensure students and faculty receive real-time confirmations, reminders, and schedule updates directly in their inboxes.
+                </p>
+<div class="p-md bg-white rounded-xl tonal-elevation border-l-4 border-primary">
+<p class="italic text-on-surface-variant">"The automated reminders have reduced our no-show rate for academic advising by 40% in just one semester."</p>
+<p class="mt-sm font-bold text-primary">— Dean of Student Affairs</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-xl bg-secondary-container/30">
+<div class="max-w-7xl mx-auto px-margin-desktop">
+<div class="text-center max-w-2xl mx-auto mb-xl space-y-md">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Inclusive &amp; Accessible for Every Student</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                    We believe education should be accessible to all. Our platform is built from the ground up to exceed WCAG 2.1 standards.
+                </p>
+</div>
+<div class="grid md:grid-cols-3 gap-lg">
+<div class="bg-white p-lg rounded-2xl tonal-elevation hover-lift transition-all space-y-sm">
+<span class="material-symbols-outlined text-primary text-4xl">visibility</span>
+<h3 class="font-title-lg text-title-lg font-bold">Screen Reader Optimized</h3>
+<p class="text-on-surface-variant">Semantic HTML and ARIA labels ensure a seamless experience for visually impaired users.</p>
+</div>
+<div class="bg-white p-lg rounded-2xl tonal-elevation hover-lift transition-all space-y-sm">
+<span class="material-symbols-outlined text-primary text-4xl">translate</span>
+<h3 class="font-title-lg text-title-lg font-bold">Multi-Language Support</h3>
+<p class="text-on-surface-variant">Full support for English, Español, Français, and 12 other languages to serve global campuses.</p>
+</div>
+<div class="bg-white p-lg rounded-2xl tonal-elevation hover-lift transition-all space-y-sm">
+<span class="material-symbols-outlined text-primary text-4xl">keyboard_command_key</span>
+<h3 class="font-title-lg text-title-lg font-bold">Keyboard Navigation</h3>
+<p class="text-on-surface-variant">Effortless booking and management using only keyboard shortcuts and tab indexing.</p>
+</div>
+</div>
+<div class="mt-xl rounded-2xl overflow-hidden tonal-elevation">
+<img class="w-full h-64 object-cover" data-alt="A focused shot of a hand using a digital interface with large, high-contrast buttons for accessibility settings. The background is a soft blue, and the UI elements include icons for language selection and font size adjustment. The overall mood is inclusive and user-friendly, highlighting the system's commitment to accessibility and universal design principles." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkzTSnJpWWc4ZGROconYAG_fmHaP5dw_llpMDrujN_WtU0pUIL962kAntF8wGhgpNiKNOY04-da_cKB0h4mdWjWgeNkJalKKJlwsCoxqkzIgr4ElyNFDJ30gOKC8UubaPjVYgfQ02sNu2v0-YVe5luSj6b4VUDAqKvqX97LQlrtaHz4u2aH_Rb0MMuqtrSr38Xt9IBmJOs-g3dA612QoQZXthlPcwd7Y4mirhClRO1czsUiuO3oka52ZKJWiQAlN7CWSdYP0vC_6Y"/>
+</div>
+</div>
+</section>
+<footer class="bg-surface-container-low"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter px-margin-desktop py-xl max-w-screen-2xl mx-auto"><div class="space-y-md"><div class="flex items-center gap-2 mb-4"><img alt="OmniBook Logo" class="object-contain h-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIUUgmq-jwoOQcyY04fFyhd5k_j4Fgv9P2rAw9arVhO_XbPbyF0RCPkA7gWUwKrhBa1Ny5YlIfJyXcP2OfQSMLMbLFPui6ii3Vg9cpbnsFKrb3GVFB4eL46Octo-rNk9At3z9u34JbA5y1AAQGNlMLyH_X9UaI_zOOHoA16fH7eFwAxuQnhIcl5dbXJN_lFoOiJz6vIAKzFWqf6kvcGtJWE1fGuSUN_DOLYW9Q_2KLrEnHVqsw6Sg030QdYqYRCeu39oHIKHJy59Q"/></div><p class="font-label-md text-label-md text-on-surface-variant max-w-xs">The unified operating system for modern appointment-based businesses.</p><div class="flex gap-sm"><a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface" href="#"><span class="material-symbols-outlined text-xl">public</span></a><a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface" href="#"><span class="material-symbols-outlined text-xl">mail</span></a><a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:text-primary transition-colors text-on-surface" href="#"><span class="material-symbols-outlined text-xl">call</span></a></div></div><div class="space-y-md"><h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Resources</h4><ul class="space-y-sm"><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Documentation</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">API Reference</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Status</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Contact Support</a></li></ul></div><div class="space-y-md"><h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Legal</h4><ul class="space-y-sm"><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Privacy Policy</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Terms of Service</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Security</a></li><li class=""><a class="font-label-md text-label-md text-on-surface-variant hover:text-primary underline decoration-transparent hover:decoration-primary transition-all" href="#">Cookie Policy</a></li></ul></div><div class="space-y-md"><h4 class="font-label-md text-label-md font-bold text-primary uppercase tracking-widest">Stay Updated</h4><p class="font-label-md text-label-md text-on-surface-variant">Get the latest news and features directly in your inbox.</p><form class="flex gap-2"><input class="flex-1 bg-white border border-outline-variant rounded-lg px-4 py-2 font-label-md text-label-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="email@company.com" type="email"/><button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md font-bold hover:brightness-110 active:scale-95 transition-all">Join</button></form></div></div><div class="px-margin-desktop py-lg border-t border-surface-variant/30 text-center"><p class="font-label-md text-label-md text-on-surface-variant"> 2024 OmniBook Enterprise. All rights reserved.</p></div></footer>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.tonal-elevation').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        });
+
+        // Sticky nav scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 20) {
+                nav.classList.add('shadow-xl', 'bg-primary-container/95', 'backdrop-blur-md');
+            } else {
+                nav.classList.remove('shadow-xl', 'bg-primary-container/95', 'backdrop-blur-md');
+            }
+        });
+    </script>
+</body></html>
