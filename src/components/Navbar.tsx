@@ -103,12 +103,14 @@ export default function Navbar() {
                     </NavLink>
                 </nav>
                 <div className="flex items-center gap-4">
-                    <button
+                    <NavLink
+                        to="/login"
                         className="hidden sm:block text-sm font-medium text-secondary hover:text-primary transition-colors">Log
-                        In</button>
-                    <button
+                        In</NavLink>
+                    <NavLink
+                        to="/register"
                         className="px-6 py-2.5 bg-tertiary text-on-tertiary rounded-xl text-sm font-bold hover:brightness-110 active:scale-95 transition-all shadow-sm">Get
-                        Started</button>
+                        Started</NavLink>
                     <button
                         className="md:hidden p-2 text-secondary flex items-center justify-center"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html class="light" lang="en" style="">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>OmniBook Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#d6e4f3",
+                        "on-tertiary-container": "#68f5b8",
+                        "on-tertiary-fixed": "#002113",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b5c4ff",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "on-secondary-fixed": "#0f1d27",
+                        "surface-container": "#e7eefe",
+                        "primary-fixed": "#dbe1ff",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface": "#f9f9ff",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-tint": "#1353d8",
+                        "surface-bright": "#f9f9ff",
+                        "primary": "#003fb1",
+                        "inverse-surface": "#2a313d",
+                        "on-background": "#151c27",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e2e8f8",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "surface-dim": "#d3daea",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#737686",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#dce2f3",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "secondary-fixed": "#d6e4f3",
+                        "error": "#ba1a1a",
+                        "tertiary": "#005438",
+                        "surface-container-low": "#f0f3ff",
+                        "on-primary-fixed": "#00174d",
+                        "on-surface": "#151c27",
+                        "on-secondary-container": "#586672",
+                        "primary-container": "#1a56db",
+                        "on-surface-variant": "#434654",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-highest": "#dce2f3",
+                        "secondary": "#53606c",
+                        "outline-variant": "#c3c5d7",
+                        "background": "#f9f9ff",
+                        "on-primary-container": "#d4dcff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#006f4b",
+                        "success": "#10B981"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xs": "0.5rem",
+                        "md": "1.5rem",
+                        "margin-desktop": "40px",
+                        "lg": "2rem",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "sm": "1rem",
+                        "xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Geist"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+
+        .glass-header {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-shadow {
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .card-shadow {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+
+        .glass-header {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-shadow {
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body-md antialiased">
+    <!-- TopNavBar (Fixed) -->
+    <header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md nav-shadow shadow-sm">
+        <div class="flex justify-between items-center px-margin-desktop h-20 max-w-7xl mx-auto">
+            <div class="flex items-center gap-2">
+                <img alt="OmniBook Logo" class="object-contain h-[40px]"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuANVa2DIMhxwJVhPP1FnM5XPZK669t-OaZbij7sEQY2BcRjKXoLi4Xlx3422j-PoJTMmPiR5Xs2jHyWkiOQbHG2PC_dwX1bTvLCKfZJr4xERFe5jC_Eg1nCXbH4JYQNcg8LmT7jvnS2rIU1qOMeCUzpati4NDHk55Jw4yD9q-c3RF-j48vJ6qqLiyYcMo90ZH-HOFSGJv14g2VG5oLaR8SvPRMAYcJZQSHy3gVOym_POA_776_joTMmbnqxiUzecB0QZUzztl5CrHw">
+            </div>
+            <nav class="hidden md:flex items-center gap-lg">
+                <a class="font-body-md text-body-md font-semibold text-primary border-b-2 border-primary"
+                    href="#">Dashboard</a>
+                <a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors duration-200"
+                    href="#">Book Appointment</a>
+                <a class="font-body-md text-body-md text-secondary hover:text-primary transition-colors duration-200"
+                    href="#">My History</a>
+            </nav>
+            <div class="flex items-center gap-sm">
+                <div class="relative cursor-pointer p-2 hover:bg-surface-container-low rounded-full transition-colors">
+                    <span class="material-symbols-outlined text-secondary">notifications</span>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+                </div>
+                <div class="relative group ml-2">
+                    <div
+                        class="h-10 w-10 rounded-full overflow-hidden border border-outline-variant hover:scale-105 transition-transform cursor-pointer shadow-sm">
+                        <img alt="User Profile Avatar" class="w-full h-full object-cover"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs">
+                    </div>
+                    <div
+                        class="absolute right-0 mt-2 w-48 bg-surface shadow-xl rounded-xl border border-surface-variant opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-[60]">
+                        <a class="flex items-center gap-3 px-4 py-2 hover:bg-surface-container-low text-on-surface font-label-md transition-colors"
+                            href="#">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
+                            Settings
+                        </a>
+                        <a class="flex items-center gap-3 px-4 py-2 hover:bg-error-container/20 text-error font-label-md transition-colors"
+                            href="#">
+                            <span class="material-symbols-outlined text-[20px]">logout</span>
+                            Log Out
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg pt-20">
+        <!-- Welcome Header -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between mb-xl">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Welcome to OmniBook, Rahul!
+                </h1>
+                <p class="text-on-surface-variant font-body-md mt-1 opacity-70">Manage your time and services
+                    effortlessly from one place.</p>
+            </div>
+            <button
+                class="mt-md md:mt-0 flex items-center gap-xs bg-[#10B981] hover:bg-[#059669] text-white px-lg py-3 rounded-xl font-bold transition-all shadow-md active:scale-95">
+                <span class="material-symbols-outlined text-[20px]" data-icon="add"
+                    style="font-variation-settings: 'wght' 600;">add</span>
+                Book New Appointment
+            </button>
+        </header>
+        <!-- Main Content (Empty State) -->
+        <section class="mb-xl">
+            <div
+                class="bg-secondary-container/30 border border-secondary-container/50 rounded-3xl p-xl md:p-32 flex flex-col items-center text-center card-shadow">
+                <div class="w-full max-w-[320px] mb-lg animate-pulse">
+                    <img alt="No events scheduled illustration" class="w-full h-auto"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxSpv5m26kB4mfkhV0RP0j4qvJnnrHGAoTiCif4ps2lq-qwEKNihpWoT0S_WGtRJDeupLj6Ya-bhIJCZNV10_4TVx6F--Ek_F_ZphFaUpeop3H3KtboQuxoUcXqzCTb5NLCJlBtvEFae91IJEwX_fmsexEcilNw2Mg7NofV7sBlWYuhTuT3QoJ5hRCxBmttSfzbyL9IQzGJ5ftn9Xx0tGk1yH3i4xTCzT0wcAsjxQoNEqY709G0uhnw-PZBdkTpivDscW1kxj78I8">
+                </div>
+                <h2 class="font-headline-md text-headline-md text-on-surface mb-sm">You don't have any upcoming
+                    appointments yet.</h2>
+                <p class="text-on-surface-variant max-w-lg mb-xl font-body-lg">
+                    Whether you need a checkup or a haircut, book your first slot in seconds.
+                    Explore professional services in your area.
+                </p>
+                <button
+                    class="bg-primary-container text-white px-xl py-4 rounded-xl font-bold flex items-center gap-md hover:brightness-110 transition-all shadow-lg shadow-primary-container/20 group">
+                    Find a Service &amp; Book Now
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform"
+                        data-icon="arrow_forward">arrow_forward</span>
+                </button>
+            </div>
+        </section>
+        <!-- Recent Appointments (Empty State) -->
+        <section>
+            <div class="flex items-center justify-between mb-md">
+                <h3 class="font-title-lg text-title-lg text-on-surface">Recent Appointments</h3>
+                <a class="text-primary font-label-md hover:underline" href="#">View all history</a>
+            </div>
+            <div
+                class="w-full p-xl rounded-2xl border-2 border-dashed border-outline-variant bg-white/50 flex items-center justify-center transition-colors hover:bg-white/80 cursor-default">
+                <div class="flex items-center gap-md text-on-surface-variant opacity-60">
+                    <span class="material-symbols-outlined text-[32px]" data-icon="history_edu">history_edu</span>
+                    <p class="font-body-md italic">Your past visits, statuses, and downloadable receipts will appear
+                        here.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-surface-container dark:bg-surface-container-highest w-full border-t border-outline-variant/10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-md px-margin-desktop py-xl max-w-full mx-auto">
+            <div class="flex flex-col gap-sm">
+                <span class="font-title-lg text-title-lg font-bold text-primary dark:text-primary-fixed">OmniBook</span>
+                <p class="text-on-surface-variant font-label-md max-w-xs opacity-70">
+                    Enterprise-grade scheduling simplified for your personal and professional needs.
+                </p>
+                <p class="font-label-md text-label-md text-on-surface-variant mt-md">© 2024 OmniBook Enterprise. All
+                    rights reserved.</p>
+            </div>
+            <div class="flex flex-col gap-sm">
+                <span class="font-label-md font-bold text-on-surface">Quick Links</span>
+                <div class="grid grid-cols-2 gap-xs">
+                    <a class="text-on-surface-variant font-label-md hover:underline hover:text-primary transition-all"
+                        href="#">Resources</a>
+                    <a class="text-on-surface-variant font-label-md hover:underline hover:text-primary transition-all"
+                        href="#">Support</a>
+                    <a class="text-on-surface-variant font-label-md hover:underline hover:text-primary transition-all"
+                        href="#">Newsletter</a>
+                    <a class="text-on-surface-variant font-label-md hover:underline hover:text-primary transition-all"
+                        href="#">Privacy Policy</a>
+                </div>
+            </div>
+            <div class="flex flex-col gap-sm">
+                <span class="font-label-md font-bold text-on-surface">Stay Updated</span>
+                <div class="flex gap-xs">
+                    <input
+                        class="bg-white border border-outline-variant rounded-lg px-md py-2 w-full text-label-md focus:ring-2 focus:ring-primary-container/20 focus:outline-none"
+                        placeholder="Enter email" type="email">
+                    <button class="bg-primary-container text-white px-md py-2 rounded-lg font-label-md">Join</button>
+                </div>
+                <div class="flex gap-md mt-sm">
+                    <span
+                        class="material-symbols-outlined text-on-secondary-fixed-variant cursor-pointer hover:text-primary transition-colors"
+                        data-icon="public">public</span>
+                    <span
+                        class="material-symbols-outlined text-on-secondary-fixed-variant cursor-pointer hover:text-primary transition-colors"
+                        data-icon="mail">mail</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.style.transform = 'scale(0.98)';
+            });
+            button.addEventListener('mouseup', () => {
+                button.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

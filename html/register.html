@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Register | OmniBook Enterprise</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#6ffbbe",
+                        "outline": "#737686",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-highest": "#dce2f3",
+                        "on-tertiary-fixed": "#002113",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface": "#f9f9ff",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c3c5d7",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#006f4b",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-variant": "#dce2f3",
+                        "surface-container": "#e7eefe",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "primary-container": "#1a56db",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#d6e4f3",
+                        "on-surface": "#151c27",
+                        "on-secondary-container": "#586672",
+                        "on-surface-variant": "#434654",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#d4dcff",
+                        "secondary-fixed": "#d6e4f3",
+                        "background": "#f9f9ff",
+                        "inverse-surface": "#2a313d",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-bright": "#f9f9ff",
+                        "primary": "#003fb1",
+                        "on-tertiary-container": "#68f5b8",
+                        "on-background": "#151c27",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e2e8f8",
+                        "secondary": "#53606c",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#00174d",
+                        "tertiary": "#005438",
+                        "surface-tint": "#1353d8",
+                        "surface-container-low": "#f0f3ff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "surface-dim": "#d3daea",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#b5c4ff",
+                        "success-green": "#10B981",
+                        "ocean-blue": "#1A56DB",
+                        "soft-blue": "#E1EFFE"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "1.5rem",
+                        "margin-desktop": "40px",
+                        "xl": "3rem",
+                        "lg": "2rem",
+                        "xs": "0.5rem",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "1rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "title-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Geist"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .form-input-focus:focus-within {
+            box-shadow: 0 0 0 2px #E1EFFE, 0 0 0 4px rgba(26, 86, 219, 0.2);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-[#F3F4F6] text-on-background min-h-screen flex flex-col items-center justify-center font-body-md overflow-x-hidden p-4">
+    <!-- Split Screen Container -->
+    <main
+        class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px] z-10">
+        <!-- Left Panel: Ocean Blue Sidebar -->
+        <section class="hidden md:flex md:w-5/12 bg-ocean-blue p-10 flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary-container opacity-20 blur-3xl">
+            </div>
+            <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-primary opacity-30 blur-3xl"></div>
+            <div class="relative z-10">
+                <div class="mb-8"><img alt="OmniBook Logo" class="h-8 w-auto"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1qADJsbqS4aCPzvCBqobYHkeDJ9nPTF01xdk_YUK9ENtADnooYW5xLBol14rRrVPC6MOnolEdJN5OCCjqbhnI_YD71rhIc1lL72HeZiw9Lza9Eb18PsqkRa1uaouJnpPO6Bz9Niz38VWAL2qx1o8KqaOh8AB_vNQsGdQm7DO1OijoElRoPNsWHK9WDSYFATUu7VojWZ-BEr4zE5CDHTdGvDRTPFXdkeu_4vVuube8JTM8I076VKD7E8lFjLv1PCGrtOm71lWaPQk">
+                </div>
+                <h1 class="font-headline-lg text-white max-w-xs leading-tight">Unlock seamless scheduling</h1>
+                <p class="text-white/80 font-body-md mt-4">Join thousands simplifying their appointments with OmniBook's
+                    professional platform.</p>
+            </div>
+            <div class="relative z-10 flex justify-center py-8"><img alt="Secure Management"
+                    class="w-full max-w-[280px] h-auto drop-shadow-xl"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdTRnWxU9y1IEngLWh63hvtmuizvB-e6F8djuWyOeZPO2t0uoI6nbkXvfJBavXiF-aZaBvHUely3GY5wrGUwDAkBt92FiLy7t04h7Xo1t0d4V8kWF9X7ewrXSYiJWiycIglf-CAGEz7P9WmQqB-XxP1MBwboUSUIW_yIKtUryPM3iaAsXAyIUx1MhxApwBQN8lCRkC27xhF12KFHbt2j-7xz9MKQ7R4IHd3CCrIoX_mevdSA3prRo3ndfdJvnA31bW2Gva2TCZZCA">
+            </div>
+            <div class="relative z-10 flex gap-3">
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 flex-1 border border-white/10"><span
+                        class="material-symbols-outlined text-white text-sm mb-1"
+                        data-icon="verified_user">verified_user</span><span
+                        class="text-white text-[10px] uppercase tracking-wider font-semibold block">Encrypted</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 flex-1 border border-white/10"><span
+                        class="material-symbols-outlined text-white text-sm mb-1"
+                        data-icon="schedule">schedule</span><span
+                        class="text-white text-[10px] uppercase tracking-wider font-semibold block">24/7 Access</span>
+                </div>
+            </div>
+        </section>
+        <!-- Right Panel: Registration Form -->
+        <section class="flex-1 bg-white p-8 md:p-12 flex flex-col justify-center">
+            <div class="w-full max-w-sm mx-auto"
+                style="opacity: 1; transform: translateY(0px); transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+                <!-- Role Selector -->
+                <div class="mb-12">
+                    <div class="flex p-1 bg-surface-container-low rounded-xl gap-1">
+                        <button
+                            class="flex-1 py-2 px-1 rounded-lg font-label-md transition-all bg-white shadow-sm text-primary"
+                            id="role-user" onclick="selectRole('user')">User/Patient</button>
+                        <button
+                            class="flex-1 py-2 px-1 rounded-lg font-label-md transition-all text-outline hover:text-on-surface"
+                            id="role-provider" onclick="selectRole('provider')">Service Provider</button>
+                        <button
+                            class="flex-1 py-2 px-1 rounded-lg font-label-md transition-all text-outline hover:text-on-surface"
+                            id="role-admin" onclick="selectRole('admin')">Admin</button>
+                    </div>
+                </div>
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-2">
+                        <img alt="OmniBook Logo" class="h-6 w-auto"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2bFe7uh5QqAVMOtvvV_MLATMwukKPYPGp1ZisHXbbKyAoKJdmAOrWyqASzIzmqm3Yf-jD4RwfmYL6busv6fE6a4ysuocfPd7b4PH7efLmAN8OIHyiNidgcBqdsrY05lJtOHAICzly-2SqtMwVxzPQ8JXi01BUN2w-0j-HlDDAa3i3l3lmIZsg1mHpsxV2p1yF5Pz4nIXoPVjLGdCL5OLy1wRB-uwvgACBc9xdNGhnfSMPJ9r1zr2VJka795HgJBX5-0_NInMdgdE">
+                        <span class="font-headline-md text-headline-md text-on-surface">Create your account</span>
+                    </div>
+                    <p class="text-on-surface-variant font-body-md">Sign up to manage your enterprise calendar</p>
+                </div>
+                <!-- Registration Form -->
+                <form class="space-y-4" onsubmit="event.preventDefault();">
+                    <div class="space-y-2">
+                        <label class="block font-label-md text-on-surface" for="fullname" id="name-label">Full
+                            Name</label>
+                        <div class="relative group">
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                                data-icon="person">person</span>
+                            <input
+                                class="w-full pl-12 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md placeholder:text-outline/50 hover:bg-soft-blue focus:bg-white focus:ring-2 focus:ring-primary-fixed-dim focus:border-primary outline-none transition-all"
+                                id="fullname" placeholder="John Doe" type="text">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block font-label-md text-on-surface" for="email">Email Address</label>
+                        <div class="relative group">
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                                data-icon="mail">mail</span>
+                            <input
+                                class="w-full pl-12 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md placeholder:text-outline/50 hover:bg-soft-blue focus:bg-white focus:ring-2 focus:ring-primary-fixed-dim focus:border-primary outline-none transition-all"
+                                id="email" placeholder="name@example.com" type="email">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="block font-label-md text-on-surface" for="password">Create Password</label>
+                            <div class="relative group">
+                                <span
+                                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                                    data-icon="lock">lock</span>
+                                <input
+                                    class="w-full pl-12 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md placeholder:text-outline/50 hover:bg-soft-blue focus:bg-white focus:ring-2 focus:ring-primary-fixed-dim focus:border-primary outline-none transition-all"
+                                    id="password" placeholder="••••••••" type="password">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block font-label-md text-on-surface" for="confirm_password">Confirm
+                                Password</label>
+                            <div class="relative group">
+                                <span
+                                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors"
+                                    data-icon="lock_reset">lock_reset</span>
+                                <input
+                                    class="w-full pl-12 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md placeholder:text-outline/50 hover:bg-soft-blue focus:bg-white focus:ring-2 focus:ring-primary-fixed-dim focus:border-primary outline-none transition-all"
+                                    id="confirm_password" placeholder="••••••••" type="password">
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        class="w-full mt-4 bg-success-green hover:bg-[#0EA271] active:scale-[0.98] text-white font-headline-md rounded-xl shadow-lg transition-all flex justify-center items-center gap-2 py-3.5"
+                        type="submit"><span class="">Get Started</span><span class="material-symbols-outlined"
+                            data-icon="arrow_forward">arrow_forward</span></button>
+                </form>
+                <!-- OAuth Section -->
+                <div class="mt-10">
+                    <div class="relative flex items-center mb-8">
+                        <div class="flex-grow border-t border-outline-variant"></div>
+                        <span
+                            class="flex-shrink mx-4 bg-white px-4 text-outline font-label-md relative z-10 text-center">Or
+                            continue with</span>
+                        <div class="flex-grow border-t border-outline-variant"></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button
+                            class="flex items-center justify-center gap-3 py-3 px-4 border border-outline-variant rounded-xl font-label-md text-on-surface hover:bg-surface transition-all active:scale-95">
+                            <img alt="Google" class="w-5 h-5"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Yxhx3MnTNdLHXPXhTIeiBE51W7IONdm9F2SxvW2wRI88ouT1e0uGu_7EbvjxoHl9IzjE5XN8HFsNjiEqfEsQtVc5BUZJrRAD9xEWv5AQf9mPp_Oph0bxWfucQ1p6IiQKOodDP61Mp-ZI4v-e6PUS4HlySzTStmDHmvswJAwvHK2vvbWNInLmzOsH0L6_YbRFlYxBPHUJ58rzFhqtIxMQ71vmBc4YUFEAVU_uTQn20Wh4MZkHlrVFc-ds1oSRMs0JYAM-KXI3v4M">
+                            Sign up with Google
+                        </button>
+                        <button
+                            class="flex items-center justify-center gap-3 py-3 px-4 border border-outline-variant rounded-xl font-label-md text-on-surface hover:bg-surface transition-all active:scale-95">
+                            <svg class="w-5 h-5 fill-[#1877F2]" viewBox="0 0 24 24">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z">
+                                </path>
+                            </svg>
+                            Sign up with Facebook
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-12 text-center">
+                    <p class="font-body-md text-on-surface-variant">
+                        Already have an account?
+                        <a class="text-primary font-semibold hover:underline decoration-2 underline-offset-4"
+                            href="#">Log in here.</a>
+                    </p>
+                </div>
+            </div>
+            <!-- Footer Section -->
+        </section>
+    </main>
+    <footer class="mt-8 flex gap-6 text-outline font-label-sm"><a class="hover:text-primary transition-colors"
+            href="#">Privacy Policy</a><a class="hover:text-primary transition-colors" href="#">Terms of Service</a><a
+            class="hover:text-primary transition-colors" href="#">Help Center</a></footer>
+    <script>
+        function selectRole(role) {
+            const roles = ['user', 'provider', 'admin'];
+            const nameLabel = document.getElementById('name-label');
+            const nameInput = document.getElementById('fullname');
+
+            roles.forEach(r => {
+                const btn = document.getElementById(`role-${r}`);
+                if (r === role) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.remove('text-outline');
+                } else {
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.add('text-outline');
+                }
+            });
+
+            if (role === 'user') {
+                nameLabel.innerText = 'Full Name';
+                nameInput.placeholder = 'John Doe';
+            } else if (role === 'provider') {
+                nameLabel.innerText = 'Service Provider Name';
+                nameInput.placeholder = 'Clinic or Professional Name';
+            } else {
+                nameLabel.innerText = 'Administrator Name';
+                nameInput.placeholder = 'Your Department or Admin ID';
+            }
+        }
+
+        // Lightweight entrance animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const formContainer = document.querySelector('section:nth-child(2) > div');
+            formContainer.style.opacity = '0';
+            formContainer.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                formContainer.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                formContainer.style.opacity = '1';
+                formContainer.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+
+
+</body>
+
+</html>

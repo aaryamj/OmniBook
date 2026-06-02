@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="light" lang="en" style="">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Login | OmniBook Enterprise</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#6ffbbe",
+                        "outline": "#737686",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-container-highest": "#dce2f3",
+                        "on-tertiary-fixed": "#002113",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface": "#f9f9ff",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c3c5d7",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#006f4b",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "on-primary-fixed-variant": "#003dab",
+                        "surface-variant": "#dce2f3",
+                        "surface-container": "#e7eefe",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "primary-container": "#1a56db",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#d6e4f3",
+                        "on-surface": "#151c27",
+                        "on-secondary-container": "#586672",
+                        "on-surface-variant": "#434654",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#d4dcff",
+                        "secondary-fixed": "#d6e4f3",
+                        "background": "#f9f9ff",
+                        "inverse-surface": "#2a313d",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-bright": "#f9f9ff",
+                        "primary": "#003fb1",
+                        "on-tertiary-container": "#68f5b8",
+                        "on-background": "#151c27",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e2e8f8",
+                        "secondary": "#53606c",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-fixed": "#00174d",
+                        "tertiary": "#005438",
+                        "surface-tint": "#1353d8",
+                        "surface-container-low": "#f0f3ff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "surface-dim": "#d3daea",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#b5c4ff",
+                        "success-green": "#10B981",
+                        "ocean-blue": "#1A56DB",
+                        "soft-blue": "#E1EFFE"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "1.5rem",
+                        "margin-desktop": "40px",
+                        "xl": "3rem",
+                        "lg": "2rem",
+                        "xs": "0.5rem",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "1rem",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "title-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Geist"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .form-input-focus:focus-within {
+            box-shadow: 0 0 0 2px #E1EFFE, 0 0 0 4px rgba(26, 86, 219, 0.2);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .shadow-soft {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-[#F3F4F6] text-on-background min-h-screen flex flex-col items-center justify-center font-body-md overflow-x-hidden p-4">
+    <!-- Split Screen Container -->
+    <main
+        class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px] z-10">
+        <!-- Left Panel: Branding -->
+        <section class="hidden md:flex md:w-5/12 bg-ocean-blue p-10 flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary-container opacity-20 blur-3xl">
+            </div>
+            <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-primary opacity-30 blur-3xl"></div>
+            <div class="relative z-10">
+                <div class="mb-8">
+                    <img alt="OmniBook Logo" class="h-8 w-auto brightness-0 invert"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4QercU8FhEKJDT16UAjD7H_HzmxwH0DyYgrnjUTvTtIHrsboGfLPxJXnu5c3S3FdIJawrzBs3HXLaKCTh2A20__SNZGO3AzD4FOK9zNnTRcLNP37yRQS0W5teA-9aBW1Fx4okT_ELda0J7aMB0ylmmYOroRPnGuzPSS1STQJPYp_-AX0EBIdLV_37lhXzH8NIMV_qfeRMb3dqsCN6jzZ91CHNvMg3qYzDJz9yHEC08tJX41PII8eu8Ww_RJh1k1IBgxVC65B9RhU">
+                </div>
+                <h1 class="font-headline-lg text-white max-w-xs leading-tight">
+                    Secure &amp; Seamless Appointments
+                </h1>
+                <p class="text-white/80 font-body-md mt-4">
+                    Manage your professional schedule with enterprise-grade security.
+                </p>
+            </div>
+            <div class="relative z-10 flex justify-center py-8">
+                <img alt="Secure Management" class="w-full max-w-[280px] h-auto drop-shadow-xl"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBk-n2PNnfuNbEt9teB4O-PujNhHcqWGpUDzzjuGcSiM0sHpVDYaWtd66lbrILbS5eHOTeE6tY6JIaGBnxBXDDZiSZPQ3s89SleNgZcJ3S4oBOkOYO7JaQvkLCBTDxC_oHmcBeGay88D1BMgJPAdFYSVYwydoAykW8VH--w1COL6cnuFSSTMxW2pqjM0Hmgjl32Kys7-xSPEiHcdewROBmb1pCavjiMjBwXDeZ9fTBO36xrnbti0D6J47hdl21cGg32bYYPtM7Kigw">
+            </div>
+            <div class="relative z-10 flex gap-3">
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 flex-1 border border-white/10">
+                    <span class="material-symbols-outlined text-white text-sm mb-1"
+                        data-icon="verified_user">verified_user</span>
+                    <span class="text-white text-[10px] uppercase tracking-wider font-semibold block">Encrypted</span>
+                </div>
+                <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 flex-1 border border-white/10">
+                    <span class="material-symbols-outlined text-white text-sm mb-1" data-icon="schedule">schedule</span>
+                    <span class="text-white text-[10px] uppercase tracking-wider font-semibold block">24/7 Access</span>
+                </div>
+            </div>
+        </section>
+        <!-- Right Panel: Login Form -->
+        <section class="flex-1 bg-white p-8 md:p-12 flex flex-col justify-center">
+            <div class="w-full max-w-sm mx-auto"
+                style="opacity: 1; transform: translateY(0px); transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+                <div class="mb-8">
+                    <div class="flex items-center gap-3 mb-2">
+                        <img alt="OmniBook Logo" class="h-7 w-auto"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4QercU8FhEKJDT16UAjD7H_HzmxwH0DyYgrnjUTvTtIHrsboGfLPxJXnu5c3S3FdIJawrzBs3HXLaKCTh2A20__SNZGO3AzD4FOK9zNnTRcLNP37yRQS0W5teA-9aBW1Fx4okT_ELda0J7aMB0ylmmYOroRPnGuzPSS1STQJPYp_-AX0EBIdLV_37lhXzH8NIMV_qfeRMb3dqsCN6jzZ91CHNvMg3qYzDJz9yHEC08tJX41PII8eu8Ww_RJh1k1IBgxVC65B9RhU">
+                        <span class="font-headline-md text-on-surface">Welcome Back</span>
+                    </div>
+                    <p class="text-on-surface-variant font-body-md">Enter your credentials to access your dashboard.</p>
+                </div>
+                <form class="space-y-5" onsubmit="event.preventDefault();">
+                    <div class="space-y-1.5">
+                        <label class="block font-label-md text-on-surface" for="identity">Email or Phone</label>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl"
+                                data-icon="mail">mail</span>
+                            <input
+                                class="w-full pl-12 pr-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                id="identity" placeholder="name@example.com" type="text">
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="block font-label-md text-on-surface" for="password">Password</label>
+                            <a class="text-primary font-label-sm hover:underline" href="#">Forgot password?</a>
+                        </div>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl"
+                                data-icon="lock">lock</span>
+                            <input
+                                class="w-full pl-12 pr-12 py-3 bg-surface-container-low border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                id="password" placeholder="••••••••" type="password">
+                            <button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface"
+                                type="button">
+                                <span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input class="w-4 h-4 text-primary border-outline-variant rounded" id="remember"
+                            type="checkbox">
+                        <label class="ml-2 text-sm text-on-surface-variant" for="remember">Keep me signed in</label>
+                    </div>
+                    <button
+                        class="w-full py-3.5 bg-success-green hover:bg-[#0EA271] text-white font-semibold rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
+                        type="submit">
+                        <span class="">Login</span>
+                        <span class="material-symbols-outlined text-xl" data-icon="arrow_forward">arrow_forward</span>
+                    </button>
+                </form>
+                <div class="mt-8">
+                    <div class="relative flex items-center justify-center mb-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-outline-variant"></div>
+                        </div>
+                        <span class="bg-white px-4 text-outline text-xs uppercase tracking-widest relative z-10">Or
+                            continue with</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button
+                            class="flex items-center justify-center gap-2 py-2.5 border border-outline-variant rounded-xl text-sm font-medium hover:bg-surface transition-all">
+                            <img alt="Google" class="w-4 h-4"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Yxhx3MnTNdLHXPXhTIeiBE51W7IONdm9F2SxvW2wRI88ouT1e0uGu_7EbvjxoHl9IzjE5XN8HFsNjiEqfEsQtVc5BUZJrRAD9xEWv5AQf9mPp_Oph0bxWfucQ1p6IiQKOodDP61Mp-ZI4v-e6PUS4HlySzTStmDHmvswJAwvHK2vvbWNInLmzOsH0L6_YbRFlYxBPHUJ58rzFhqtIxMQ71vmBc4YUFEAVU_uTQn20Wh4MZkHlrVFc-ds1oSRMs0JYAM-KXI3v4M">
+                            Google
+                        </button>
+                        <button
+                            class="flex items-center justify-center gap-2 py-2.5 border border-outline-variant rounded-xl text-sm font-medium hover:bg-surface transition-all">
+                            <svg class="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z">
+                                </path>
+                            </svg>
+                            Facebook
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-8 text-center text-sm text-on-surface-variant">
+                    Don't have an account? <a class="text-primary font-bold hover:underline" href="#">Sign up</a>
+                </p>
+            </div>
+        </section>
+    </main>
+    <footer class="mt-8 flex gap-6 text-outline font-label-sm">
+        <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+        <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+        <a class="hover:text-primary transition-colors" href="#">Help Center</a>
+    </footer>
+    <script>
+        function selectRole(role) {
+            const roles = ['user', 'provider', 'admin'];
+            roles.forEach(r => {
+                const btn = document.getElementById(`role-${r}`);
+                if (r === role) {
+                    btn.classList.add('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.remove('text-outline');
+                } else {
+                    btn.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                    btn.classList.add('text-outline');
+                }
+            });
+        }
+
+        // Lightweight entrance animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const formContainer = document.querySelector('section:nth-child(2) > div');
+            formContainer.style.opacity = '0';
+            formContainer.style.transform = 'translateY(20px)';
+
+            setTimeout(() => {
+                formContainer.style.transition = 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+                formContainer.style.opacity = '1';
+                formContainer.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+
+
+</body>
+
+</html>

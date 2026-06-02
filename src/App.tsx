@@ -7,7 +7,9 @@ import GovernmentPage from './pages/GovernmentPage';
 import EducationPage from './pages/EducationPage';
 import FeaturesPage from './pages/FeaturesPage';
 import PricingPage from './pages/PricingPage';
-
+import LoginPage from './pages/authPage/LoginPage';
+import RegisterPage from './pages/authPage/RegisterPage';
+import UserDashboardPage from './pages/userPage/UserDashboardPage';
 
 function App() {
   return (
@@ -16,6 +18,9 @@ function App() {
       <Route path="/platform" element={<Platform />} />
       <Route path="/features" element={<FeaturesPage />} />
       <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/dashboard" element={<UserDashboardPage />} />
       <Route path="/industries/healthcare" element={<Healthcare />} />
       <Route path="/industries/beauty-wellness" element={<BeautyWellnessPage />} />
       <Route path="/industries/government" element={<GovernmentPage />} />
