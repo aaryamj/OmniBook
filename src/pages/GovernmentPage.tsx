@@ -29,25 +29,25 @@ const GovernmentPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#f9f9ff] text-[#434654] font-sans selection:bg-[#1a56db]/20 selection:text-[#1a56db] overflow-x-hidden">
+    <div className="bg-surface text-secondary font-sans selection:bg-[#1a56db]/20 selection:text-[#1a56db] overflow-x-hidden">
       <Navbar />
 
       <main className="pt-20">
         {/* Hero Section */}
-        <header className="hero bg-[#1853d9] text-white min-h-[70vh] flex flex-col justify-center py-20 px-4 md:px-10">
+        <header className="hero bg-primary text-white min-h-[70vh] flex flex-col justify-center py-20 px-4 md:px-10">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
             <div className="space-y-8">
-              <h1 className="text-[40px] md:text-[48px] font-bold leading-[1.15] tracking-tight">
+              <h1 className="text-4xl md:text-5xl font-bold leading-[1.15] tracking-tight">
                 Transform Citizen Services with Digital Queue Management.
               </h1>
-              <p className="text-[16px] md:text-[18px] text-white/90 max-w-xl leading-relaxed">
+              <p className="text-base md:text-lg text-white/90 max-w-xl leading-relaxed">
                 Eliminate physical lines and increase operational transparency with our enterprise-grade scheduling engine. Designed for the scale of modern government.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                <button className="bg-[#10B981] hover:bg-[#059669] text-white px-8 py-4 rounded-[12px] font-bold text-[16px] shadow-lg shadow-[#10B981]/20 transition-all hover:-translate-y-1">
+                <button className="bg-tertiary text-on-tertiary px-8 py-4 rounded-[12px] font-bold text-base hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
                   Request an Enterprise Demo
                 </button>
-                <button className="border border-white/30 bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-[12px] font-bold text-[16px] hover:bg-white/20 transition-all">
+                <button className="border border-white/30 bg-white/10 backdrop-blur-sm text-white px-8 py-4 rounded-[12px] font-bold text-base hover:bg-white/20 transition-all">
                   View Pricing
                 </button>
               </div>
@@ -64,26 +64,26 @@ const GovernmentPage: React.FC = () => {
         </header>
 
         {/* Section 1: Real-Time Sync */}
-        <section className="py-16 px-4 md:px-10 bg-[#f9f9ff]">
+        <section className="py-16 px-4 md:px-10 bg-surface">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 space-y-6">
-              <span className="inline-block bg-[#e1e8ff] text-[#1853d9] px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
+              <span className="inline-block bg-[#e1e8ff] text-primary px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
                 Operational Efficiency
               </span>
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#1853d9] leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary leading-tight">
                 Eliminate Crowds with Real-Time Sync
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed max-w-lg">
+              <p className="text-base text-secondary leading-relaxed max-w-lg">
                 OmniBook synchronizes physical kiosk data with mobile interfaces instantly. Citizens can monitor their queue position from any device, reducing lobby congestion by up to 65% and improving the staff experience.
               </p>
               <ul className="space-y-4 pt-2">
                 <li className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#10B981] text-[24px]">check_circle</span>
-                  <span className="text-[16px] text-[#151c27] font-medium">Dynamic lobby display integration</span>
+                  <span className="material-symbols-outlined text-[#10B981] text-2xl">check_circle</span>
+                  <span className="text-base text-on-background font-medium">Dynamic lobby display integration</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#10B981] text-[24px]">check_circle</span>
-                  <span className="text-[16px] text-[#151c27] font-medium">Automated SMS and WhatsApp notifications</span>
+                  <span className="material-symbols-outlined text-[#10B981] text-2xl">check_circle</span>
+                  <span className="text-base text-on-background font-medium">Automated SMS and WhatsApp notifications</span>
                 </li>
               </ul>
             </div>
@@ -100,7 +100,7 @@ const GovernmentPage: React.FC = () => {
         </section>
 
         {/* Section 2: Regional Selector */}
-        <section className="py-16 px-4 md:px-10 bg-[#f9f9ff]">
+        <section className="py-16 px-4 md:px-10 bg-surface">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="bg-[#e2e8f8] rounded-[32px] p-8 shadow-sm overflow-hidden flex justify-center max-w-[550px]">
               <img 
@@ -110,16 +110,16 @@ const GovernmentPage: React.FC = () => {
               />
             </div>
             <div className="space-y-6 lg:pl-8">
-              <span className="inline-block bg-[#e1e8ff] text-[#1853d9] px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
+              <span className="inline-block bg-[#e1e8ff] text-primary px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
                 Multi-Site Scalability
               </span>
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#1853d9] leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary leading-tight">
                 Seamless Multi-Branch Allocation
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed max-w-lg">
+              <p className="text-base text-secondary leading-relaxed max-w-lg">
                 Manage a nationwide network of offices from a single dashboard. Our regional selector allows administrators to load-balance traffic, reassign staff based on live demand, and maintain consistent service standards across all jurisdictions.
               </p>
-              <button className="group flex items-center gap-2 text-[#1853d9] font-bold text-[16px] mt-4 hover:underline">
+              <button className="group flex items-center gap-2 text-primary font-bold text-base mt-4 hover:underline">
                 Explore Governance Tools
                 <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </button>
@@ -131,10 +131,10 @@ const GovernmentPage: React.FC = () => {
         <section className="bg-[#f4f7fc] py-16 px-4 md:px-10">
           <div className="max-w-7xl mx-auto">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-[32px] font-bold text-[#151c27] mb-4">
+              <h2 className="text-3xl font-bold text-on-background mb-4">
                 Administrative Oversight & Analytics
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed">
+              <p className="text-base text-secondary leading-relaxed">
                 Gain deep insights into service performance with JasperReports-powered analytics and automated data reporting.
               </p>
             </div>
@@ -142,15 +142,15 @@ const GovernmentPage: React.FC = () => {
               {/* Analytics Card 1 */}
               <div className="lg:col-span-2 bg-white rounded-[32px] p-8 md:p-10 shadow-sm hover:shadow-[0_10px_30px_rgba(26,86,219,0.08)] transition-all border border-[#e2e8f0] flex flex-col md:flex-row gap-10 items-center">
                 <div className="flex-1 space-y-6">
-                  <h3 className="text-[24px] font-bold text-[#1853d9]">Data-Driven Reporting</h3>
-                  <p className="text-[15px] text-[#434654] leading-relaxed">
+                  <h3 className="text-2xl font-bold text-primary">Data-Driven Reporting</h3>
+                  <p className="text-[15px] text-secondary leading-relaxed">
                     Automatically generate compliance reports and performance summaries. Monitor average processing speeds and peak volume periods to optimize staffing schedules.
                   </p>
                   <div className="flex gap-3 pt-4">
-                    <span className="bg-[#eef2fa] text-[#151c27] px-4 py-2 rounded-[8px] text-[13px] font-medium border border-[#dce2f3]">
+                    <span className="bg-[#eef2fa] text-on-background px-4 py-2 rounded-[8px] text-sm font-medium border border-[#dce2f3]">
                       PDF Export
                     </span>
-                    <span className="bg-[#eef2fa] text-[#151c27] px-4 py-2 rounded-[8px] text-[13px] font-medium border border-[#dce2f3]">
+                    <span className="bg-[#eef2fa] text-on-background px-4 py-2 rounded-[8px] text-sm font-medium border border-[#dce2f3]">
                       Live Dashboards
                     </span>
                   </div>
@@ -167,11 +167,11 @@ const GovernmentPage: React.FC = () => {
               {/* Side Features */}
               <div className="flex flex-col gap-8">
                 <div className="bg-[#eef2fa] rounded-[32px] p-8 flex-1 hover:shadow-md transition-all">
-                  <span className="material-symbols-outlined text-[#1853d9] text-[36px] mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  <span className="material-symbols-outlined text-primary text-[36px] mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>
                     security
                   </span>
-                  <h4 className="text-[20px] font-bold text-[#151c27] mb-2">Government Security</h4>
-                  <p className="text-[15px] text-[#434654] leading-relaxed">
+                  <h4 className="text-[20px] font-bold text-on-background mb-2">Government Security</h4>
+                  <p className="text-[15px] text-secondary leading-relaxed">
                     SOC2 Type II and FedRAMP compliant data handling protocols.
                   </p>
                 </div>
@@ -179,8 +179,8 @@ const GovernmentPage: React.FC = () => {
                   <span className="material-symbols-outlined text-[#10B981] text-[36px] mb-4">
                     group
                   </span>
-                  <h4 className="text-[20px] font-bold text-[#1853d9] mb-2">Accessibility First</h4>
-                  <p className="text-[15px] text-[#434654] leading-relaxed">
+                  <h4 className="text-[20px] font-bold text-primary mb-2">Accessibility First</h4>
+                  <p className="text-[15px] text-secondary leading-relaxed">
                     Fully WCAG 2.1 Level AA compliant user interfaces for all citizens.
                   </p>
                 </div>

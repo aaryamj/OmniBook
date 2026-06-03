@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { SocialLogin } from '../../components/SocialLogin';
 
 const RegisterPage: React.FC = () => {
   const [role, setRole] = useState<'user' | 'provider' | 'admin'>('user');
@@ -41,7 +42,10 @@ const RegisterPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
     if (!fullName.trim()) newErrors.fullName = 'Name is required';
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = 'Valid email is required';
-    if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    if (!/^\d{10}$/.test(phone)) newErrors.phone = 'Phone number must be exactly 10 digits';
+    if (!/^(?=.*\d)(?=.*[^a-zA-Z0-9])[A-Z].{5,}$/.test(password)) {
+      newErrors.password = 'Must be 6+ chars, start with a capital, and include a number and symbol';
+    }
     if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     
     setErrors(newErrors);
@@ -110,6 +114,17 @@ const RegisterPage: React.FC = () => {
       setServerError(err.response?.data?.message || 'Invalid verification code');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOAuthSuccess = (data: any) => {
+    if (data.success && data.token) {
+      localStorage.setItem('token', data.token);
+      if (data.role) localStorage.setItem('role', data.role);
+      if (data.fullName) localStorage.setItem('fullName', data.fullName);
+      navigate('/dashboard');
+    } else {
+      setServerError(data.message || 'OAuth registration failed');
     }
   };
 
@@ -264,10 +279,11 @@ const RegisterPage: React.FC = () => {
                       <input
                         className={`w-full pl-[95px] pr-4 py-3 bg-white border ${errors.phone ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
                         id="phone"
-                        placeholder="(555) 000-0000"
+                        placeholder="0000000000"
                         type="tel"
+                        maxLength={10}
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
                       />
                     </div>
                     {errors.phone && <p className="text-red-500 text-xs">{errors.phone}</p>}
@@ -320,32 +336,11 @@ const RegisterPage: React.FC = () => {
                   </button>
                 </form>
                 
-                <div className="mt-10">
-                  <div className="relative flex items-center justify-center mb-8">
-                    <div className="flex-grow border-t border-[#c3c5d7]"></div>
-                    <span className="flex-shrink mx-4 bg-white px-4 text-[#737686] text-[12px] font-medium relative z-10 text-center">
-                      Or continue with
-                    </span>
-                    <div className="flex-grow border-t border-[#c3c5d7]"></div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button className="flex items-center justify-center gap-3 py-3 px-4 border border-[#c3c5d7] rounded-xl text-[14px] font-medium text-[#151c27] hover:bg-[#f9f9ff] transition-all active:scale-95">
-                      <img 
-                        alt="Google" 
-                        className="w-5 h-5" 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Yxhx3MnTNdLHXPXhTIeiBE51W7IONdm9F2SxvW2wRI88ouT1e0uGu_7EbvjxoHl9IzjE5XN8HFsNjiEqfEsQtVc5BUZJrRAD9xEWv5AQf9mPp_Oph0bxWfucQ1p6IiQKOodDP61Mp-ZI4v-e6PUS4HlySzTStmDHmvswJAwvHK2vvbWNInLmzOsH0L6_YbRFlYxBPHUJ58rzFhqtIxMQ71vmBc4YUFEAVU_uTQn20Wh4MZkHlrVFc-ds1oSRMs0JYAM-KXI3v4M" 
-                      />
-                      Sign up with Google
-                    </button>
-                    <button className="flex items-center justify-center gap-3 py-3 px-4 border border-[#c3c5d7] rounded-xl text-[14px] font-medium text-[#151c27] hover:bg-[#f9f9ff] transition-all active:scale-95">
-                      <svg className="w-5 h-5 fill-[#1877F2]" viewBox="0 0 24 24">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
-                      </svg>
-                      Sign up with Facebook
-                    </button>
-                  </div>
-                </div>
+                <SocialLogin 
+                  role={role} 
+                  onSuccess={handleOAuthSuccess} 
+                  onError={() => setServerError('OAuth registration failed')} 
+                />
                 
                 <div className="mt-12 text-center">
                   <p className="text-[16px] text-[#434654]">

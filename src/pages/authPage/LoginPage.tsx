@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { SocialLogin } from '../../components/SocialLogin';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -83,6 +84,17 @@ const LoginPage: React.FC = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOAuthSuccess = (data: any) => {
+    if (data.success && data.token) {
+      localStorage.setItem('token', data.token);
+      if (data.role) localStorage.setItem('role', data.role);
+      if (data.fullName) localStorage.setItem('fullName', data.fullName);
+      navigate('/dashboard');
+    } else {
+      setServerError(data.message || 'OAuth login failed');
     }
   };
 
@@ -218,33 +230,11 @@ const LoginPage: React.FC = () => {
               </button>
             </form>
 
-            <div className="mt-8">
-              <div className="relative flex items-center justify-center mb-6">
-                <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                  <div className="w-full border-t border-[#c3c5d7]"></div>
-                </div>
-                <span className="bg-white px-4 text-[#737686] text-[12px] uppercase tracking-widest relative z-10">
-                  Or continue with
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-2.5 border border-[#c3c5d7] rounded-xl text-[14px] font-medium hover:bg-[#f9f9ff] transition-all">
-                  <img
-                    alt="Google"
-                    className="w-4 h-4"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Yxhx3MnTNdLHXPXhTIeiBE51W7IONdm9F2SxvW2wRI88ouT1e0uGu_7EbvjxoHl9IzjE5XN8HFsNjiEqfEsQtVc5BUZJrRAD9xEWv5AQf9mPp_Oph0bxWfucQ1p6IiQKOodDP61Mp-ZI4v-e6PUS4HlySzTStmDHmvswJAwvHK2vvbWNInLmzOsH0L6_YbRFlYxBPHUJ58rzFhqtIxMQ71vmBc4YUFEAVU_uTQn20Wh4MZkHlrVFc-ds1oSRMs0JYAM-KXI3v4M"
-                  />
-                  Google
-                </button>
-                <button className="flex items-center justify-center gap-2 py-2.5 border border-[#c3c5d7] rounded-xl text-[14px] font-medium hover:bg-[#f9f9ff] transition-all">
-                  <svg className="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
-                  </svg>
-                  Facebook
-                </button>
-              </div>
-            </div>
+            <SocialLogin 
+              role="user" 
+              onSuccess={handleOAuthSuccess} 
+              onError={() => setServerError('OAuth login failed')} 
+            />
 
             <p className="mt-8 text-center text-[14px] text-[#434654]">
               Don't have an account?{' '}

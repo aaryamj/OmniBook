@@ -29,7 +29,7 @@ const EducationPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#f9f9ff] text-[#434654] font-sans selection:bg-[#1a56db]/20 selection:text-[#1a56db] overflow-x-hidden">
+    <div className="bg-surface text-secondary font-sans selection:bg-[#1a56db]/20 selection:text-[#1a56db] overflow-x-hidden">
       <Navbar />
 
       <main className="pt-20">
@@ -39,14 +39,14 @@ const EducationPage: React.FC = () => {
           
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full relative z-10">
             <div className="space-y-6">
-              <h1 className="text-[40px] md:text-[56px] font-bold text-[#1853d9] leading-[1.1] tracking-tight">
+              <h1 className="text-4xl md:text-[56px] font-bold text-primary leading-[1.1] tracking-tight">
                 Simplify Campus Scheduling for Faculty and Students.
               </h1>
-              <p className="text-[16px] md:text-[18px] text-[#434654] max-w-xl leading-relaxed">
+              <p className="text-base md:text-lg text-secondary max-w-xl leading-relaxed">
                 Hassle-free office hours, academic counseling, and lab resource bookings designed for modern universities.
               </p>
               <div className="pt-4">
-                <button className="bg-[#006f4b] hover:bg-[#005438] text-white px-8 py-4 rounded-[12px] font-bold text-[16px] shadow-lg shadow-[#006f4b]/20 transition-all hover:-translate-y-1">
+                <button className="bg-tertiary text-on-tertiary px-8 py-4 rounded-[12px] font-bold text-base hover:brightness-110 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
                   Deploy on Your Campus
                 </button>
               </div>
@@ -62,30 +62,30 @@ const EducationPage: React.FC = () => {
         </header>
 
         {/* Section 1: Classic Calendars */}
-        <section className="py-16 px-4 md:px-10 bg-[#f9f9ff]">
+        <section className="py-16 px-4 md:px-10 bg-surface">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 space-y-6">
-              <span className="inline-block bg-[#e1e8ff] text-[#1853d9] px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
+              <span className="inline-block bg-[#e1e8ff] text-primary px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
                 Time Management
               </span>
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#1853d9] leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary leading-tight">
                 Traditional Control with Classic Calendars
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed max-w-lg">
+              <p className="text-base text-secondary leading-relaxed max-w-lg">
                 Empower faculty with intuitive calendar management. Define 15-minute thesis review slots, recurring office hours, or one-off academic counseling sessions with a single click.
               </p>
               <ul className="space-y-4 pt-2">
                 <li className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#006f4b] text-[24px]">check_circle</span>
-                  <span className="text-[16px] text-[#434654] font-medium">Instant slot availability</span>
+                  <span className="material-symbols-outlined text-[#006f4b] text-2xl">check_circle</span>
+                  <span className="text-base text-secondary font-medium">Instant slot availability</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#006f4b] text-[24px]">check_circle</span>
-                  <span className="text-[16px] text-[#434654] font-medium">Automated buffer times</span>
+                  <span className="material-symbols-outlined text-[#006f4b] text-2xl">check_circle</span>
+                  <span className="text-base text-secondary font-medium">Automated buffer times</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#006f4b] text-[24px]">check_circle</span>
-                  <span className="text-[16px] text-[#434654] font-medium">Department-wide synchronization</span>
+                  <span className="material-symbols-outlined text-[#006f4b] text-2xl">check_circle</span>
+                  <span className="text-base text-secondary font-medium">Department-wide synchronization</span>
                 </li>
               </ul>
             </div>
@@ -113,18 +113,18 @@ const EducationPage: React.FC = () => {
               <span className="inline-block bg-[#dcece2] text-[#006f4b] px-4 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-wider">
                 Seamless Connectivity
               </span>
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#1853d9] leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary leading-tight">
                 Instant Communication Channels
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed max-w-lg">
+              <p className="text-base text-secondary leading-relaxed max-w-lg">
                 Never miss a meeting with our robust notification engine. Integrated JavaMail protocols ensure students and faculty receive real-time confirmations, reminders, and schedule updates directly in their inboxes.
               </p>
               
               <div className="mt-8 bg-white p-6 rounded-[16px] shadow-sm border-l-4 border-[#1853d9]">
-                <p className="italic text-[#434654] text-[15px] leading-relaxed mb-4">
+                <p className="italic text-secondary text-[15px] leading-relaxed mb-4">
                   "The automated reminders have reduced our no-show rate for academic advising by 40% in just one semester."
                 </p>
-                <p className="font-bold text-[#1853d9] text-[15px]">
+                <p className="font-bold text-primary text-[15px]">
                   — Dean of Student Affairs
                 </p>
               </div>
@@ -133,36 +133,36 @@ const EducationPage: React.FC = () => {
         </section>
 
         {/* Section 3: Inclusive & Accessible */}
-        <section className="bg-[#f9f9ff] py-16 px-4 md:px-10">
+        <section className="bg-surface py-16 px-4 md:px-10">
           <div className="max-w-7xl mx-auto">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-[32px] md:text-[40px] font-bold text-[#1853d9] mb-4 leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 leading-tight">
                 Inclusive & Accessible for Every Student
               </h2>
-              <p className="text-[16px] text-[#434654] leading-relaxed">
+              <p className="text-base text-secondary leading-relaxed">
                 We believe education should be accessible to all. Our platform is built from the ground up to exceed WCAG 2.1 standards.
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white p-8 rounded-[24px] shadow-[0_4px_20px_rgba(26,86,219,0.05)] hover:shadow-[0_10px_30px_rgba(26,86,219,0.1)] hover:-translate-y-1 transition-all space-y-4">
-                <span className="material-symbols-outlined text-[#1853d9] text-[32px]">visibility</span>
-                <h3 className="text-[20px] font-bold text-[#151c27]">Screen Reader Optimized</h3>
-                <p className="text-[15px] text-[#434654] leading-relaxed">
+                <span className="material-symbols-outlined text-primary text-3xl">visibility</span>
+                <h3 className="text-[20px] font-bold text-on-background">Screen Reader Optimized</h3>
+                <p className="text-[15px] text-secondary leading-relaxed">
                   Semantic HTML and ARIA labels ensure a seamless experience for visually impaired users.
                 </p>
               </div>
               <div className="bg-white p-8 rounded-[24px] shadow-[0_4px_20px_rgba(26,86,219,0.05)] hover:shadow-[0_10px_30px_rgba(26,86,219,0.1)] hover:-translate-y-1 transition-all space-y-4">
-                <span className="material-symbols-outlined text-[#1853d9] text-[32px]">translate</span>
-                <h3 className="text-[20px] font-bold text-[#151c27]">Multi-Language Support</h3>
-                <p className="text-[15px] text-[#434654] leading-relaxed">
+                <span className="material-symbols-outlined text-primary text-3xl">translate</span>
+                <h3 className="text-[20px] font-bold text-on-background">Multi-Language Support</h3>
+                <p className="text-[15px] text-secondary leading-relaxed">
                   Full support for English, Español, Français, and 12 other languages to serve global campuses.
                 </p>
               </div>
               <div className="bg-white p-8 rounded-[24px] shadow-[0_4px_20px_rgba(26,86,219,0.05)] hover:shadow-[0_10px_30px_rgba(26,86,219,0.1)] hover:-translate-y-1 transition-all space-y-4">
-                <span className="material-symbols-outlined text-[#1853d9] text-[32px]">keyboard_command_key</span>
-                <h3 className="text-[20px] font-bold text-[#151c27]">Keyboard Navigation</h3>
-                <p className="text-[15px] text-[#434654] leading-relaxed">
+                <span className="material-symbols-outlined text-primary text-3xl">keyboard_command_key</span>
+                <h3 className="text-[20px] font-bold text-on-background">Keyboard Navigation</h3>
+                <p className="text-[15px] text-secondary leading-relaxed">
                   Effortless booking and management using only keyboard shortcuts and tab indexing.
                 </p>
               </div>
