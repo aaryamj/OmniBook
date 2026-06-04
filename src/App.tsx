@@ -10,6 +10,7 @@ import PricingPage from './pages/PricingPage';
 import LoginPage from './pages/authPage/LoginPage';
 import RegisterPage from './pages/authPage/RegisterPage';
 import UserDashboardPage from './pages/userPage/UserDashboardPage';
+import BookAppointmentPage from './pages/userPage/BookAppointmentPage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<UserDashboardPage />} />
+      <Route path="/book-appointment" element={<BookAppointmentPage />} />
       <Route path="/industries/healthcare" element={<Healthcare />} />
       <Route path="/industries/beauty-wellness" element={<BeautyWellnessPage />} />
       <Route path="/industries/government" element={<GovernmentPage />} />

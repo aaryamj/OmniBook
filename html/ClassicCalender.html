@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Classic Calendar Booking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#53606c",
+                      "surface": "#f9f9ff",
+                      "surface-container-highest": "#dce2f3",
+                      "outline-variant": "#c3c5d7",
+                      "on-secondary-fixed": "#0f1d27",
+                      "on-primary-fixed": "#00174d",
+                      "tertiary-container": "#006f4b",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "tertiary-fixed": "#6ffbbe",
+                      "surface-container-high": "#e2e8f8",
+                      "outline": "#737686",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "on-tertiary-container": "#68f5b8",
+                      "on-secondary": "#ffffff",
+                      "primary": "#003fb1",
+                      "on-surface-variant": "#434654",
+                      "surface-container-low": "#f0f3ff",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "on-background": "#151c27",
+                      "on-primary-container": "#d4dcff",
+                      "on-error": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#d6e4f3",
+                      "inverse-surface": "#2a313d",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#1a56db",
+                      "on-tertiary-fixed": "#002113",
+                      "on-secondary-fixed-variant": "#3b4854",
+                      "surface-tint": "#1353d8",
+                      "surface-bright": "#f9f9ff",
+                      "surface-variant": "#dce2f3",
+                      "secondary-fixed-dim": "#bac8d6",
+                      "error": "#ba1a1a",
+                      "background": "#f9f9ff",
+                      "on-primary-fixed-variant": "#003dab",
+                      "tertiary": "#005438",
+                      "secondary-container": "#d6e4f3",
+                      "on-secondary-container": "#586672",
+                      "on-error-container": "#93000a",
+                      "inverse-on-surface": "#ebf1ff",
+                      "on-surface": "#151c27",
+                      "on-primary": "#ffffff",
+                      "inverse-primary": "#b5c4ff",
+                      "error-container": "#ffdad6",
+                      "primary-fixed": "#dbe1ff",
+                      "surface-container": "#e7eefe",
+                      "surface-dim": "#d3daea"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "3rem",
+                      "md": "1.5rem",
+                      "xs": "0.5rem",
+                      "lg": "2rem",
+                      "base": "4px",
+                      "margin-desktop": "40px",
+                      "sm": "1rem",
+                      "gutter": "24px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "title-lg": ["Inter"],
+                      "label-sm": ["Geist"],
+                      "label-md": ["Geist"],
+                      "display-lg": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #dce2f3;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed min-h-screen pb-24">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary shadow-[0_4px_20px_rgba(26,86,219,0.05)] h-16 flex justify-between items-center px-margin-desktop">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-headline-md font-bold text-on-primary-container dark:text-on-primary">OmniBook</span>
+<div class="hidden md:flex gap-6">
+<a class="text-on-primary-container/80 font-medium hover:text-on-primary-container transition-colors duration-200" href="#">Dashboard</a>
+<a class="text-on-primary-container font-bold border-b-2 border-on-primary-container pb-1 transition-colors duration-200" href="#">Book Appointment</a>
+<a class="text-on-primary-container/80 font-medium hover:text-on-primary-container transition-colors duration-200" href="#">My History</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-primary-container">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-primary-container"></span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-on-primary-container/20 overflow-hidden cursor-pointer active:scale-95 transition-transform">
+<img alt="User Profile" data-alt="A professional headshot of a young male executive with a friendly expression. He is wearing a clean navy blue suit against a soft, out-of-focus modern office background. The lighting is bright and airy, reflecting a high-end corporate light-mode aesthetic consistent with a premium SaaS platform dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_hoVq91P5vwY1A7-SvnL9NAfnnhzsywV5FgDNikAZojLH2A1d7fc4XawUHDLw77b4Y2V3i9rXyubxcBap1Wfy-8NIRQiHjXHNexdf_L_Rxh-F4BT5XiSdZfy00uqI8bMmLVvHHlTupYJioP_J4yEOtb2B_6KDMOr0_xyA1aX1go2E5TcDytMXS8URH9qdaC7BtkhShruZBvD2azthAziwUTnbNyRW4ecqb_-d6iJ9raLkkoxiHZnIfSDcX4MBGxURnHN3f6J44Gw"/>
+</div>
+</div>
+</nav>
+<!-- Location Header -->
+<header class="pt-16 bg-surface-container-lowest">
+<div class="max-w-7xl mx-auto px-margin-desktop py-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-headline-md text-headline-md text-on-surface">Book Your Slot</h1>
+<p class="font-body-md text-secondary mt-1">Select a branch and find your preferred time.</p>
+</div>
+<div class="relative min-w-[280px]">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">location_on</span>
+<select class="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent appearance-none font-label-md cursor-pointer">
+<option>Kathmandu Main Branch</option>
+<option>Lalitpur Service Center</option>
+<option>Pokhara Regional Office</option>
+</select>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="max-w-7xl mx-auto px-margin-desktop mt-8">
+<!-- Hybrid Toggle -->
+<div class="flex justify-center mb-10">
+<div class="inline-flex p-1 bg-surface-container-high rounded-full shadow-inner">
+<button class="px-8 py-2.5 rounded-full font-label-md text-secondary hover:text-primary transition-all duration-200">
+                    Smart AI Booking
+                </button>
+<button class="px-8 py-2.5 rounded-full font-label-md bg-primary-container text-on-primary-container shadow-sm font-bold transition-all duration-200">
+                    Classic Calendar
+                </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Calendar -->
+<div class="lg:col-span-5 bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(26,86,219,0.05)]">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-lg text-title-lg text-on-surface">November 2024</h3>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-y-2 text-center">
+<!-- Days names -->
+<div class="font-label-md text-outline py-2">Su</div>
+<div class="font-label-md text-outline py-2">Mo</div>
+<div class="font-label-md text-outline py-2">Tu</div>
+<div class="font-label-md text-outline py-2">We</div>
+<div class="font-label-md text-outline py-2">Th</div>
+<div class="font-label-md text-outline py-2">Fr</div>
+<div class="font-label-md text-outline py-2">Sa</div>
+<!-- Days cells (Placeholder logic) -->
+<div class="py-3 text-outline/30 font-label-md">27</div>
+<div class="py-3 text-outline/30 font-label-md">28</div>
+<div class="py-3 text-outline/30 font-label-md">29</div>
+<div class="py-3 text-outline/30 font-label-md">30</div>
+<div class="py-3 text-outline/30 font-label-md">31</div>
+<div class="py-3 relative group cursor-pointer transition-all">
+<span class="relative z-10 font-label-md">1</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<div class="py-3 relative group cursor-pointer transition-all">
+<span class="relative z-10 font-label-md">2</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<!-- Row 2 -->
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">3</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">4</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">5</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">6</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">7</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<!-- Today -->
+<div class="py-3 relative cursor-pointer">
+<div class="absolute inset-0 bg-primary-container rounded-lg shadow-md scale-95"></div>
+<span class="relative z-10 font-label-md text-on-primary-container font-bold">8</span>
+</div>
+<div class="py-3 cursor-pointer group relative">
+<span class="relative z-10 font-label-md">9</span>
+<div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>
+</div>
+<!-- Fillers for visual density -->
+<script>
+                        const calendarContainer = document.querySelector('.grid-cols-7');
+                        for(let i=10; i<=30; i++) {
+                            const div = document.createElement('div');
+                            div.className = "py-3 cursor-pointer group relative";
+                            div.innerHTML = `<span class="relative z-10 font-label-md">${i}</span><div class="absolute inset-0 bg-surface-container-low opacity-0 group-hover:opacity-100 rounded-lg transition-opacity"></div>`;
+                            calendarContainer.appendChild(div);
+                        }
+                    </script>
+</div>
+</div>
+<!-- Right Column: Slots -->
+<div class="lg:col-span-7 bg-surface-container-lowest rounded-[16px] p-md shadow-[0_4px_20px_rgba(26,86,219,0.05)]">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-lg text-title-lg text-on-surface">Available Slots for <span class="text-primary">Nov 8, 2024</span></h3>
+<div class="flex items-center gap-2 text-secondary font-label-sm">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+                        All times in GMT+5:45
+                    </div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4"><!-- 09:00 AM - Default -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<span class="font-label-md text-on-surface font-medium">09:00 AM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div>
+<!-- 09:30 AM - Scarcity -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<div class="absolute -top-2 -right-2 bg-[#FEE2E2] text-[#DC2626] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10">
+        🔥 2 Left
+    </div>
+<span class="font-label-md text-on-surface font-medium">09:30 AM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div>
+<!-- 10:00 AM - Default -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<span class="font-label-md text-on-surface font-medium">10:00 AM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div>
+<!-- 10:30 AM - Selected -->
+<div class="relative p-4 bg-[#E1EFFE] border-2 border-[#1A56DB] rounded-xl shadow-md flex flex-col items-center justify-center gap-1 transform scale-105 z-10">
+<span class="font-label-md text-[#1A56DB] font-bold">10:30 AM</span>
+<span class="text-[12px] text-[#1A56DB]/70">रू 1,500</span>
+</div>
+<!-- 11:00 AM - Sold Out -->
+<div class="relative p-4 bg-[#F3F4F6] border border-transparent rounded-xl flex flex-col items-center justify-center gap-1 opacity-60 cursor-not-allowed">
+<span class="font-label-md text-secondary line-through">11:00 AM</span>
+<span class="text-[12px] font-bold text-secondary uppercase tracking-tighter">Sold Out</span>
+</div>
+<!-- 11:30 AM - Default -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<span class="font-label-md text-on-surface font-medium">11:30 AM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div>
+<!-- 12:00 PM - Default -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<span class="font-label-md text-on-surface font-medium">12:00 PM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div>
+<!-- 12:30 PM - Default -->
+<div class="relative p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl hover:border-primary/30 transition-all cursor-pointer flex flex-col items-center justify-center gap-1 active:scale-95">
+<span class="font-label-md text-on-surface font-medium">12:30 PM</span>
+<span class="text-[12px] text-secondary">रू 1,500</span>
+</div></div>
+<div class="mt-8 p-4 bg-surface-container-low rounded-xl border border-dashed border-outline-variant">
+<div class="flex items-start gap-4">
+<div class="bg-primary-fixed p-2 rounded-lg">
+<span class="material-symbols-outlined text-on-primary-fixed">info</span>
+</div>
+<div>
+<h4 class="font-label-md font-bold text-on-surface">Booking Policy</h4>
+<p class="font-label-sm text-secondary mt-1">Free cancellation up to 4 hours before. Appointments starting after 4:00 PM are subject to evening rates.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Checkout Footer -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant/30 py-4 px-margin-desktop shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-50">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex items-center gap-8">
+<div class="hidden sm:block">
+<p class="font-label-sm text-secondary uppercase tracking-wider">Appointment</p>
+<p class="font-title-lg text-on-surface font-bold">Nov 8 • 10:30 AM</p>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant/50 hidden sm:block"></div>
+<div>
+<p class="font-label-sm text-secondary uppercase tracking-wider">Total Amount</p>
+<p class="font-title-lg text-primary font-bold">रू 1,500.00</p>
+</div>
+</div>
+<div class="flex items-center gap-4 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-4 bg-surface-container-high text-on-surface font-bold rounded-xl active:scale-95 transition-transform hover:bg-surface-container-highest">
+                    Modify Selection
+                </button>
+<button class="flex-1 md:flex-none px-8 py-4 bg-tertiary-container text-on-tertiary-container font-headline-md text-headline-md font-bold rounded-xl shadow-[0_4px_12px_rgba(0,111,75,0.3)] active:scale-95 transition-transform hover:opacity-90 flex items-center justify-center gap-3">
+                    Confirm &amp; Pay
+                    <span class="material-symbols-outlined">payments</span>
+</button>
+</div>
+</div>
+</footer>
+<!-- Global Footer -->
+<div class="bg-surface py-12 mb-24 mt-xl border-t border-outline-variant/10">
+<div class="max-w-7xl mx-auto px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex flex-col gap-2">
+<span class="font-title-lg text-title-lg text-primary font-bold">OmniBook</span>
+<p class="text-secondary font-label-md">© 2024 OmniBook. All rights reserved.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-secondary hover:text-primary transition-colors font-label-md" href="#">Privacy Policy</a>
+<a class="text-secondary hover:text-primary transition-colors font-label-md" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</body></html>

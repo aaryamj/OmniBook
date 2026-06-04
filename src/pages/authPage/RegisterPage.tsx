@@ -18,6 +18,8 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Verification states
   const [isVerificationSent, setIsVerificationSent] = useState(false);
@@ -297,13 +299,22 @@ const RegisterPage: React.FC = () => {
                           lock
                         </span>
                         <input
-                          className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.password ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
+                          className={`w-full pl-12 pr-12 py-3 bg-white border ${errors.password ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
                           id="password"
                           placeholder="••••••••"
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                         />
+                        <button 
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#151c27]" 
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <span className="material-symbols-outlined">
+                            {showPassword ? "visibility_off" : "visibility"}
+                          </span>
+                        </button>
                       </div>
                       {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
                     </div>
@@ -314,13 +325,22 @@ const RegisterPage: React.FC = () => {
                           lock_reset
                         </span>
                         <input
-                          className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
+                          className={`w-full pl-12 pr-12 py-3 bg-white border ${errors.confirmPassword ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
                           id="confirm_password"
                           placeholder="••••••••"
-                          type="password"
+                          type={showConfirmPassword ? "text" : "password"}
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                         />
+                        <button 
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#151c27]" 
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          <span className="material-symbols-outlined">
+                            {showConfirmPassword ? "visibility_off" : "visibility"}
+                          </span>
+                        </button>
                       </div>
                       {errors.confirmPassword && <p className="text-red-500 text-xs">{errors.confirmPassword}</p>}
                     </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 
 const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,24 +41,30 @@ const UserDashboardPage: React.FC = () => {
             />
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a
-              className="text-[16px] font-semibold text-[#003fb1] border-b-2 border-[#003fb1] pb-1"
-              href="#"
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => 
+                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
+              }
             >
               Dashboard
-            </a>
-            <a
-              className="text-[16px] text-[#53606c] hover:text-[#003fb1] transition-colors duration-200"
-              href="#"
+            </NavLink>
+            <NavLink
+              to="/book-appointment"
+              className={({ isActive }) => 
+                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
+              }
             >
               Book Appointment
-            </a>
-            <a
-              className="text-[16px] text-[#53606c] hover:text-[#003fb1] transition-colors duration-200"
-              href="#"
+            </NavLink>
+            <NavLink
+              to="/my-history"
+              className={({ isActive }) => 
+                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
+              }
             >
               My History
-            </a>
+            </NavLink>
           </nav>
           <div className="flex items-center gap-4">
             <div className="relative cursor-pointer p-2 hover:bg-[#e7eefe] rounded-full transition-colors">

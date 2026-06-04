@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html class="light" lang="en" style="">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Appointment History | OmniBook</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#d6e4f3",
+                        "tertiary-container": "#006f4b",
+                        "surface-container-highest": "#dce2f3",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "on-primary-fixed-variant": "#003dab",
+                        "outline-variant": "#c3c5d7",
+                        "on-error": "#ffffff",
+                        "tertiary": "#005438",
+                        "outline": "#737686",
+                        "on-secondary-container": "#586672",
+                        "error": "#ba1a1a",
+                        "surface": "#f9f9ff",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "primary-container": "#1a56db",
+                        "on-tertiary-container": "#68f5b8",
+                        "on-background": "#151c27",
+                        "background": "#f9f9ff",
+                        "on-primary-fixed": "#00174d",
+                        "surface-container-low": "#f0f3ff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#d4dcff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-dim": "#d3daea",
+                        "inverse-surface": "#2a313d",
+                        "surface-container": "#e7eefe",
+                        "primary": "#003fb1",
+                        "on-surface": "#151c27",
+                        "surface-bright": "#f9f9ff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-tint": "#1353d8",
+                        "inverse-primary": "#b5c4ff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e2e8f8",
+                        "surface-variant": "#dce2f3",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "inverse-on-surface": "#ebf1ff",
+                        "secondary": "#53606c",
+                        "secondary-container": "#d6e4f3",
+                        "on-surface-variant": "#434654",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "1.5rem",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "sm": "1rem",
+                        "xl": "3rem",
+                        "lg": "2rem",
+                        "gutter": "24px",
+                        "xs": "0.5rem",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .card-elevation {
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+
+<body class="text-on-surface">
+    <!-- TopNavBar -->
+    <header
+        class="fixed top-0 w-full z-50 bg-surface dark:bg-inverse-surface shadow-sm flex justify-between items-center px-margin-desktop py-4 max-w-full mx-auto">
+        <div class="flex items-center gap-xl">
+            <span
+                class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">OmniBook</span>
+            <nav class="hidden md:flex gap-lg items-center">
+                <a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors transition-all duration-200 ease-in-out"
+                    href="#">Dashboard</a>
+                <a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-primary-fixed transition-colors transition-all duration-200 ease-in-out"
+                    href="#">Book Appointment</a>
+                <a class="font-body-md text-body-md text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 transition-all duration-200 ease-in-out"
+                    href="#">My History</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-md">
+            <button
+                class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container rounded-full transition-colors">notifications</button>
+            <div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden ring-2 ring-primary/10">
+                <img alt="User profile avatar" class="w-full h-full object-cover"
+                    data-alt="A professional studio portrait of a corporate executive in their late 30s, featuring soft three-point lighting against a neutral gradient background. The style is clean, modern, and high-fidelity, reflecting an enterprise software user profile. The overall color palette is composed of muted blues and greys to match a sophisticated SaaS interface."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlr6uZf7_GepzJrBFE6OgJaW7g8mNZUagJFEbIXNMBd1feW9JYdMuXxfHfk4OfYtjc0n9CZX9Dpvv4XUsQXPSsg0s4IGxjKUhVgVls15F2LoCkkgf1P2zR9jl7VGduAVwU8taOJ1ijokukD5T_md2rc_5g8g-HnXj46d9L5R3GOFsN8PvE6c4tTNLl7-iqpWTdeAE-DCShI3cTf06fyMRaXTLPv7j78c3EO2Pdoa9mdWHNM0Dm5SnhABo1P3zmMQWtcMg8grdzvDU">
+            </div>
+        </div>
+    </header>
+    <main class="pt-32 pb-xl px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto">
+        <!-- Header & Filters Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-on-background mb-base">Appointment History</h1>
+                <p class="font-body-md text-body-md text-on-surface-variant">Review and manage your past service
+                    records.</p>
+            </div>
+            <div class="flex gap-sm">
+                <div class="relative min-w-[160px]">
+                    <select
+                        class="w-full appearance-none bg-surface border border-outline-variant rounded-xl px-md py-sm font-label-md text-label-md focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+                        <option value="7-days" class="">7 days</option>
+                        <option value="1-month" class="">1 month</option>
+                        <option value="3-months" class="">3 months</option>
+                        <option value="6-months" class="">6 months</option>
+                        <option value="lifetime" class="">lifetime</option>
+                    </select>
+                    <span
+                        class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                </div>
+                <div class="relative min-w-[160px]">
+                    <select
+                        class="w-full appearance-none bg-surface border border-outline-variant rounded-xl px-md py-sm font-label-md text-label-md focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer">
+                        <option value="all" class="">All</option>
+                        <option value="upcoming" class="">Upcoming</option>
+                        <option value="completed" class="">Completed</option>
+                        <option value="cancelled" class="">Cancelled</option>
+                    </select>
+                    <span
+                        class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                </div>
+            </div>
+        </div>
+        <!-- Cards Container -->
+        <div class="grid grid-cols-1 gap-md">
+            <!-- Card 1: Upcoming -->
+            <div class="flex justify-center items-center gap-md mt-xl mb-md">
+                <div class="h-[1px] w-full bg-outline-variant"></div><span
+                    class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant whitespace-nowrap text-center">November
+                    2024</span>
+                <div class="h-[1px] w-full bg-outline-variant"></div>
+            </div>
+            <div
+                class="bg-surface rounded-xl p-md card-elevation transition-all hover:translate-y-[-2px] hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md border border-white/50">
+                <div class="flex items-start gap-md">
+                    <div
+                        class="flex flex-col items-center justify-center bg-primary-container/10 text-primary rounded-xl p-sm min-w-[80px]">
+                        <span class="font-label-sm text-label-sm uppercase tracking-wider">Nov</span>
+                        <span class="font-headline-md text-headline-md">12</span>
+                        <span class="font-label-sm text-label-sm mt-1 opacity-80">10:00 AM</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div
+                            class="inline-flex items-center px-sm py-0.5 rounded-full bg-secondary-container text-primary text-label-sm font-medium">
+                            Upcoming
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-surface">Dr. Smith</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">medical_services</span> General Checkup
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-md">
+                    <a class="text-primary font-label-md text-label-md hover:underline flex items-center gap-xs"
+                        href="#">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Download Receipt
+                    </a>
+                    <button
+                        class="px-lg py-sm border border-outline text-primary rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">
+                        View Detail
+                    </button>
+                    <button
+                        class="px-lg py-sm bg-primary-container text-white rounded-xl font-label-md text-label-md hover:opacity-90 shadow-md transition-all">
+                        Reschedule
+                    </button>
+                </div>
+            </div>
+            <div
+                class="bg-surface rounded-xl p-md card-elevation transition-all hover:translate-y-[-2px] hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md border border-white/50">
+                <div class="flex items-start gap-md">
+                    <div
+                        class="flex flex-col items-center justify-center bg-primary-container/10 text-primary rounded-xl p-sm min-w-[80px]">
+                        <span class="font-label-sm text-label-sm uppercase tracking-wider">Nov</span>
+                        <span class="font-headline-md text-headline-md">05</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div
+                            class="inline-flex items-center px-sm py-0.5 rounded-full bg-secondary-container text-primary text-label-sm font-medium">
+                            Upcoming
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-surface">City Dental</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">dentistry</span> Routine Cleaning
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-md">
+                    <a class="text-primary font-label-md text-label-md hover:underline flex items-center gap-xs"
+                        href="#">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Download Receipt
+                    </a>
+                    <button
+                        class="px-lg py-sm border border-outline text-primary rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">
+                        View Detail
+                    </button>
+                    <button
+                        class="px-lg py-sm bg-primary-container text-white rounded-xl font-label-md text-label-md hover:opacity-90 shadow-md transition-all">
+                        Reschedule
+                    </button>
+                </div>
+            </div>
+            <!-- Card 2: Completed -->
+            <div class="flex justify-center items-center gap-md mt-xl mb-md">
+                <div class="h-[1px] w-full bg-outline-variant"></div><span
+                    class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant whitespace-nowrap text-center">October
+                    2024</span>
+                <div class="h-[1px] w-full bg-outline-variant"></div>
+            </div>
+            <div
+                class="bg-surface rounded-xl p-md card-elevation transition-all hover:translate-y-[-2px] hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md border border-white/50">
+                <div class="flex items-start gap-md">
+                    <div
+                        class="flex flex-col items-center justify-center bg-secondary-container/30 text-secondary rounded-xl p-sm min-w-[80px]">
+                        <span class="font-label-sm text-label-sm uppercase tracking-wider">Oct</span>
+                        <span class="font-headline-md text-headline-md">20</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div
+                            class="inline-flex items-center px-sm py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-label-sm font-medium">
+                            Completed
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-surface">Elite Salon</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">content_cut</span> Hair Styling
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-md">
+                    <a class="text-primary font-label-md text-label-md hover:underline flex items-center gap-xs"
+                        href="#">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Download Receipt
+                    </a>
+                    <button
+                        class="px-lg py-sm border border-outline text-primary rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">
+                        View Detail
+                    </button>
+                    <button
+                        class="px-lg py-sm bg-primary-container text-white rounded-xl font-label-md text-label-md hover:opacity-90 shadow-md transition-all">
+                        Book Again
+                    </button>
+                </div>
+            </div>
+            <div
+                class="bg-surface rounded-xl p-md card-elevation transition-all hover:translate-y-[-2px] hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md border border-white/50">
+                <div class="flex items-start gap-md">
+                    <div
+                        class="flex flex-col items-center justify-center bg-secondary-container/30 text-secondary rounded-xl p-sm min-w-[80px]">
+                        <span class="font-label-sm text-label-sm uppercase tracking-wider">Oct</span>
+                        <span class="font-headline-md text-headline-md">12</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div
+                            class="inline-flex items-center px-sm py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant text-label-sm font-medium">
+                            Completed
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-surface">Tech Support Hub</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">laptop_mac</span> Laptop Repair
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-md">
+                    <a class="text-primary font-label-md text-label-md hover:underline flex items-center gap-xs"
+                        href="#">
+                        <span class="material-symbols-outlined text-[18px]">download</span> Download Receipt
+                    </a>
+                    <button
+                        class="px-lg py-sm border border-outline text-primary rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">
+                        View Detail
+                    </button>
+                    <button
+                        class="px-lg py-sm bg-primary-container text-white rounded-xl font-label-md text-label-md hover:opacity-90 shadow-md transition-all">
+                        Book Again
+                    </button>
+                </div>
+            </div>
+            <!-- Card 3: Cancelled -->
+            <div class="flex justify-center items-center gap-md mt-xl mb-md">
+                <div class="h-[1px] w-full bg-outline-variant"></div><span
+                    class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant whitespace-nowrap text-center">September
+                    2024</span>
+                <div class="h-[1px] w-full bg-outline-variant"></div>
+            </div>
+            <div
+                class="bg-surface rounded-xl p-md card-elevation transition-all hover:translate-y-[-2px] hover:shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-md border border-white/50 opacity-80">
+                <div class="flex items-start gap-md">
+                    <div
+                        class="flex flex-col items-center justify-center bg-surface-container-highest text-on-surface-variant rounded-xl p-sm min-w-[80px]">
+                        <span class="font-label-sm text-label-sm uppercase tracking-wider">Sep</span>
+                        <span class="font-headline-md text-headline-md">15</span>
+                    </div>
+                    <div class="space-y-1">
+                        <div
+                            class="inline-flex items-center px-sm py-0.5 rounded-full bg-surface-variant text-on-surface-variant text-label-sm font-medium">
+                            Cancelled
+                        </div>
+                        <h3 class="font-title-lg text-title-lg text-on-surface">Central Bureau</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-xs">
+                            <span class="material-symbols-outlined text-[18px]">description</span> License Renewal
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-md">
+                    <!-- No download receipt for cancelled -->
+                    <button
+                        class="px-lg py-sm border border-outline text-primary rounded-xl font-label-md text-label-md hover:bg-surface-container transition-colors">
+                        View Detail
+                    </button>
+                    <button
+                        class="px-lg py-sm bg-primary-container text-white rounded-xl font-label-md text-label-md hover:opacity-90 shadow-md transition-all">
+                        Book Again
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Pagination Footer -->
+        <div class="mt-xl flex items-center gap-md">
+            <nav class="flex items-center gap-sm font-label-md text-label-md text-on-surface-variant">
+                <button
+                    class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <span class="text-on-surface font-medium">Page 1 of 3</span>
+                <button
+                    class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </nav>
+        </div>
+    </main>
+    <script>
+        // Micro-interaction: Active state simulation for filter buttons
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('focus', () => {
+                select.parentElement.classList.add('ring-2', 'ring-primary/20');
+            });
+            select.addEventListener('blur', () => {
+                select.parentElement.classList.remove('ring-2', 'ring-primary/20');
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
