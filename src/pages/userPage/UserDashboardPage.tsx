@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,10 +68,7 @@ const UserDashboardPage: React.FC = () => {
             </NavLink>
           </nav>
           <div className="flex items-center gap-4">
-            <div className="relative cursor-pointer p-2 hover:bg-[#e7eefe] rounded-full transition-colors">
-              <span className="material-symbols-outlined text-[#53606c]">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-[#f9f9ff]"></span>
-            </div>
+            <NotificationBell />
             <div className="relative group ml-2">
               <div className="h-10 w-10 rounded-full overflow-hidden border border-[#c3c5d7] hover:scale-105 transition-transform cursor-pointer shadow-sm">
                 <img
@@ -80,13 +78,13 @@ const UserDashboardPage: React.FC = () => {
                 />
               </div>
               <div className="absolute right-0 mt-2 w-48 bg-white shadow-xl rounded-xl border border-[#dce2f3] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-[60]">
-                <a
+                <NavLink
                   className="flex items-center gap-3 px-4 py-2 hover:bg-[#f0f3ff] text-[#151c27] text-[14px] font-medium transition-colors"
-                  href="#"
+                  to="/profile-settings"
                 >
                   <span className="material-symbols-outlined text-[20px]">settings</span>
                   Settings
-                </a>
+                </NavLink>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-[#ffdad6]/20 text-[#ba1a1a] text-[14px] font-medium transition-colors w-full text-left"

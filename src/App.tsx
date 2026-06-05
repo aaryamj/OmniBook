@@ -11,6 +11,8 @@ import LoginPage from './pages/authPage/LoginPage';
 import RegisterPage from './pages/authPage/RegisterPage';
 import UserDashboardPage from './pages/userPage/UserDashboardPage';
 import BookAppointmentPage from './pages/userPage/BookAppointmentPage';
+import MyHistoryPage from './pages/userPage/MyHistoryPage';
+import ProfileSettingPage from './pages/userPage/ProfileSettingPage';
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/dashboard" element={<UserDashboardPage />} />
       <Route path="/book-appointment" element={<BookAppointmentPage />} />
+      <Route path="/my-history" element={<MyHistoryPage />} />
+      <Route path="/profile-settings" element={<ProfileSettingPage />} />
       <Route path="/industries/healthcare" element={<Healthcare />} />
       <Route path="/industries/beauty-wellness" element={<BeautyWellnessPage />} />
       <Route path="/industries/government" element={<GovernmentPage />} />

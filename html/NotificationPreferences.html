@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Notification Preferences | OmniBook Enterprise</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#151c27",
+                        "secondary-container": "#d6e4f3",
+                        "background": "#f9f9ff",
+                        "surface-tint": "#1353d8",
+                        "error-container": "#ffdad6",
+                        "secondary": "#53606c",
+                        "on-surface": "#151c27",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#e7eefe",
+                        "on-primary-container": "#d4dcff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#002113",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f0f3ff",
+                        "outline-variant": "#c3c5d7",
+                        "inverse-primary": "#b5c4ff",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2a313d",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "secondary-fixed": "#d6e4f3",
+                        "tertiary": "#005438",
+                        "surface-variant": "#dce2f3",
+                        "on-surface-variant": "#434654",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-primary-fixed": "#00174d",
+                        "on-tertiary-container": "#68f5b8",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "surface-container-high": "#e2e8f8",
+                        "tertiary-container": "#006f4b",
+                        "primary": "#003fb1",
+                        "on-secondary-container": "#586672",
+                        "surface-dim": "#d3daea",
+                        "on-secondary-fixed": "#0f1d27",
+                        "outline": "#737686",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "inverse-on-surface": "#ebf1ff",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1a56db",
+                        "surface-container-highest": "#dce2f3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "sm": "1rem",
+                        "md": "1.5rem",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "lg": "2rem",
+                        "xs": "0.5rem",
+                        "xl": "3rem"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .active-nav-glow {
+            box-shadow: 0 0 15px rgba(26, 86, 219, 0.1);
+        }
+
+        .toggle-dot {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        input:checked~.toggle-dot {
+            transform: translateX(100%);
+        }
+
+        .zebra-striping div:nth-child(even) {
+            background-color: rgba(225, 239, 254, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #dce2f3;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body-md text-on-surface min-h-screen flex flex-col">
+    <!-- TopNavBar -->
+    <header
+        class="bg-primary-container text-on-primary-container flex justify-between items-center w-full px-margin-desktop py-4 sticky top-0 z-50 shadow-md">
+        <div class="flex items-center gap-xl">
+            <span class="font-headline-md text-headline-md font-bold text-on-primary">OmniBook Enterprise</span>
+            <nav class="hidden md:flex items-center gap-lg">
+                <a class="font-body-md text-body-md text-on-primary/80 hover:text-on-primary transition-all duration-200 active:scale-95"
+                    href="#">Dashboard</a>
+                <a class="font-body-md text-body-md text-on-primary/80 hover:text-on-primary transition-all duration-200 active:scale-95"
+                    href="#">Clients</a>
+                <a class="font-body-md text-body-md text-on-primary/80 hover:text-on-primary transition-all duration-200 active:scale-95"
+                    href="#">Schedule</a>
+                <a class="font-body-md text-body-md text-on-primary/80 hover:text-on-primary transition-all duration-200 active:scale-95"
+                    href="#">Reports</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-md">
+            <button
+                class="material-symbols-outlined p-2 rounded-full hover:bg-primary-fixed-dim/10 transition-colors">notifications</button>
+            <button
+                class="material-symbols-outlined p-2 rounded-full hover:bg-primary-fixed-dim/10 transition-colors">help</button>
+            <div
+                class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border-2 border-on-primary-container/20">
+                <img alt="User Profile Avatar" class="w-full h-full object-cover"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFtHKifAXNTBocW1STpnw3Eh1nBE4AYtp4dKIsBtSbJ09tfaLLMgOIZX3XKIFmwkWFU1nL6euAVkis5Kie40hDzt7DtpUAUVSBGBYCVwZH28VIUbee1g3gKjnkcZLhm4oaDQytRWZuCFdni-0QXFumkdu6JVpbAvz8-E8GbgGBARf--CYf-57mabf-n_wbLhlOT5u_XPa9GGE-_PjusnwH28RKRQbLHLhEm-2gvQyVN-67lxDW2RKhylBEFpBBrkCJNMy3uYJrVZc" />
+            </div>
+        </div>
+    </header>
+    <div class="flex flex-1 overflow-hidden">
+        <!-- SideNavBar -->
+        <aside class="hidden md:flex flex-col h-full w-64 bg-surface-container-low p-md gap-xs shrink-0">
+            <div class="px-2 mb-md">
+                <h2 class="font-title-lg text-title-lg font-semibold text-on-surface">Settings</h2>
+                <p class="font-label-md text-label-md text-on-surface-variant">Manage your account</p>
+            </div>
+            <nav class="flex flex-col gap-1">
+                <a class="flex items-center gap-sm px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-xl transition-all duration-150"
+                    href="#">
+                    <span class="material-symbols-outlined">person</span>
+                    <span class="font-label-md text-label-md">Personal Info</span>
+                </a>
+                <a class="flex items-center gap-sm px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-xl transition-all duration-150"
+                    href="#">
+                    <span class="material-symbols-outlined">shield</span>
+                    <span class="font-label-md text-label-md">Security</span>
+                </a>
+                <!-- Active Tab: Notifications -->
+                <a class="flex items-center gap-sm px-4 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-xl active-nav-glow transition-all duration-150"
+                    href="#">
+                    <span class="material-symbols-outlined"
+                        style="font-variation-settings: 'FILL' 1;">notifications</span>
+                    <span class="font-label-md text-label-md">Notifications</span>
+                </a>
+            </nav>
+            <div class="mt-auto p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                <p class="text-label-sm font-label-sm text-primary mb-2">PRO PLAN</p>
+                <button
+                    class="w-full py-2 px-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md hover:opacity-90 transition-opacity">Upgrade
+                    Plan</button>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 bg-surface-container-low overflow-y-auto custom-scrollbar">
+            <div class="max-w-4xl mx-auto px-margin-desktop py-xl">
+                <!-- Page Header -->
+                <div class="mb-lg">
+                    <h1 class="font-headline-lg text-headline-lg text-on-surface">Notification Preferences</h1>
+                    <p class="font-body-lg text-body-lg text-on-surface-variant">Choose how you want to receive updates
+                        and alerts.</p>
+                </div>
+                <div class="space-y-lg">
+                    <!-- Card 1: Bookings & Reminders -->
+                    <section
+                        class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] overflow-hidden border border-black/5">
+                        <div class="p-md border-b border-outline-variant/30 flex items-center gap-sm">
+                            <span class="material-symbols-outlined text-primary">calendar_today</span>
+                            <h3 class="font-title-lg text-title-lg text-on-surface">Bookings &amp; Reminders</h3>
+                        </div>
+                        <div class="zebra-striping">
+                            <!-- Header Row -->
+                            <div class="grid grid-cols-12 gap-gutter px-md py-xs bg-surface-container-low/50">
+                                <div
+                                    class="col-span-6 font-label-sm text-label-sm text-outline uppercase tracking-wider">
+                                    Event Type</div>
+                                <div
+                                    class="col-span-2 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider">
+                                    Email</div>
+                                <div
+                                    class="col-span-2 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider">
+                                    SMS</div>
+                                <div
+                                    class="col-span-2 text-center font-label-sm text-label-sm text-outline uppercase tracking-wider">
+                                    In-App</div>
+                            </div>
+                            <!-- Rows -->
+                            <div class="grid grid-cols-12 gap-gutter px-md py-md items-center">
+                                <div class="col-span-6">
+                                    <p class="font-label-md text-label-md text-on-surface">Booking Confirmations</p>
+                                    <p class="text-xs text-on-surface-variant">Sent when a new appointment is scheduled.
+                                    </p>
+                                </div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                            </div>
+                            <div class="grid grid-cols-12 gap-gutter px-md py-md items-center">
+                                <div class="col-span-6">
+                                    <p class="font-label-md text-label-md text-on-surface">Upcoming Reminders</p>
+                                    <p class="text-xs text-on-surface-variant">Alerts sent 24 hours before the event
+                                        starts.</p>
+                                </div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                            </div>
+                            <div class="grid grid-cols-12 gap-gutter px-md py-md items-center">
+                                <div class="col-span-6">
+                                    <p class="font-label-md text-label-md text-on-surface">Cancellations &amp;
+                                        Rescheduling</p>
+                                    <p class="text-xs text-on-surface-variant">Immediate updates when timings change.
+                                    </p>
+                                </div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                                <div class="col-span-2 flex justify-center"><input checked=""
+                                        class="w-5 h-5 rounded border-outline text-primary focus:ring-primary/20"
+                                        type="checkbox" /></div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Card 2: Offers & News -->
+                    <section
+                        class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] overflow-hidden border border-black/5">
+                        <div class="p-md border-b border-outline-variant/30 flex items-center gap-sm">
+                            <span class="material-symbols-outlined text-primary">sell</span>
+                            <h3 class="font-title-lg text-title-lg text-on-surface">Offers &amp; News</h3>
+                        </div>
+                        <div class="divide-y divide-outline-variant/20">
+                            <div class="p-md flex justify-between items-center">
+                                <div>
+                                    <p class="font-label-md text-label-md text-on-surface">Exclusive Discounts</p>
+                                    <p class="text-xs text-on-surface-variant">Marketing offers from our certified
+                                        partners.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input class="sr-only peer" type="checkbox" />
+                                    <div
+                                        class="w-11 h-6 bg-outline-variant/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="p-md flex justify-between items-center">
+                                <div>
+                                    <p class="font-label-md text-label-md text-on-surface">OmniBook Newsletter</p>
+                                    <p class="text-xs text-on-surface-variant">Monthly insights and feature updates.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input class="sr-only peer" type="checkbox" />
+                                    <div
+                                        class="w-11 h-6 bg-outline-variant/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Card 3: System & Security -->
+                    <section
+                        class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] overflow-hidden border border-black/5">
+                        <div class="p-md border-b border-outline-variant/30 flex items-center gap-sm">
+                            <span class="material-symbols-outlined text-primary">security</span>
+                            <h3 class="font-title-lg text-title-lg text-on-surface">System &amp; Security</h3>
+                        </div>
+                        <div class="p-md flex justify-between items-center bg-surface-container-low/30">
+                            <div>
+                                <p class="font-label-md text-label-md text-on-surface">New sign-ins and password
+                                    changes.</p>
+                                <p class="text-xs text-on-surface-variant">Critical alerts regarding your account
+                                    integrity.</p>
+                            </div>
+                            <span
+                                class="font-label-sm text-label-sm text-outline bg-surface-variant/50 px-3 py-1 rounded-full">Always
+                                On (Required for security)</span>
+                        </div>
+                    </section>
+                </div>
+                <!-- Action Button -->
+                <div class="mt-xl flex justify-end">
+                    <button
+                        class="flex items-center gap-xs px-xl py-3 bg-primary text-on-primary rounded-xl font-title-lg transition-all duration-200 active:scale-95 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"
+                        id="saveBtn">
+                        <span>Save Preferences</span>
+                        <span class="material-symbols-outlined">check_circle</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Footer -->
+    <footer
+        class="bg-surface-container-highest text-on-surface-variant flex flex-col md:flex-row justify-between items-center px-margin-desktop py-lg w-full border-t border-outline-variant">
+        <div class="flex items-center gap-md mb-4 md:mb-0">
+            <span class="font-label-md text-label-md font-black text-primary">OmniBook Enterprise</span>
+            <p class="font-label-sm text-label-sm">© 2024 OmniBook Enterprise. All rights reserved.</p>
+        </div>
+        <div class="flex gap-lg">
+            <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-opacity duration-200 hover:underline"
+                href="#">Privacy Policy</a>
+            <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-opacity duration-200 hover:underline"
+                href="#">Terms of Service</a>
+            <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-opacity duration-200 hover:underline"
+                href="#">Help Center</a>
+            <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-opacity duration-200 hover:underline"
+                href="#">Resources</a>
+        </div>
+    </footer>
+    <script>
+        // Micro-interaction for the save button
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.addEventListener('click', () => {
+            const originalContent = saveBtn.innerHTML;
+            saveBtn.innerHTML = `
+                <span class="material-symbols-outlined animate-spin">sync</span>
+                <span>Saving...</span>
+            `;
+            saveBtn.classList.add('opacity-80');
+            saveBtn.disabled = true;
+
+            setTimeout(() => {
+                saveBtn.innerHTML = `
+                    <span class="material-symbols-outlined">done_all</span>
+                    <span>Saved!</span>
+                `;
+                saveBtn.classList.remove('bg-primary');
+                saveBtn.classList.add('bg-tertiary-container', 'text-on-tertiary-container');
+
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalContent;
+                    saveBtn.classList.add('bg-primary');
+                    saveBtn.classList.remove('bg-tertiary-container', 'text-on-tertiary-container', 'opacity-80');
+                    saveBtn.disabled = false;
+                }, 2000);
+            }, 1000);
+        });
+
+        // Toggle state micro-interaction
+        document.querySelectorAll('input[type="checkbox"].sr-only').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const parent = e.target.closest('label');
+                if (e.target.checked) {
+                    parent.querySelector('div').classList.add('ring-2', 'ring-primary/20');
+                } else {
+                    parent.querySelector('div').classList.remove('ring-2', 'ring-primary/20');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
