@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Revenue &amp; Analytics Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #F4F7FB; /* Requested Background */
+            font-family: 'Inter', sans-serif;
+        }
+        .bento-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(26, 86, 219, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(26, 86, 219, 0.08);
+        }
+        .zebra-stripe:nth-child(even) {
+            background-color: rgba(225, 239, 254, 0.3);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary": "#53606c",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f0f3ff",
+                      "surface-dim": "#d3daea",
+                      "surface-container-high": "#e2e8f8",
+                      "on-primary-fixed-variant": "#003dab",
+                      "on-error-container": "#93000a",
+                      "on-surface": "#151c27",
+                      "secondary-fixed-dim": "#bac8d6",
+                      "on-primary-container": "#d4dcff",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#dce2f3",
+                      "outline-variant": "#c3c5d7",
+                      "background": "#f4f7fb",
+                      "surface-tint": "#1353d8",
+                      "on-tertiary-fixed": "#002113",
+                      "surface-container-highest": "#dce2f3",
+                      "secondary-container": "#d6e4f3",
+                      "on-background": "#151c27",
+                      "on-secondary-container": "#586672",
+                      "inverse-on-surface": "#ebf1ff",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#003fb1",
+                      "surface-bright": "#f9f9ff",
+                      "tertiary-fixed": "#6ffbbe",
+                      "on-tertiary-container": "#68f5b8",
+                      "on-secondary-fixed": "#0f1d27",
+                      "on-surface-variant": "#434654",
+                      "on-secondary-fixed-variant": "#3b4854",
+                      "on-error": "#ffffff",
+                      "on-tertiary-fixed-variant": "#005236",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-container": "#006f4b",
+                      "primary-fixed": "#dbe1ff",
+                      "primary-container": "#1a56db",
+                      "on-primary": "#ffffff",
+                      "outline": "#737686",
+                      "primary-fixed-dim": "#b5c4ff",
+                      "tertiary-fixed-dim": "#4edea3",
+                      "surface-container": "#e7eefe",
+                      "inverse-primary": "#b5c4ff",
+                      "on-primary-fixed": "#00174d",
+                      "inverse-surface": "#2a313d",
+                      "surface": "#f9f9ff",
+                      "on-secondary": "#ffffff",
+                      "tertiary": "#005438",
+                      "secondary-fixed": "#d6e4f3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "0.5rem",
+                      "margin-desktop": "40px",
+                      "xl": "3rem",
+                      "sm": "1rem",
+                      "lg": "2rem",
+                      "gutter": "24px",
+                      "base": "4px",
+                      "margin-mobile": "16px",
+                      "md": "1.5rem"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "label-md": ["Geist"],
+                      "label-sm": ["Geist"],
+                      "headline-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "headline-lg-mobile": ["Inter"],
+                      "title-lg": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "500"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-surface-container-lowest shadow-sm">
+<div class="flex items-center gap-8">
+<img alt="OmniBook Logo" class="h-8" src="https://lh3.googleusercontent.com/aida/AP1WRLu_YTAYmo8em8hdGDItYETy_y7CkLgiu-JRfDzMot2POX2WCULtmZTEVKrwKLuul8DKHIwCa9Ai7Y4mhlr-r8SZ5Jvq3XfenFZLu4_4z0GxjBlYCjk_RRBZo0dttMM6Kk7WaKZkCzlIcPqmSqeMZeXPVvXIDxzWZWXW-hu-JROjWMPvKoZwyFgI_uKhBVbomS4wphIdVNe6sLEHdVsDC69FHlMI4i2NfsCpc7lDCIYi3CmLkQHAlsf2RU0hH5Rx_l1oknhbPO2k8w"/>
+<nav class="hidden md:flex gap-6">
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Patients</a>
+<a class="text-on-surface-variant font-body-md text-body-md hover:text-primary transition-colors" href="#">Calendar</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Analytics</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<!-- Digital Clock -->
+<div class="text-primary font-bold font-body-md text-body-md" id="digital-clock">00:00:00</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary" title="Schedule">schedule</button>
+<button class="material-symbols-outlined text-primary" title="Notifications">notifications</button>
+<div class="flex items-center gap-3 pl-4 border-l border-outline-variant">
+<div class="text-right">
+<p class="text-label-md font-label-md text-on-surface leading-none">Dr. Rahul Sharma</p>
+<p class="text-label-sm font-label-sm text-secondary">Lalitpur Clinic</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A professional headshot of a middle-aged South Asian male doctor with glasses, wearing a white medical coat and a stethoscope. The background is a clean, softly lit medical clinic with light blue accents. High-quality photography, professional lighting, corporate SaaS aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnnGM-eF9GiwutLT9bST_JXYss-r7ciazJbH4vOuhUacbf5DK1jpqgFbAMyxgfF7wExcMeNbXEzPL_jmhHK4Erz3ieOzQDK1gqp5aAaApuRrkEToZdA3DEZPj8XtZ2y65YwhjOeaFKWvkQZn9kC-fK5hc9eel0duKJKyTSiQ0E9eB0CEVSIYoCh5bq_YlCsrbZGeHC332ZJGIFLWSxtZ0t20LFs5uqHNEZyk8bck1F3vL4KecoNIpF"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-surface-container-low flex flex-col p-sm z-40 hidden md:flex">
+<div class="mb-lg px-4">
+<h2 class="text-headline-md font-headline-md text-primary">Provider Portal</h2>
+<p class="text-label-sm font-label-sm text-secondary">Enterprise Edition</p>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span>Master Calendar</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Patients</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span>Services</span>
+</a>
+<!-- Highlighted Analytics -->
+<a class="flex items-center gap-3 px-4 py-3 text-primary font-bold bg-secondary-container rounded-lg scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span>Analytics</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1">
+<button class="w-full bg-primary text-on-primary py-3 px-4 rounded-xl flex items-center justify-center gap-2 mb-lg shadow-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add</span>
+<span class="font-label-md text-label-md">New Appointment</span>
+</button>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-64 pt-16 min-h-screen">
+<div class="px-margin-desktop py-lg">
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-xl gap-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Analytics Overview</h1>
+<p class="font-body-md text-body-md text-secondary">Real-time revenue performance and booking trends.</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-lowest text-primary border border-outline-variant px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-md text-label-md">Last 30 Days</span>
+</button>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined">download</span>
+<span class="font-label-md text-label-md">Export Report</span>
+</button>
+</div>
+</div>
+<!-- KPI Cards (Section 1) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+<!-- Total Revenue -->
+<div class="bento-card">
+<div class="flex justify-between items-start mb-sm">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+</div>
+<span class="text-tertiary font-label-sm text-label-sm bg-tertiary-fixed px-2 py-1 rounded-full">+12.5%</span>
+</div>
+<p class="text-secondary font-label-md text-label-md">Total Revenue</p>
+<h3 class="text-headline-md font-headline-md text-on-surface">रू 4,20,000</h3>
+<p class="text-label-sm font-label-sm text-outline mt-2 italic">vs last month</p>
+</div>
+<!-- Appointments -->
+<div class="bento-card">
+<div class="flex justify-between items-start mb-sm">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">event_available</span>
+</div>
+<span class="text-tertiary font-label-sm text-label-sm bg-tertiary-fixed px-2 py-1 rounded-full">+8.2%</span>
+</div>
+<p class="text-secondary font-label-md text-label-md">Appointments</p>
+<h3 class="text-headline-md font-headline-md text-on-surface">1,204</h3>
+<p class="text-label-sm font-label-sm text-outline mt-2 italic">vs last month</p>
+</div>
+<!-- No-Show Rate -->
+<div class="bento-card">
+<div class="flex justify-between items-start mb-sm">
+<div class="w-12 h-12 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">event_busy</span>
+</div>
+<span class="text-tertiary font-label-sm text-label-sm bg-tertiary-fixed px-2 py-1 rounded-full">-0.5% Improved</span>
+</div>
+<p class="text-secondary font-label-md text-label-md">No-Show Rate</p>
+<h3 class="text-headline-md font-headline-md text-on-surface">2.4%</h3>
+<p class="text-label-sm font-label-sm text-outline mt-2 italic">Optimized targeting active</p>
+</div>
+</div>
+<!-- Visualizations (Section 2) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-xl">
+<!-- Appointment Trends -->
+<div class="bento-card flex flex-col">
+<div class="flex justify-between items-center mb-lg">
+<h4 class="font-title-lg text-title-lg text-on-surface">Appointment Trends</h4>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded hover:bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">more_vert</span>
+</button>
+</div>
+</div>
+<div class="flex-grow flex items-center justify-center min-h-[300px]">
+<img alt="Appointment Trends Graph" class="w-full h-auto rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2JJQxiziWsyX8nRwB-DFZdONEdzW5b9NKmx1ScMvMYed9vIoFUcEzVCj6-nqJehYhbevrRbHYxwkqXU-bvef4hF_APBtIiGVVkshgaLNtAw2Hw1QcwdIYW5zICgS4NpnAlPRoBYL6f_EW5iI0DYfjjXeivpvXsrjsuvcZKCqEXqRfMBsoMwhHW__G3VJ2VbyLRtkB_3SE1pdASmhFcWRYdrclIloFdRdZ8t8oaBbWFnaVG8oUbwmo"/>
+</div>
+</div>
+<!-- Top Services -->
+<div class="bento-card flex flex-col">
+<div class="flex justify-between items-center mb-lg">
+<h4 class="font-title-lg text-title-lg text-on-surface">Top Services by Volume</h4>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded hover:bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-outline">filter_list</span>
+</button>
+</div>
+</div>
+<div class="flex-grow flex items-center justify-center min-h-[300px]">
+<img alt="Top Services Chart" class="w-full h-auto rounded-xl" src="https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg"/>
+</div>
+</div>
+</div>
+<!-- Detailed Table Section (Bonus for SaaS Context) -->
+<div class="bento-card">
+<div class="flex flex-col md:flex-row justify-between md:items-center mb-lg gap-4">
+<h4 class="font-title-lg text-title-lg text-on-surface">Recent Transaction Log</h4>
+<div class="relative max-w-xs w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-full text-body-md font-body-md focus:ring-2 focus:ring-primary-container outline-none" placeholder="Search transactions..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-label-sm font-label-sm text-outline border-b border-outline-variant">
+<th class="pb-3 px-4">TRANSACTION ID</th>
+<th class="pb-3 px-4">PATIENT</th>
+<th class="pb-3 px-4">SERVICE</th>
+<th class="pb-3 px-4">AMOUNT</th>
+<th class="pb-3 px-4">STATUS</th>
+<th class="pb-3 px-4">DATE</th>
+</tr>
+</thead>
+<tbody class="text-body-md font-body-md text-on-surface">
+<tr class="zebra-stripe border-b border-surface-container-high">
+<td class="py-4 px-4 font-mono text-sm">#TXN-8902</td>
+<td class="py-4 px-4 font-medium">Bikash Adhikari</td>
+<td class="py-4 px-4 text-secondary">General Consultation</td>
+<td class="py-4 px-4 font-bold text-primary">रू 2,500</td>
+<td class="py-4 px-4">
+<span class="bg-tertiary-fixed text-tertiary-container px-3 py-1 rounded-full text-xs font-bold">Confirmed</span>
+</td>
+<td class="py-4 px-4 text-outline">Oct 12, 2024</td>
+</tr>
+<tr class="zebra-stripe border-b border-surface-container-high">
+<td class="py-4 px-4 font-mono text-sm">#TXN-8899</td>
+<td class="py-4 px-4 font-medium">Sita Tamang</td>
+<td class="py-4 px-4 text-secondary">Dermatology Follow-up</td>
+<td class="py-4 px-4 font-bold text-primary">रू 4,000</td>
+<td class="py-4 px-4">
+<span class="bg-secondary-container text-secondary px-3 py-1 rounded-full text-xs font-bold">Pending</span>
+</td>
+<td class="py-4 px-4 text-outline">Oct 12, 2024</td>
+</tr>
+<tr class="zebra-stripe border-b border-surface-container-high">
+<td class="py-4 px-4 font-mono text-sm">#TXN-8895</td>
+<td class="py-4 px-4 font-medium">Rajesh Hamal</td>
+<td class="py-4 px-4 text-secondary">Advanced Cardiology</td>
+<td class="py-4 px-4 font-bold text-primary">रू 12,500</td>
+<td class="py-4 px-4">
+<span class="bg-tertiary-fixed text-tertiary-container px-3 py-1 rounded-full text-xs font-bold">Confirmed</span>
+</td>
+<td class="py-4 px-4 text-outline">Oct 11, 2024</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6 flex justify-center">
+<button class="text-primary font-bold text-body-md hover:underline flex items-center gap-2">
+                        View Full History
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="md:ml-64 w-full py-lg px-margin-desktop flex flex-col md:flex-row justify-between items-center mt-auto bg-surface-container-lowest border-t border-outline-variant">
+<p class="font-label-sm text-label-sm text-on-surface-variant">© 2024 OmniBook Enterprise. All rights reserved.</p>
+<div class="flex gap-6 mt-4 md:mt-0">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Security</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#">Cookie Settings</a>
+</div>
+</footer>
+<script>
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('digital-clock').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Subtle animation for cards on scroll
+        const observerOptions = {
+            threshold: 0.1
+        };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.bento-card').forEach(card => {
+            card.classList.add('transition-all', 'duration-500', 'opacity-0', 'translate-y-4');
+            observer.observe(card);
+        });
+    </script>
+</body></html>

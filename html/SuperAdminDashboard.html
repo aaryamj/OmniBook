@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook Superadmin | Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#191c1e",
+                        "primary-fixed": "#dae2fd",
+                        "tertiary-container": "#111c2d",
+                        "primary-container": "#131b2e",
+                        "inverse-on-surface": "#eff1f3",
+                        "inverse-primary": "#bec6e0",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-fixed": "#001e2c",
+                        "on-secondary-container": "#004d6a",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-background": "#191c1e",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-surface-variant": "#45464d",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary-container": "#79849a",
+                        "tertiary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline-variant": "#c6c6cd",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "secondary-container": "#40c2fd",
+                        "surface-container": "#eceef0",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#7c839b",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d8dadc",
+                        "surface-container-low": "#f2f4f6",
+                        "primary": "#000000",
+                        "outline": "#76777d",
+                        "surface-tint": "#565e74",
+                        "secondary-fixed": "#c4e7ff",
+                        "error-container": "#ffdad6",
+                        "secondary": "#00668a",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#d8e3fb",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-primary-fixed": "#131b2e",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#2d3133"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "margin-mobile": "1rem",
+                        "stack-compact": "0.5rem",
+                        "sidebar-width": "280px",
+                        "stack-default": "1rem",
+                        "gutter": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "mono-data": ["JetBrains Mono"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7fb; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .active-glow { box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        .heartbeat { animation: heartbeat 1.5s ease-in-out infinite; }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden">
+<!-- SIDEBAR: Recessed Command Zone -->
+<aside class="flex flex-col h-screen w-sidebar-width fixed left-0 top-0 bg-primary-container z-50 transition-all duration-300">
+<!-- Brand Identity -->
+<div class="p-gutter flex items-center space-x-3">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-surface-container-lowest tracking-tight">OmniBook</span>
+<span class="font-label-md text-[10px] text-on-primary-container uppercase tracking-widest">Superadmin Console</span>
+</div>
+</div>
+<!-- Navigation Shell -->
+<nav class="flex-1 px-4 mt-4 space-y-1 custom-scrollbar overflow-y-auto">
+<!-- Active State Logic: Dashboard is selected -->
+<a class="group flex items-center px-4 py-3 text-surface-container-lowest bg-on-primary-fixed-variant border-l-4 border-secondary-container active-glow transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3 text-secondary-container">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">hub</span>
+<span class="font-label-md text-label-md">Tenant Management</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="font-label-md text-label-md">System KPI</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">history</span>
+<span class="font-label-md text-label-md">Audit Logs</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">security</span>
+<span class="font-label-md text-label-md">Permissions</span>
+</a>
+<a class="group flex items-center px-4 py-3 text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<!-- Footer Actions -->
+<div class="p-4 border-t border-on-primary-fixed-variant/30">
+<button class="w-full mb-4 px-4 py-2 bg-error text-white font-label-md text-label-md rounded flex items-center justify-center space-x-2 hover:bg-red-700 transition-colors">
+<span class="material-symbols-outlined text-sm">emergency_home</span>
+<span>Global Emergency Stop</span>
+</button>
+<div class="space-y-1">
+<a class="flex items-center px-4 py-2 text-on-tertiary-container hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">help</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center px-4 py-2 text-on-tertiary-container hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- MAIN CONTENT WRAPPER -->
+<main class="ml-sidebar-width flex-1 flex flex-col h-screen overflow-hidden">
+<!-- TOP NAVIGATION BAR -->
+<header class="flex justify-between items-center h-16 bg-surface-container-lowest px-gutter border-b border-surface-container z-40">
+<div class="flex items-center space-x-4">
+<div class="hidden md:flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-full border border-green-200">
+<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+<span class="text-[11px] font-bold text-green-700 uppercase tracking-wider">All Systems Operational</span>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="relative">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[9px] flex items-center justify-center rounded-full font-bold">12</span>
+</div>
+<div class="flex items-center space-x-3 border-l border-surface-container pl-6">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-label-md text-on-surface">System Admin</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Level 5 Access</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container bg-surface-container-high object-cover" data-alt="A professional headshot of a high-level system administrator in a modern office, characterized by sharp focus, soft side lighting, and a sophisticated corporate color palette of slate and navy. The image conveys authority, precision, and reliable expertise in a high-tech environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7nK7IFZg5o8IqwfRfddeiXZA0h4BTEaTutIe3dNawSPM-GNYNoPvgylMqkbtg6iKiXV0FDLQXAG6ih32rQh3e22FCr0SY9iUkkxoAtedkJVhc5N-CLy-lt015Nz7oB1Zf82KuNUoZmddb3cjfoMxkBAA2g7aqmG1osemxljQtiieiqSUMC_N7uSkVu1uNAXkUm4fH3bBNl7C4idry7VwsXBCtVbfJ53mM8OUCp4MhZv8epQ0_vcju"/>
+</div>
+</div>
+</header>
+<!-- DASHBOARD CANVAS -->
+<div class="flex-1 overflow-y-auto p-gutter bg-surface-bright custom-scrollbar">
+<div class="max-w-container-max mx-auto space-y-gutter">
+<!-- HEADER ROW -->
+<div class="flex flex-col space-y-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Welcome back, System Admin</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Here is what is happening across the OmniBook platform today.</p>
+</div>
+<!-- SECTION 1: KPI GRID -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container transition-transform hover:scale-[1.02] duration-200">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined p-2 bg-blue-50 text-blue-600 rounded-lg">payments</span>
+<span class="text-[11px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">+12% this month</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Monthly Recurring Revenue (MRR)</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface tracking-tighter">रू 2,45,000</p>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container transition-transform hover:scale-[1.02] duration-200">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined p-2 bg-purple-50 text-purple-600 rounded-lg">local_hospital</span>
+<span class="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">+3 new this week</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Active Clinic Subscriptions</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface tracking-tighter">42</p>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container transition-transform hover:scale-[1.02] duration-200">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined p-2 bg-orange-50 text-orange-600 rounded-lg">groups</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Patient Footfall</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface tracking-tighter">18,450</p>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-surface-container transition-transform hover:scale-[1.02] duration-200">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined p-2 bg-green-50 text-green-600 rounded-lg heartbeat" style="font-variation-settings: 'FILL' 1;">monitor_heart</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">System Uptime</h3>
+<p class="font-headline-lg text-headline-lg text-on-surface tracking-tighter">99.99%</p>
+</div>
+</div>
+<!-- SECTION 2: CHARTS -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Revenue Trajectory Area Chart -->
+<div class="lg:col-span-8 bg-surface-container-lowest p-6 rounded-xl border border-surface-container min-h-[400px] flex flex-col">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Platform Revenue Trajectory</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">12-month MRR growth across all tiers</p>
+</div>
+<div class="flex space-x-2">
+<button class="px-3 py-1 text-[11px] font-bold bg-surface-container text-on-surface-variant rounded">1W</button>
+<button class="px-3 py-1 text-[11px] font-bold bg-primary text-white rounded">1M</button>
+<button class="px-3 py-1 text-[11px] font-bold bg-surface-container text-on-surface-variant rounded">1Y</button>
+</div>
+</div>
+<div class="flex-1 relative">
+<!-- SVG Placeholder for Chart -->
+<div class="absolute inset-0 flex items-end justify-between px-2">
+<div class="w-[7%] bg-blue-50 h-[30%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-100 h-[35%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-200 h-[45%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-300 h-[50%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-400 h-[55%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-500 h-[65%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-600 h-[70%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-700 h-[75%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-600 h-[80%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-700 h-[85%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-800 h-[92%] rounded-t-sm"></div>
+<div class="w-[7%] bg-blue-600 h-[100%] rounded-t-sm"></div>
+</div>
+<!-- Overlaying Gridlines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none border-b border-surface-container">
+<div class="w-full border-t border-dashed border-surface-container-highest"></div>
+<div class="w-full border-t border-dashed border-surface-container-highest"></div>
+<div class="w-full border-t border-dashed border-surface-container-highest"></div>
+<div class="w-full border-t border-dashed border-surface-container-highest"></div>
+</div>
+</div>
+<div class="flex justify-between mt-4 px-2">
+<span class="text-[10px] font-mono-data text-on-surface-variant">JAN</span>
+<span class="text-[10px] font-mono-data text-on-surface-variant">MAR</span>
+<span class="text-[10px] font-mono-data text-on-surface-variant">MAY</span>
+<span class="text-[10px] font-mono-data text-on-surface-variant">JUL</span>
+<span class="text-[10px] font-mono-data text-on-surface-variant">SEP</span>
+<span class="text-[10px] font-mono-data text-on-surface-variant">NOV</span>
+</div>
+</div>
+<!-- Donut Chart -->
+<div class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-xl border border-surface-container flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Clinics by Plan</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8">Current subscription distribution</p>
+<div class="flex-1 flex flex-col items-center justify-center">
+<div class="relative w-48 h-48 rounded-full border-[12px] border-surface-container flex items-center justify-center">
+<div class="text-center">
+<p class="text-[24px] font-bold text-on-surface">42</p>
+<p class="text-[10px] font-label-md text-on-surface-variant uppercase">Total</p>
+</div>
+<!-- CSS-based donut segments concept -->
+<div class="absolute inset-[-12px] rounded-full border-[12px] border-t-blue-600 border-r-blue-400 border-b-blue-200 border-l-transparent transform rotate-45"></div>
+</div>
+<div class="w-full mt-8 space-y-3">
+<div class="flex justify-between items-center text-body-md">
+<div class="flex items-center">
+<span class="w-3 h-3 bg-blue-600 rounded-full mr-2"></span>
+<span>Enterprise</span>
+</div>
+<span class="font-mono-data">20%</span>
+</div>
+<div class="flex justify-between items-center text-body-md">
+<div class="flex items-center">
+<span class="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
+<span>Pro</span>
+</div>
+<span class="font-mono-data">50%</span>
+</div>
+<div class="flex justify-between items-center text-body-md">
+<div class="flex items-center">
+<span class="w-3 h-3 bg-blue-200 rounded-full mr-2"></span>
+<span>Basic</span>
+</div>
+<span class="font-mono-data">30%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 3: BOTTOM ROW -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-gutter">
+<!-- Recent Activity -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container overflow-hidden flex flex-col">
+<div class="px-6 py-4 border-b border-surface-container flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Recent Onboarding Activity</h3>
+<button class="text-[11px] font-bold text-blue-600 hover:underline">View All</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar">
+<ul class="divide-y divide-surface-container">
+<li class="px-6 py-4 flex items-center hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-4">
+<span class="material-symbols-outlined text-sm">domain</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-semibold group-hover:text-blue-700 transition-colors">Kathmandu Central Hospital</p>
+<p class="text-[12px] text-on-surface-variant">Account Activated • Kathmandu, Nepal</p>
+</div>
+<span class="text-[11px] font-mono-data text-on-surface-variant">2h ago</span>
+</li>
+<li class="px-6 py-4 flex items-center hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 mr-4">
+<span class="material-symbols-outlined text-sm">verified_user</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-semibold group-hover:text-green-700 transition-colors">Dr. Sharma Clinics</p>
+<p class="text-[12px] text-on-surface-variant">Credentials Verified • Pokhara</p>
+</div>
+<span class="text-[11px] font-mono-data text-on-surface-variant">5h ago</span>
+</li>
+<li class="px-6 py-4 flex items-center hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 mr-4">
+<span class="material-symbols-outlined text-sm">pending_actions</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-semibold group-hover:text-orange-700 transition-colors">Patan Polyclinic</p>
+<p class="text-[12px] text-on-surface-variant">Awaiting Documentation Review</p>
+</div>
+<span class="text-[11px] font-mono-data text-on-surface-variant">12h ago</span>
+</li>
+<li class="px-6 py-4 flex items-center hover:bg-surface-container-low transition-colors group">
+<div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mr-4">
+<span class="material-symbols-outlined text-sm">domain</span>
+</div>
+<div class="flex-1">
+<p class="font-body-md text-on-surface font-semibold group-hover:text-blue-700 transition-colors">Lalitpur Eye Center</p>
+<p class="text-[12px] text-on-surface-variant">Account Activated • Lalitpur</p>
+</div>
+<span class="text-[11px] font-mono-data text-on-surface-variant">1d ago</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="bg-surface-container-lowest rounded-xl border border-surface-container p-6">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6">Quick Actions</h3>
+<div class="space-y-4">
+<button class="w-full group flex items-center justify-between p-4 bg-primary text-white rounded-lg hover:bg-on-primary-fixed-variant transition-all transform active:scale-95 duration-150">
+<div class="flex items-center">
+<span class="material-symbols-outlined mr-3">add_business</span>
+<span class="font-body-md font-semibold">Invite New Clinic</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full group flex items-center justify-between p-4 bg-white border border-surface-container text-on-surface rounded-lg hover:bg-surface-container-low transition-all transform active:scale-95 duration-150">
+<div class="flex items-center">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant">description</span>
+<span class="font-body-md font-semibold">Generate Financial Report</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<button class="w-full group flex items-center justify-between p-4 bg-white border border-surface-container text-on-surface rounded-lg hover:bg-surface-container-low transition-all transform active:scale-95 duration-150">
+<div class="flex items-center">
+<span class="material-symbols-outlined mr-3 text-on-surface-variant">manage_search</span>
+<span class="font-body-md font-semibold">View System Audit Logs</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
+</button>
+<div class="mt-8 p-4 rounded-lg bg-blue-50 border border-blue-100 flex items-start">
+<span class="material-symbols-outlined text-blue-600 mr-3">info</span>
+<p class="text-[13px] text-blue-800 leading-relaxed">
+                                    The next scheduled system maintenance is set for <span class="font-bold">Sunday at 02:00 AM UTC</span>. Ensure all cluster replicas are synced.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions and Lightweight effects
+        document.querySelectorAll('.group').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                // Subtle feedback handled by Tailwind classes
+            });
+        });
+
+        // Initialize any data visual tooltips or interactions
+        const cards = document.querySelectorAll('.bg-surface-container-lowest');
+        cards.forEach(card => {
+            card.addEventListener('mousedown', () => {
+                card.style.transform = 'scale(0.98)';
+            });
+            card.addEventListener('mouseup', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Public Profile | OmniBook Enterprise</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-container": "#d4dcff",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "outline": "#737686",
+                        "surface-container-high": "#e2e8f8",
+                        "primary-container": "#1a56db",
+                        "tertiary-container": "#006f4b",
+                        "inverse-primary": "#b5c4ff",
+                        "surface-container-low": "#f0f3ff",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#ebf1ff",
+                        "on-secondary-fixed": "#0f1d27",
+                        "on-secondary-container": "#586672",
+                        "surface": "#f9f9ff",
+                        "inverse-surface": "#2a313d",
+                        "surface-variant": "#dce2f3",
+                        "on-surface": "#151c27",
+                        "secondary": "#53606c",
+                        "on-tertiary-container": "#68f5b8",
+                        "surface-container": "#e7eefe",
+                        "background": "#f9f9ff",
+                        "primary-fixed": "#dbe1ff",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "tertiary": "#005438",
+                        "surface-tint": "#1353d8",
+                        "secondary-fixed-dim": "#bac8d6",
+                        "on-primary-fixed-variant": "#003dab",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "primary-fixed-dim": "#b5c4ff",
+                        "outline-variant": "#c3c5d7",
+                        "surface-container-highest": "#dce2f3",
+                        "on-surface-variant": "#434654",
+                        "on-primary-fixed": "#00174d",
+                        "secondary-fixed": "#d6e4f3",
+                        "surface-dim": "#d3daea",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "surface-bright": "#f9f9ff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#3b4854",
+                        "primary": "#003fb1",
+                        "on-background": "#151c27",
+                        "secondary-container": "#d6e4f3",
+                        "on-tertiary-fixed": "#002113",
+                        "on-tertiary-fixed-variant": "#005236"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "3rem",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "margin-desktop": "40px",
+                        "xs": "0.5rem",
+                        "lg": "2rem",
+                        "margin-mobile": "16px",
+                        "md": "1.5rem",
+                        "sm": "1rem"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-sm": ["Geist"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="text-on-surface">
+    <!-- Top Navigation Bar -->
+    <header
+        class="flex justify-between items-center w-full px-margin-desktop h-16 sticky top-0 z-50 bg-primary-container/95 backdrop-blur-md shadow-[0_4px_20px_rgba(26,86,219,0.15)]">
+        <div class="flex items-center gap-gutter">
+            <span class="font-headline-md text-headline-md font-bold text-on-primary">OmniBook</span>
+            <nav class="hidden md:flex items-center gap-sm ml-lg">
+                <a class="text-on-primary-container font-medium font-body-md text-body-md hover:text-white transition-colors duration-200"
+                    href="#">Dashboard</a>
+                <a class="text-on-primary-container font-medium font-body-md text-body-md hover:text-white transition-colors duration-200"
+                    href="#">Book Appointment</a>
+                <a class="text-on-primary-container font-medium font-body-md text-body-md hover:text-white transition-colors duration-200"
+                    href="#">My History</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-sm">
+            <button class="relative p-2 text-on-primary hover:bg-white/10 rounded-full transition-all">
+                <span class="material-symbols-outlined">notifications</span>
+                <span
+                    class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-primary-container"></span>
+            </button>
+            <div class="flex items-center gap-xs ml-sm">
+                <img alt="Alexander Mitchell" class="w-10 h-10 rounded-full border-2 border-white/20"
+                    src="https://lh3.googleusercontent.com/aida/AP1WRLtUfwvmfQGFGKhb9HqIOZJlexlq81l7WIiDsvIpx_uDsFKeW0q0LEYqFlPJLQOuz_aFritzo5ilLOR2W9LqOGmhEl1QvYzQCevroceZUrItXeupzDe-K3K2hSz0-BcoNCPNsnh4w_gi5c7FtKHpDD7e1W0h9u0S0IO6qyIdEsICYGhoc28_5v_DVDZykFsLCKYXcZLJtaLd1PMDfdOAaPmDIR5DbLx8x1JJQYKXcyDnf5_dDg1gHaGAnQ" />
+                <span class="hidden lg:block font-label-md text-label-md text-white font-medium">Alexander
+                    Mitchell</span>
+            </div>
+        </div>
+    </header>
+    <div class="flex min-h-[calc(100vh-64px)]">
+        <!-- Sidebar Navigation -->
+        <aside
+            class="h-[calc(100vh-64px)] w-72 bg-surface-container-low border-r border-outline-variant flex flex-col py-md px-sm sticky top-16">
+            <div class="mb-lg px-xs">
+                <h3 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-sm px-sm">Account
+                    Settings</h3>
+                <div class="space-y-1">
+                    <a class="flex items-center gap-sm px-sm py-2 text-secondary font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all group"
+                        href="#">
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary">person</span>
+                        Personal Info
+                    </a>
+                    <a class="flex items-center gap-sm px-sm py-2 text-secondary font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all group"
+                        href="#">
+                        <span class="material-symbols-outlined text-outline group-hover:text-primary">security</span>
+                        Security
+                    </a>
+                    <a class="flex items-center gap-sm px-sm py-2 text-secondary font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all group"
+                        href="#">
+                        <span
+                            class="material-symbols-outlined text-outline group-hover:text-primary">notifications</span>
+                        Notifications
+                    </a>
+                </div>
+            </div>
+            <div class="px-xs">
+                <h3 class="font-label-sm text-label-sm text-secondary uppercase tracking-wider mb-sm px-sm">Public
+                    Profile</h3>
+                <div class="space-y-1">
+                    <a class="flex items-center gap-sm px-sm py-2 bg-surface-container-lowest text-primary font-bold font-label-md text-label-md rounded-lg shadow-sm border border-outline-variant/30"
+                        href="#">
+                        <span class="material-symbols-outlined"
+                            style="font-variation-settings: 'FILL' 1;">visibility</span>
+                        View Public Profile
+                    </a>
+                </div>
+            </div>
+            <div class="mt-auto pt-md border-t border-outline-variant px-xs">
+                <a class="flex items-center gap-sm px-sm py-2 text-secondary font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all"
+                    href="#">
+                    <span class="material-symbols-outlined">help</span>
+                    Help Center
+                </a>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex-1 p-xl overflow-y-auto">
+            <div class="max-w-5xl mx-auto space-y-gutter">
+                <!-- Page Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-gutter">
+                    <div>
+                        <h1 class="font-headline-lg text-headline-lg text-on-surface">Alexander Mitchell's Public
+                            Profile</h1>
+                        <p class="font-body-md text-body-md text-secondary mt-1">This is what other community members
+                            see.</p>
+                    </div>
+                    <button
+                        class="flex items-center gap-xs px-md py-2 border border-outline text-secondary font-medium font-label-md text-label-md rounded-xl hover:bg-surface-container-low hover:text-primary transition-all">
+                        <span class="material-symbols-outlined text-[20px]">edit</span>
+                        Edit Profile
+                    </button>
+                </div>
+                <!-- Card 1: User Hero -->
+                <section
+                    class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-xl text-center overflow-hidden relative">
+                    <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-primary/5 to-surface-container">
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div class="p-1 bg-white rounded-full shadow-lg mb-md">
+                            <img alt="Alexander Mitchell Profile" class="w-32 h-32 rounded-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida/AP1WRLtUfwvmfQGFGKhb9HqIOZJlexlq81l7WIiDsvIpx_uDsFKeW0q0LEYqFlPJLQOuz_aFritzo5ilLOR2W9LqOGmhEl1QvYzQCevroceZUrItXeupzDe-K3K2hSz0-BcoNCPNsnh4w_gi5c7FtKHpDD7e1W0h9u0S0IO6qyIdEsICYGhoc28_5v_DVDZykFsLCKYXcZLJtaLd1PMDfdOAaPmDIR5DbLx8x1JJQYKXcyDnf5_dDg1gHaGAnQ" />
+                        </div>
+                        <h2 class="font-headline-md text-headline-md text-on-surface mb-2">Alexander Mitchell</h2>
+                        <div class="flex items-center gap-xs px-md py-1 bg-tertiary/10 rounded-full">
+                            <span class="material-symbols-outlined text-[18px] text-tertiary"
+                                style="font-variation-settings: 'FILL' 1;">verified_user</span>
+                            <span class="font-label-md text-label-md text-tertiary font-semibold">Verified OmniBook
+                                Member • Joined June 2024</span>
+                        </div>
+                    </div>
+                </section>
+                <!-- Stats Grid Section -->
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <div
+                        class="bg-surface-container-lowest p-md rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-md border border-transparent hover:border-primary-container/20 transition-all">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined">stars</span>
+                        </div>
+                        <div>
+                            <p class="font-display-lg text-headline-md font-bold text-on-surface">4</p>
+                            <p class="font-label-md text-label-md text-secondary">Reviews Shared</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-surface-container-lowest p-md rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-md border border-transparent hover:border-primary-container/20 transition-all">
+                        <div class="w-12 h-12 rounded-xl bg-error/10 flex items-center justify-center text-error">
+                            <span class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        </div>
+                        <div>
+                            <p class="font-display-lg text-headline-md font-bold text-on-surface">3</p>
+                            <p class="font-label-md text-label-md text-secondary">Favorite Providers</p>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-surface-container-lowest p-md rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-md border border-transparent hover:border-primary-container/20 transition-all">
+                        <div class="w-12 h-12 rounded-xl bg-tertiary/10 flex items-center justify-center text-tertiary">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                        </div>
+                        <div>
+                            <p class="font-display-lg text-headline-md font-bold text-on-surface">12</p>
+                            <p class="font-label-md text-label-md text-secondary">Successful Bookings</p>
+                        </div>
+                    </div>
+                </section>
+                <!-- Layout Row for About and Activity -->
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-gutter">
+                    <!-- Card 2: About Me (Left column) -->
+                    <section
+                        class="lg:col-span-3 bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-xl border border-transparent">
+                        <div class="flex items-center gap-sm mb-md">
+                            <span class="material-symbols-outlined text-primary">person</span>
+                            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">About Me</h3>
+                        </div>
+                        <div class="space-y-md">
+                            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                I'm a dedicated healthcare professional with a passion for streamlining patient care
+                                through technology. When I'm not in the clinic, you'll likely find me exploring local
+                                hiking trails or hunting for the perfect cup of artisanal coffee.
+                            </p>
+                            <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+                                I value efficiency and reliability in all my professional services, which is why I've
+                                been an active member of the OmniBook community since mid-2024. My goal is to find the
+                                best local providers and share my experiences to help others make informed decisions.
+                            </p>
+                            <div class="flex flex-wrap gap-xs pt-sm">
+                                <span
+                                    class="px-sm py-1 bg-surface-container-low text-secondary font-label-md text-label-md rounded-full">Healthcare</span>
+                                <span
+                                    class="px-sm py-1 bg-surface-container-low text-secondary font-label-md text-label-md rounded-full">Outdoor
+                                    Enthusiast</span>
+                                <span
+                                    class="px-sm py-1 bg-surface-container-low text-secondary font-label-md text-label-md rounded-full">Coffee
+                                    Connoisseur</span>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Card 4: Activity (Right column) -->
+                    <section
+                        class="lg:col-span-2 bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-xl flex flex-col">
+                        <div class="flex items-center justify-between mb-md">
+                            <div class="flex items-center gap-sm">
+                                <span class="material-symbols-outlined text-primary">history</span>
+                                <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Recent Activity</h3>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-secondary">See all</span>
+                        </div>
+                        <div
+                            class="bg-surface-container-low/50 rounded-xl p-md border border-outline-variant/30 flex-1">
+                            <div class="flex items-center gap-xs mb-sm">
+                                <div class="flex text-tertiary">
+                                    <span class="material-symbols-outlined text-[16px]"
+                                        style="font-variation-settings: 'FILL' 1;">star</span>
+                                    <span class="material-symbols-outlined text-[16px]"
+                                        style="font-variation-settings: 'FILL' 1;">star</span>
+                                    <span class="material-symbols-outlined text-[16px]"
+                                        style="font-variation-settings: 'FILL' 1;">star</span>
+                                    <span class="material-symbols-outlined text-[16px]"
+                                        style="font-variation-settings: 'FILL' 1;">star</span>
+                                    <span class="material-symbols-outlined text-[16px]"
+                                        style="font-variation-settings: 'FILL' 1;">star</span>
+                                </div>
+                                <span class="text-secondary font-label-sm text-label-sm">• June 12, 2024</span>
+                            </div>
+                            <h4 class="font-label-md text-label-md font-bold text-on-surface mb-1">Review for Dr. Sharma
+                            </h4>
+                            <p class="font-label-md text-label-md text-on-surface-variant italic leading-relaxed">
+                                "Excellent care and extremely professional. The booking process via OmniBook was
+                                seamless and the appointment started right on time..."
+                            </p>
+                            <div
+                                class="mt-md pt-md border-t border-outline-variant/20 flex items-center justify-between">
+                                <span class="text-tertiary font-label-sm text-label-sm flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">thumb_up</span>
+                                    12 helpful votes
+                                </span>
+                                <span class="material-symbols-outlined text-outline text-[18px]">more_horiz</span>
+                            </div>
+                        </div>
+                        <div class="mt-md flex items-center gap-sm">
+                            <div
+                                class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+                                <span class="material-symbols-outlined text-[18px]">favorite</span>
+                            </div>
+                            <p class="font-label-md text-label-md text-secondary">Added <span
+                                    class="text-on-surface font-semibold">City Heart Clinic</span> to favorites.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- Footer Content -->
+    <footer
+        class="w-full py-xl px-margin-desktop flex flex-col md:flex-row justify-between items-start gap-gutter max-w-7xl mx-auto border-t border-outline-variant mt-xl">
+        <div class="space-y-sm">
+            <h2 class="font-title-lg text-title-lg font-bold text-primary">OmniBook Enterprise</h2>
+            <p class="font-label-sm text-label-sm text-secondary">© 2024 OmniBook Enterprise Solutions. All rights
+                reserved.</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-lg">
+            <div class="flex flex-col gap-xs">
+                <span class="font-label-md text-label-md font-bold text-on-surface mb-xs">Product</span>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all" href="#">API
+                    Documentation</a>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all"
+                    href="#">Resource Hub</a>
+            </div>
+            <div class="flex flex-col gap-xs">
+                <span class="font-label-md text-label-md font-bold text-on-surface mb-xs">Support</span>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all" href="#">Contact
+                    Support</a>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all"
+                    href="#">Security</a>
+            </div>
+            <div class="flex flex-col gap-xs">
+                <span class="font-label-md text-label-md font-bold text-on-surface mb-xs">Legal</span>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all" href="#">Privacy
+                    Policy</a>
+                <a class="font-label-sm text-label-sm text-secondary hover:text-primary transition-all" href="#">Terms
+                    of Service</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('section > div.bg-surface-container-lowest').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0px)';
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Global Emergency Stop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#004c69",
+                    "inverse-primary": "#bec6e0",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary-fixed": "#001e2c",
+                    "on-secondary-container": "#004d6a",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-background": "#191c1e",
+                    "tertiary-container": "#111c2d",
+                    "primary-container": "#131b2e",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-surface": "#191c1e",
+                    "primary-fixed": "#dae2fd",
+                    "surface-bright": "#f7f9fb",
+                    "on-tertiary-container": "#79849a",
+                    "tertiary": "#000000",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#bec6e0",
+                    "outline-variant": "#c6c6cd",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#45464d",
+                    "secondary-fixed-dim": "#7bd0ff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary-fixed-variant": "#3c475a",
+                    "surface-dim": "#d8dadc",
+                    "surface-container-low": "#f2f4f6",
+                    "primary": "#000000",
+                    "outline": "#76777d",
+                    "surface": "#f7f9fb",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-container": "#7c839b",
+                    "background": "#f7f9fb",
+                    "surface-variant": "#e0e3e5",
+                    "tertiary-fixed-dim": "#bcc7de",
+                    "secondary-container": "#40c2fd",
+                    "surface-container": "#eceef0",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#131b2e",
+                    "on-error": "#ffffff",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#d8e3fb",
+                    "on-tertiary-fixed": "#111c2d",
+                    "error-container": "#ffdad6",
+                    "secondary": "#00668a",
+                    "surface-tint": "#565e74",
+                    "secondary-fixed": "#c4e7ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-compact": "0.5rem",
+                    "sidebar-width": "280px",
+                    "margin-mobile": "1rem",
+                    "stack-default": "1rem",
+                    "gutter": "1.5rem",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "mono-data": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .emergency-pulse {
+            animation: pulse-red 2s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .emergency-amber-pulse {
+            animation: pulse-amber 1.5s infinite;
+        }
+        @keyframes pulse-amber {
+            0% { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { border-color: rgba(245, 158, 11, 0.8); box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { border-color: rgba(245, 158, 11, 0.4); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden h-screen flex">
+<!-- Fixed Left Sidebar -->
+<aside class="flex flex-col h-full w-[280px] bg-tertiary-container border-r border-outline-variant/10 fixed left-0 top-0 z-50">
+<!-- Logo Area -->
+<div class="p-6">
+<div class="bg-white rounded-lg p-3 inline-flex items-center justify-center mb-4">
+<span class="font-headline-md text-headline-md font-bold text-primary tracking-tighter">OmniBook</span>
+</div>
+<p class="font-label-md text-label-md text-on-tertiary-container tracking-wider uppercase opacity-60">Enterprise Control</p>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-3 space-y-1 mt-4 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:text-on-primary hover:bg-on-primary-fixed-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:text-on-primary hover:bg-on-primary-fixed-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-body-md">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:text-on-primary hover:bg-on-primary-fixed-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md">User Management</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:text-on-primary hover:bg-on-primary-fixed-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">dns</span>
+<span class="font-body-md">Infrastructure</span>
+</a>
+<!-- Active Link: Permissions/Settings -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary bg-on-primary-fixed-variant/20 border-l-4 border-secondary-container transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:text-on-primary hover:bg-on-primary-fixed-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body-md">Audit Logs</span>
+</a>
+</nav>
+<!-- Footer Actions -->
+<div class="p-6 border-t border-outline-variant/10 space-y-4">
+<button class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-error text-white font-bold rounded-full emergency-amber-pulse hover:bg-red-700 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emergency_home</span>
+<span class="uppercase tracking-widest text-[10px]">Global Emergency Stop</span>
+</button>
+<div class="flex items-center justify-between px-2 text-on-tertiary-container">
+<span class="material-symbols-outlined hover:text-white cursor-pointer transition-colors">help</span>
+<span class="font-label-md text-[10px] uppercase">v4.1.2-STABLE</span>
+</div>
+</div>
+</aside>
+<!-- Main Wrapper -->
+<div class="flex-1 flex flex-col ml-[280px] h-full relative overflow-hidden">
+<!-- Top Nav -->
+<header class="flex justify-between items-center h-16 px-gutter bg-surface-bright border-b border-outline-variant sticky top-0 z-40">
+<div class="flex items-center gap-6">
+<!-- Search -->
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container border-none rounded-full pl-10 pr-4 py-1.5 w-64 text-body-md focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search system resources..." type="text"/>
+</div>
+<!-- Global Status -->
+<div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-200">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-label-md text-label-md uppercase">All Systems Operational</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-px bg-outline-variant"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="font-label-md text-label-md text-primary leading-none">System Admin</p>
+<p class="font-label-md text-[10px] text-error font-black uppercase tracking-tighter">ROOT AUTHORITY</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white overflow-hidden ring-2 ring-primary/10">
+<img class="w-full h-full object-cover" data-alt="A professional close-up headshot of a high-level technology administrator in a modern office environment. The person has a serious, authoritative expression, wearing dark professional attire. The lighting is crisp and cool-toned, reflecting a high-end corporate command center aesthetic with blurred digital screens in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsUq9NgeyOIxmRYOgJ1pFw8_XxfWMExzDWKHttRgn1RRxS_JnMGzVgjaM0x17QNn3ngpwXRtoTUQTjWBBnsogq_Fv0rfSqJQyEtyVNMTCqATPWcv-3Nuoi1HER-LSF_Ll8rx34grxWwCj0d6T9iqVFvKHbrZSIiaXVkR7_cAY-8fWLIsu_E7gvYEYeJ33ys5_fDg6umWWA4Kd4s7lJTXtUrwT0mzGGpTQ7yVxqBpx7KPNVEZZ_u38F"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Canvas -->
+<main class="flex-1 overflow-y-auto bg-background p-gutter">
+<div class="max-w-[1440px] mx-auto space-y-6">
+<!-- Page Header & Action -->
+<div class="flex justify-between items-end pb-4">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary flex items-center gap-3">
+                            Global Emergency Stop &amp; System Lockdown
+                            <span class="bg-error/10 text-error px-2 py-0.5 rounded text-label-md font-bold border border-error/20">LOCKED ACCESS</span>
+</h1>
+<p class="text-on-surface-variant font-body-md mt-1 max-w-2xl">
+                            Root-level override to isolate infrastructure, revoke session keys, and suspend database operations. 
+                            Unauthorized use is logged and will trigger an immediate security audit.
+                        </p>
+</div>
+<button class="bg-on-background hover:bg-error px-8 py-4 text-white font-black rounded-lg transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-3 group">
+<span class="material-symbols-outlined text-white group-hover:animate-spin">security</span>
+<span class="tracking-widest uppercase">INITIATE SYSTEM LOCKDOWN</span>
+</button>
+</div>
+<!-- Metric Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+<!-- Status Card -->
+<div class="bg-white p-5 border border-outline-variant rounded-xl flex items-center gap-4 group hover:border-secondary transition-all">
+<div class="w-12 h-12 bg-secondary/10 flex items-center justify-center rounded-lg text-secondary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Current Platform State</p>
+<h3 class="font-headline-md text-headline-md text-secondary font-black">ACTIVE</h3>
+</div>
+</div>
+<!-- Sessions Card -->
+<div class="bg-white p-5 border border-outline-variant rounded-xl flex items-center gap-4 group hover:border-primary transition-all">
+<div class="w-12 h-12 bg-primary/5 flex items-center justify-center rounded-lg text-primary-fixed-dim group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+<div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Total Concurrent Sessions</p>
+<h3 class="font-headline-md text-headline-md text-primary font-black">1,420 Live</h3>
+</div>
+</div>
+<!-- DB Card -->
+<div class="bg-white p-5 border border-outline-variant rounded-xl flex items-center gap-4 group hover:border-amber-500 transition-all">
+<div class="w-12 h-12 bg-amber-50 flex items-center justify-center rounded-lg text-amber-600 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+<div>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Live Database Writes</p>
+<h3 class="font-headline-md text-headline-md text-amber-700 font-black">140 / sec</h3>
+</div>
+</div>
+<!-- Circuit Card -->
+<div class="bg-tertiary-container p-5 border border-primary-container rounded-xl flex items-center gap-4 group">
+<div class="w-12 h-12 bg-on-primary-fixed-variant/20 flex items-center justify-center rounded-lg text-on-primary group-hover:text-amber-400 transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-label-md text-[10px] text-on-tertiary-container uppercase tracking-widest leading-none mb-1">Circuit Breaker Status</p>
+<h3 class="font-headline-md text-headline-md text-white font-black">ARMED</h3>
+</div>
+</div>
+</div>
+<!-- Incident Command Console -->
+<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+<!-- Left: Levers -->
+<div class="p-10 border-r border-outline-variant bg-surface-bright/50">
+<div class="flex items-center justify-between mb-8">
+<h2 class="font-headline-md text-headline-md text-primary">Circuit Breaker Levers</h2>
+<span class="bg-primary text-white font-mono-data text-[10px] px-2 py-0.5 rounded">MOD: MANUAL_OVERRIDE</span>
+</div>
+<div class="space-y-8">
+<!-- Toggle 1 -->
+<div class="flex items-start gap-4">
+<div class="relative inline-flex items-center cursor-pointer mt-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+</div>
+<div>
+<p class="font-bold text-primary leading-none mb-1 flex items-center gap-2">
+                                        Suspend Public APIs
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+</p>
+<p class="text-on-surface-variant font-body-md leading-relaxed">Instantly rejects new booking and registration requests from patients.</p>
+</div>
+</div>
+<!-- Toggle 2 -->
+<div class="flex items-start gap-4">
+<div class="relative inline-flex items-center cursor-pointer mt-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+</div>
+<div>
+<p class="font-bold text-primary leading-none mb-1 flex items-center gap-2">
+                                        Force Database Read-Only
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+</p>
+<p class="text-on-surface-variant font-body-md leading-relaxed">Blocks all write operations across all clinic tenants to prevent data corruption.</p>
+</div>
+</div>
+<!-- Toggle 3 -->
+<div class="flex items-start gap-4">
+<div class="relative inline-flex items-center cursor-pointer mt-1">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+</div>
+<div>
+<p class="font-bold text-on-surface-variant leading-none mb-1 flex items-center gap-2">
+                                        Global Token Eviction
+                                        <span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</p>
+<p class="text-on-surface-variant font-body-md leading-relaxed opacity-60">Mass-expires all active authentication tokens, forcing an immediate log-out for all users.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Broadcast & Confirmation -->
+<div class="p-10 flex flex-col justify-between space-y-8">
+<div>
+<div class="flex items-center justify-between mb-4">
+<label class="font-bold text-primary uppercase text-[10px] tracking-widest">Global Maintenance Message Broadcast</label>
+<span class="material-symbols-outlined text-primary text-sm">edit</span>
+</div>
+<textarea class="w-full bg-surface-container border border-outline-variant/30 rounded-xl p-4 font-mono-data text-on-surface text-sm focus:ring-primary focus:border-primary transition-all" rows="4">OmniBook is currently undergoing emergency database optimization. Systems will return online momentarily.</textarea>
+<p class="text-on-surface-variant text-[11px] mt-2 italic">This message will be displayed globally on all client portals and patient apps.</p>
+</div>
+<!-- Confirmation Box -->
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-6 space-y-4">
+<div class="flex items-center gap-3 text-amber-800">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">warning</span>
+<p class="font-bold text-label-md uppercase tracking-wide">Authorization Required</p>
+</div>
+<p class="text-amber-900/70 font-body-md">Confirm total infrastructure isolation. This action is irreversible via UI and requires CLI recovery.</p>
+<div>
+<label class="block text-[10px] uppercase font-bold text-amber-800 mb-1">Type 'FORCE-LOCKDOWN' to confirm authorization</label>
+<input class="w-full bg-white border border-amber-300 rounded-lg px-4 py-3 font-mono-data text-primary focus:ring-2 focus:ring-amber-500 outline-none placeholder:text-amber-200 uppercase tracking-widest" placeholder="Type here..." type="text"/>
+</div>
+<button class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg transition-colors opacity-50 cursor-not-allowed">
+                                LOCKDOWN AUTHORIZED
+                            </button>
+</div>
+</div>
+</div>
+<!-- Live Monitoring Stream -->
+<div class="bg-tertiary-container rounded-2xl overflow-hidden p-6 border border-primary-container">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="w-3 h-3 rounded-full bg-amber-500 animate-ping"></span>
+<h3 class="text-white font-bold uppercase tracking-widest text-[10px]">Real-time Root Security Log</h3>
+</div>
+<button class="text-on-tertiary-container hover:text-white transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+<div class="bg-black/30 rounded-xl p-4 font-mono-data text-[12px] space-y-2 h-40 overflow-y-auto">
+<p class="text-on-tertiary-container"><span class="text-emerald-500">[14:22:01]</span> System.Status.Check: All nodes healthy. Primary DC-01 active.</p>
+<p class="text-on-tertiary-container"><span class="text-emerald-500">[14:22:04]</span> Auth.Service: Issued 14 new session tokens (Regional EU-WEST).</p>
+<p class="text-amber-400 font-bold"><span class="text-amber-500">[14:22:08]</span> Security.Monitor: Manual Access to Root Control Panel by user 'sysadmin_01'.</p>
+<p class="text-on-tertiary-container"><span class="text-emerald-500">[14:22:15]</span> Database.IO: Write frequency stabilized at 140/sec.</p>
+<p class="text-on-tertiary-container"><span class="text-emerald-500">[14:22:19]</span> Network.Shield: DDoS protection active. No threats detected.</p>
+<p class="text-on-tertiary-container opacity-50 italic animate-pulse">Waiting for telemetry data...</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro Interaction Script -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const confirmInput = document.querySelector('input[placeholder="Type here..."]');
+            const authButton = document.querySelector('.bg-amber-600');
+
+            confirmInput.addEventListener('input', (e) => {
+                if (e.target.value === 'FORCE-LOCKDOWN') {
+                    authButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    authButton.classList.add('opacity-100', 'cursor-pointer', 'animate-pulse');
+                } else {
+                    authButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    authButton.classList.remove('opacity-100', 'cursor-pointer', 'animate-pulse');
+                }
+            });
+
+            // Smooth scroll for custom log area
+            const logArea = document.querySelector('.overflow-y-auto.h-40');
+            setInterval(() => {
+                logArea.scrollTop = logArea.scrollHeight;
+            }, 3000);
+        });
+    </script>
+</body></html>

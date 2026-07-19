@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBook Patient Directory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#F0F5FF',
+                            100: '#E1EBFF',
+                            500: '#2563EB',
+                            600: '#1A56DB',
+                            700: '#1E40AF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F4F7FB; overflow: hidden; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        /* Table Row Hover */
+        .table-row-hover { transition: all 0.2s ease; cursor: pointer; }
+        .table-row-hover:hover { background-color: #F8FAFC; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); z-index: 10; position: relative; }
+        
+        /* Slide Panel Animation */
+        #slide-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel-open { transform: translateX(0%); }
+        .panel-closed { transform: translateX(100%); }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <header class="bg-white border-b border-gray-200 h-[70px] flex items-center justify-between px-8 shrink-0 z-30 relative">
+        <div class="text-2xl font-extrabold text-brand-600 tracking-tight">OmniBook</div>
+        
+        <div class="flex items-center gap-8">
+            <div class="text-sm font-semibold text-gray-500">
+                01:54 PM • Wednesday, July 8
+            </div>
+            
+            <button class="relative text-gray-500 hover:text-gray-800 transition-colors">
+                <i class="fa-regular fa-bell text-xl"></i>
+                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            
+            <div class="flex items-center gap-3 border-l border-gray-200 pl-8 cursor-pointer hover:opacity-80 transition">
+                <div class="text-right">
+                    <div class="text-sm font-bold text-gray-900">Dr. Rahul Sharma</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Lalitpur Clinic</div>
+                </div>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul&backgroundColor=e2e8f0" alt="Avatar" class="w-10 h-10 rounded-full border border-gray-200 shadow-sm">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <aside class="w-[260px] bg-white border-r border-gray-200 flex flex-col justify-between pt-6 pb-8 shrink-0 z-20">
+            <nav class="flex flex-col gap-1 px-4">
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-border-all w-5 text-center text-gray-400"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-regular fa-calendar-days w-5 text-center text-gray-400"></i> Master Calendar
+                </a>
+                
+                <!-- Active State -->
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-brand-50 text-brand-600 font-bold transition-colors">
+                    <i class="fa-solid fa-user-group w-5 text-center"></i> Patients
+                </a>
+                
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-regular fa-square-plus w-5 text-center text-gray-400"></i> Services
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-chart-simple w-5 text-center text-gray-400"></i> Analytics
+                </a>
+                
+                <div class="h-px bg-gray-100 my-4 mx-4"></div>
+                
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-gear w-5 text-center text-gray-400"></i> Settings
+                </a>
+            </nav>
+
+            <div class="px-5 mt-auto">
+                <div class="bg-brand-600 rounded-2xl p-5 text-white relative overflow-hidden shadow-lg shadow-brand-600/30">
+                    <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-white opacity-10 rounded-full"></div>
+                    <div class="absolute top-2 -right-10 w-20 h-20 bg-white opacity-10 rounded-full"></div>
+                    
+                    <h4 class="font-bold text-lg mb-1 relative z-10">Upgrade Pro</h4>
+                    <p class="text-xs text-blue-100 mb-5 relative z-10 leading-relaxed pr-2">Get advanced analytics & multi-clinic sync.</p>
+                    <button class="bg-white text-brand-600 text-sm font-bold py-2.5 px-4 rounded-lg relative z-10 hover:bg-gray-50 transition w-full shadow-sm">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative overflow-hidden p-8">
+            
+            <!-- Page Header & Controls -->
+            <div class="flex items-center justify-between mb-8 shrink-0">
+                <div>
+                    <h1 class="text-[32px] font-bold text-gray-900 tracking-tight">Patient Directory</h1>
+                    <p class="text-sm font-medium text-gray-500 mt-1">Manage your 1,204 registered patients and viewing history.</p>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button class="px-4 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+                    <button class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 shadow-md shadow-brand-600/20 transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-plus"></i> Add Patient
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="flex items-center gap-4 mb-6 shrink-0">
+                <div class="relative flex-1 max-w-md">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" placeholder="Search by name, phone, or email..." class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm">
+                </div>
+                <button class="px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition shadow-sm flex items-center gap-2 text-sm font-bold">
+                    <i class="fa-solid fa-filter"></i> Filters
+                </button>
+            </div>
+
+            <div class="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-y-auto custom-scrollbar flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
+                            <tr>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Patient Info</th>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Contact</th>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Last Visit</th>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Total Bookings</th>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Status</th>
+                                <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            
+                            <!-- Row 1 -->
+                            <tr class="table-row-hover bg-white" onclick="openPatientPanel('Alexander Mitchell', 'alex@example.com', '+977 9801234567', '14', '0', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=e2e8f0')">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=e2e8f0" class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200">
+                                        <div>
+                                            <div class="font-bold text-gray-900">Alexander Mitchell</div>
+                                            <div class="text-xs text-gray-500">ID: #PT-8472</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm text-gray-800">+977 9801234567</div>
+                                    <div class="text-xs text-gray-500">alex@example.com</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-semibold text-gray-800">Jul 8, 2026</div>
+                                    <div class="text-xs text-gray-500">General Checkup</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-bold text-gray-900">14</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-green-100">Active</span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition" onclick="event.stopPropagation()">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 2 -->
+                            <tr class="table-row-hover bg-white" onclick="openPatientPanel('Sarah Jenkins', 'sarah.j@example.com', '+977 9811223344', '3', '1', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=e2e8f0')">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah&backgroundColor=e2e8f0" class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200">
+                                        <div>
+                                            <div class="font-bold text-gray-900">Sarah Jenkins</div>
+                                            <div class="text-xs text-gray-500">ID: #PT-2931</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm text-gray-800">+977 9811223344</div>
+                                    <div class="text-xs text-gray-500">sarah.j@example.com</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-semibold text-gray-800">May 22, 2026</div>
+                                    <div class="text-xs text-gray-500">Follow-up Consult</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-bold text-gray-900">3</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="px-3 py-1 bg-green-50 text-green-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-green-100">Active</span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition" onclick="event.stopPropagation()">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3 -->
+                            <tr class="table-row-hover bg-white" onclick="openPatientPanel('Marcus Chen', 'marcus.chen@example.com', '+977 9845566778', '1', '0', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus&backgroundColor=e2e8f0')">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Marcus&backgroundColor=e2e8f0" class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200">
+                                        <div>
+                                            <div class="font-bold text-gray-900">Marcus Chen</div>
+                                            <div class="text-xs text-gray-500">ID: #PT-1004</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm text-gray-800">+977 9845566778</div>
+                                    <div class="text-xs text-gray-500">marcus.chen@email.com</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-semibold text-gray-800">Jan 10, 2026</div>
+                                    <div class="text-xs text-gray-500">Initial Screening</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-bold text-gray-900">1</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-gray-200">Inactive</span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition" onclick="event.stopPropagation()">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                             <!-- Row 4 (No Show Warning) -->
+                            <tr class="table-row-hover bg-white" onclick="openPatientPanel('Priya Patel', 'priya.p@example.com', '+977 9822334455', '5', '3', 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya&backgroundColor=e2e8f0')">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-4">
+                                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Priya&backgroundColor=e2e8f0" class="w-10 h-10 rounded-full bg-gray-100 border border-gray-200">
+                                        <div>
+                                            <div class="font-bold text-gray-900">Priya Patel</div>
+                                            <div class="text-xs text-gray-500">ID: #PT-6632</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm text-gray-800">+977 9822334455</div>
+                                    <div class="text-xs text-gray-500">priya.p@example.com</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-semibold text-red-600">Missed (Jun 1)</div>
+                                    <div class="text-xs text-gray-500">Vaccination</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-sm font-bold text-gray-900">5</div>
+                                </td>
+                                <td class="py-4 px-6">
+                                    <span class="px-3 py-1 bg-red-50 text-red-600 text-xs font-bold uppercase tracking-wider rounded-lg border border-red-100 flex items-center gap-1.5 w-max">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> High No-Show
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition" onclick="event.stopPropagation()">
+                                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Table Footer / Pagination -->
+                <div class="border-t border-gray-200 bg-gray-50 p-4 flex items-center justify-between shrink-0">
+                    <span class="text-sm text-gray-500 font-medium">Showing 1 to 4 of 1,204 entries</span>
+                    <div class="flex items-center gap-2">
+                        <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-gray-500 bg-white hover:bg-gray-50 disabled:opacity-50 text-sm font-semibold shadow-sm" disabled>Previous</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-brand-600 text-white font-bold text-sm shadow-sm shadow-brand-600/30">1</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-700 font-bold text-sm transition">2</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-700 font-bold text-sm transition">3</button>
+                        <span class="text-gray-400 px-1">...</span>
+                        <button class="px-3 py-1.5 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 text-sm font-semibold shadow-sm transition">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="panel-backdrop" class="absolute inset-0 bg-gray-900/20 backdrop-blur-sm z-40 hidden transition-opacity opacity-0 rounded-2xl" onclick="closePanel()"></div>
+            
+            <div id="slide-panel" class="absolute top-0 right-0 bottom-0 w-[450px] bg-white border-l border-gray-200 shadow-2xl z-50 panel-closed flex flex-col rounded-r-2xl overflow-hidden">
+                
+                <!-- Panel Header -->
+                <div class="px-8 py-6 flex justify-between items-start border-b border-gray-100">
+                    <h3 class="font-bold text-gray-900 text-lg">Patient Overview</h3>
+                    <button class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors" onclick="closePanel()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <!-- Panel Body -->
+                <div class="flex-1 overflow-y-auto p-8">
+                    <!-- Profile Header -->
+                    <div class="flex items-center gap-5 mb-8">
+                        <img id="panel-avatar" src="" alt="Patient" class="w-20 h-20 rounded-full border border-gray-200 shadow-sm bg-gray-50">
+                        <div>
+                            <h2 id="panel-name" class="text-2xl font-bold text-gray-900 tracking-tight">Patient Name</h2>
+                            <div class="text-sm font-medium text-gray-500 mt-1 flex items-center gap-2">
+                                <i class="fa-regular fa-envelope"></i> <span id="panel-email">email@example.com</span>
+                            </div>
+                            <div class="text-sm font-medium text-gray-500 mt-1 flex items-center gap-2">
+                                <i class="fa-solid fa-phone"></i> <span id="panel-phone">+977 Phone</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics Grid -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Bookings</p>
+                            <p id="panel-bookings" class="font-bold text-gray-900 text-2xl">0</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">No-Show Rate</p>
+                            <p id="panel-noshows" class="font-bold text-brand-600 text-2xl">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Internal Notes -->
+                    <div class="mb-8">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-gray-900">Internal Provider Notes</h4>
+                            <button class="text-xs font-bold text-brand-600 hover:underline">Edit Notes</button>
+                        </div>
+                        <div class="bg-yellow-50/50 p-4 rounded-xl border border-yellow-100 text-sm text-gray-700 shadow-sm leading-relaxed">
+                            Allergic to Penicillin. Prefers morning appointments. Requires wheelchair accessibility upon arrival.
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions List -->
+                    <h4 class="font-bold text-gray-900 mb-3">Quick Actions</h4>
+                    <div class="space-y-2">
+                        <button class="w-full text-left px-4 py-3 rounded-xl border border-gray-200 hover:border-brand-500 hover:bg-brand-50 font-semibold text-gray-700 transition flex items-center justify-between group">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-calendar-plus text-gray-400 group-hover:text-brand-600 transition"></i> Book New Appointment</span>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+                        </button>
+                        <button class="w-full text-left px-4 py-3 rounded-xl border border-gray-200 hover:border-brand-500 hover:bg-brand-50 font-semibold text-gray-700 transition flex items-center justify-between group">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-gray-400 group-hover:text-brand-600 transition"></i> View Medical/Booking History</span>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        // Slide Panel Logic
+        const panel = document.getElementById('slide-panel');
+        const backdrop = document.getElementById('panel-backdrop');
+
+        // Dynamic elements
+        const pName = document.getElementById('panel-name');
+        const pEmail = document.getElementById('panel-email');
+        const pPhone = document.getElementById('panel-phone');
+        const pBookings = document.getElementById('panel-bookings');
+        const pNoshows = document.getElementById('panel-noshows');
+        const pAvatar = document.getElementById('panel-avatar');
+
+        function openPatientPanel(name, email, phone, bookings, noshows, avatarUrl) {
+            // Update Text Data
+            pName.innerText = name;
+            pEmail.innerText = email;
+            pPhone.innerText = phone;
+            pBookings.innerText = bookings;
+            pAvatar.src = avatarUrl;
+            
+            // Format No-Show rate
+            if(parseInt(noshows) > 0) {
+                pNoshows.innerHTML = `<span class="text-red-500">${noshows} Missed</span>`;
+            } else {
+                pNoshows.innerHTML = `<span class="text-green-500">Perfect (0)</span>`;
+            }
+
+            // Animate In
+            backdrop.classList.remove('hidden');
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('panel-closed');
+                panel.classList.add('panel-open');
+            }, 10);
+        }
+
+        function closePanel() {
+            // Animate Out
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('panel-open');
+            panel.classList.add('panel-closed');
+            
+            // Hide backdrop
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+</body>
+</html>

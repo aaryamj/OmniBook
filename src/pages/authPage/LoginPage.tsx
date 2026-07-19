@@ -71,8 +71,14 @@ const LoginPage: React.FC = () => {
             localStorage.removeItem('rememberedIdentity');
         }
 
-        // Redirect to dashboard or home page
-        navigate('/dashboard'); // adjust as needed
+        // Redirect based on role
+        if (response.data.role === 'service_provider') {
+          navigate('/provider-dashboard');
+        } else if (response.data.role === 'super_admin') {
+          navigate('/superadmin/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setServerError(response.data.message || 'Login failed');
       }
@@ -93,7 +99,13 @@ const LoginPage: React.FC = () => {
       localStorage.setItem('token', data.token);
       if (data.role) localStorage.setItem('role', data.role);
       if (data.fullName) localStorage.setItem('fullName', data.fullName);
-      navigate('/dashboard');
+      if (data.role === 'service_provider') {
+        navigate('/provider-dashboard');
+      } else if (data.role === 'super_admin') {
+        navigate('/superadmin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setServerError(data.message || 'OAuth login failed');
     }

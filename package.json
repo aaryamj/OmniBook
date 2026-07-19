@@ -17,8 +17,10 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-facebook-login": "^4.1.1",
+    "react-is": "^19.2.7",
     "react-router": "^7.15.1",
     "react-router-dom": "^7.16.0",
+    "recharts": "^3.9.2",
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {

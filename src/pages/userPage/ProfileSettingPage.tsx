@@ -5,7 +5,7 @@ import NotificationBell from './NotificationBell';
 const ProfileSettingPage: React.FC = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'personal-info' | 'security' | 'notifications'>('personal-info');
+  const [activeTab, setActiveTab] = useState<'personal-info' | 'security' | 'notifications' | 'public-profile'>('personal-info');
   const [twoStepEnabled, setTwoStepEnabled] = useState(true);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -212,11 +212,17 @@ const ProfileSettingPage: React.FC = () => {
             </button>
           </nav>
 
-          <div className="mt-8 p-4 bg-[#f0f3ff] rounded-xl border border-[#c3c5d7]/30">
-            <p className="text-[#434654] text-[12px] font-medium mb-2 uppercase tracking-wider">Public Profile</p>
-            <button className="text-[#003fb1] font-bold text-[14px] hover:underline flex items-center gap-2">
-              View Public Profile <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-            </button>
+          <div className="mt-8 px-2">
+            <h3 className="text-[12px] font-medium text-[#53606c] uppercase tracking-wider mb-2 px-4">Public Profile</h3>
+            <nav className="flex flex-col gap-1">
+              <button 
+                onClick={() => setActiveTab('public-profile')}
+                className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all w-full text-left ${activeTab === 'public-profile' ? 'text-[#003fb1] font-bold bg-[#1a56db]/10 translate-x-1 shadow-sm border border-[#c3c5d7]/30' : 'text-[#53606c] hover:bg-[#d6e4f3]/50 hover:text-[#586672]'}`}
+              >
+                <span className="material-symbols-outlined" style={activeTab === 'public-profile' ? {fontVariationSettings: "'FILL' 1"} : {}}>visibility</span>
+                <span className="text-[14px]">View Public Profile</span>
+              </button>
+            </nav>
           </div>
         </aside>
 
@@ -756,6 +762,162 @@ const ProfileSettingPage: React.FC = () => {
                       )}
                   </button>
               </div>
+            </>
+          )}
+
+          {activeTab === 'public-profile' && (
+            <>
+            <div className="max-w-5xl mx-auto space-y-6">
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
+                    <div>
+                        <h1 className="text-[32px] font-semibold text-[#151c27]">Alexander Mitchell's Public Profile</h1>
+                        <p className="text-[16px] text-[#434654] mt-1">This is what other community members see.</p>
+                    </div>
+                    <button
+                        onClick={() => setActiveTab('personal-info')}
+                        className="flex items-center gap-2 px-6 py-2 border border-[#737686] text-[#53606c] font-medium text-[14px] rounded-xl hover:bg-[#f0f3ff] hover:text-[#003fb1] transition-all">
+                        <span className="material-symbols-outlined text-[20px]">edit</span>
+                        Edit Profile
+                    </button>
+                </div>
+                {/* Card 1: User Hero */}
+                <section
+                    className="bg-[#ffffff] rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-12 text-center overflow-hidden relative">
+                    <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-[#003fb1]/5 to-[#e7eefe]">
+                    </div>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="p-1 bg-white rounded-full shadow-lg mb-6">
+                            <img alt="Alexander Mitchell Profile" className="w-32 h-32 rounded-full object-cover"
+                                src={avatarUrl} />
+                        </div>
+                        <h2 className="text-[24px] font-semibold text-[#151c27] mb-2">{fullName || 'Alexander Mitchell'}</h2>
+                        <div className="flex items-center gap-2 px-6 py-1 bg-[#005438]/10 rounded-full">
+                            <span className="material-symbols-outlined text-[18px] text-[#005438]"
+                                style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                            <span className="text-[14px] text-[#005438] font-semibold">Verified OmniBook Member • Joined June 2024</span>
+                        </div>
+                    </div>
+                </section>
+                {/* Stats Grid Section */}
+                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div
+                        className="bg-[#ffffff] p-6 rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-6 border border-transparent hover:border-[#1a56db]/20 transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-[#003fb1]/10 flex items-center justify-center text-[#003fb1]">
+                            <span className="material-symbols-outlined">stars</span>
+                        </div>
+                        <div>
+                            <p className="text-[24px] font-bold text-[#151c27]">4</p>
+                            <p className="text-[14px] text-[#53606c]">Reviews Shared</p>
+                        </div>
+                    </div>
+                    <div
+                        className="bg-[#ffffff] p-6 rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-6 border border-transparent hover:border-[#1a56db]/20 transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-[#ba1a1a]/10 flex items-center justify-center text-[#ba1a1a]">
+                            <span className="material-symbols-outlined"
+                                style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                        </div>
+                        <div>
+                            <p className="text-[24px] font-bold text-[#151c27]">3</p>
+                            <p className="text-[14px] text-[#53606c]">Favorite Providers</p>
+                        </div>
+                    </div>
+                    <div
+                        className="bg-[#ffffff] p-6 rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] flex items-center gap-6 border border-transparent hover:border-[#1a56db]/20 transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-[#005438]/10 flex items-center justify-center text-[#005438]">
+                            <span className="material-symbols-outlined">calendar_month</span>
+                        </div>
+                        <div>
+                            <p className="text-[24px] font-bold text-[#151c27]">12</p>
+                            <p className="text-[14px] text-[#53606c]">Successful Bookings</p>
+                        </div>
+                    </div>
+                </section>
+                {/* Layout Row for About and Activity */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    {/* Card 2: About Me (Left column) */}
+                    <section
+                        className="lg:col-span-3 bg-[#ffffff] rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-12 border border-transparent hover:transform hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-center gap-4 mb-6">
+                            <span className="material-symbols-outlined text-[#003fb1]">person</span>
+                            <h3 className="text-[20px] font-bold text-[#151c27]">About Me</h3>
+                        </div>
+                        <div className="space-y-6">
+                            <p className="text-[16px] text-[#434654] leading-relaxed">
+                                I'm a dedicated healthcare professional with a passion for streamlining patient care
+                                through technology. When I'm not in the clinic, you'll likely find me exploring local
+                                hiking trails or hunting for the perfect cup of artisanal coffee.
+                            </p>
+                            <p className="text-[16px] text-[#434654] leading-relaxed">
+                                I value efficiency and reliability in all my professional services, which is why I've
+                                been an active member of the OmniBook community since mid-2024. My goal is to find the
+                                best local providers and share my experiences to help others make informed decisions.
+                            </p>
+                            <div className="flex flex-wrap gap-2 pt-4">
+                                <span
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Healthcare</span>
+                                <span
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Outdoor
+                                    Enthusiast</span>
+                                <span
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Coffee
+                                    Connoisseur</span>
+                            </div>
+                        </div>
+                    </section>
+                    {/* Card 4: Activity (Right column) */}
+                    <section
+                        className="lg:col-span-2 bg-[#ffffff] rounded-xl shadow-[0_4px_20px_rgba(26,86,219,0.05)] p-12 flex flex-col hover:transform hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                                <span className="material-symbols-outlined text-[#003fb1]">history</span>
+                                <h3 className="text-[20px] font-bold text-[#151c27]">Recent Activity</h3>
+                            </div>
+                            <span className="text-[12px] text-[#53606c] cursor-pointer hover:underline">See all</span>
+                        </div>
+                        <div
+                            className="bg-[#f0f3ff]/50 rounded-xl p-6 border border-[#c3c5d7]/30 flex-1">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="flex text-[#005438]">
+                                    <span className="material-symbols-outlined text-[16px]"
+                                        style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                    <span className="material-symbols-outlined text-[16px]"
+                                        style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                    <span className="material-symbols-outlined text-[16px]"
+                                        style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                    <span className="material-symbols-outlined text-[16px]"
+                                        style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                    <span className="material-symbols-outlined text-[16px]"
+                                        style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                </div>
+                                <span className="text-[#53606c] text-[12px]">• June 12, 2024</span>
+                            </div>
+                            <h4 className="text-[14px] font-bold text-[#151c27] mb-1">Review for Dr. Sharma
+                            </h4>
+                            <p className="text-[14px] text-[#434654] italic leading-relaxed">
+                                "Excellent care and extremely professional. The booking process via OmniBook was
+                                seamless and the appointment started right on time..."
+                            </p>
+                            <div
+                                className="mt-6 pt-6 border-t border-[#c3c5d7]/20 flex items-center justify-between">
+                                <span className="text-[#005438] text-[12px] flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[14px]">thumb_up</span>
+                                    12 helpful votes
+                                </span>
+                                <span className="material-symbols-outlined text-[#737686] text-[18px]">more_horiz</span>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex items-center gap-4">
+                            <div
+                                className="w-8 h-8 rounded-full bg-[#d6e4f3] flex items-center justify-center text-[#586672]">
+                                <span className="material-symbols-outlined text-[18px]">favorite</span>
+                            </div>
+                            <p className="text-[14px] text-[#53606c]">Added <span
+                                    className="text-[#151c27] font-semibold">City Heart Clinic</span> to favorites.</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
             </>
           )}
 

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { SocialLogin } from '../../components/SocialLogin';
 
 const RegisterPage: React.FC = () => {
-  const [role, setRole] = useState<'user' | 'provider' | 'admin'>('user');
+  const [role, setRole] = useState<'user' | 'service_provider' | 'admin'>('user');
   const navigate = useNavigate();
 
   // Form states
@@ -199,8 +199,8 @@ const RegisterPage: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      className={`flex-1 py-2 px-1 rounded-lg text-[14px] font-medium transition-all ${role === 'provider' ? 'bg-white shadow-sm text-[#1853d9]' : 'text-[#737686] hover:text-[#151c27]'}`}
-                      onClick={() => setRole('provider')}
+                      className={`flex-1 py-2 px-1 rounded-lg text-[14px] font-medium transition-all ${role === 'service_provider' ? 'bg-white shadow-sm text-[#1853d9]' : 'text-[#737686] hover:text-[#151c27]'}`}
+                      onClick={() => setRole('service_provider')}
                     >
                       Service Provider
                     </button>
@@ -230,7 +230,7 @@ const RegisterPage: React.FC = () => {
                 <form className="space-y-4" onSubmit={handleRegister}>
                   <div className="space-y-2">
                     <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="fullname">
-                      {role === 'user' ? 'Full Name' : role === 'provider' ? 'Service Provider Name' : 'Administrator Name'}
+                      {role === 'user' ? 'Full Name' : role === 'service_provider' ? 'Service Provider Name' : 'Administrator Name'}
                     </label>
                     <div className="relative group">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
@@ -239,7 +239,7 @@ const RegisterPage: React.FC = () => {
                       <input
                         className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.fullName ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
                         id="fullname"
-                        placeholder={role === 'user' ? 'John Doe' : role === 'provider' ? 'Clinic or Professional Name' : 'Your Department or Admin ID'}
+                        placeholder={role === 'user' ? 'John Doe' : role === 'service_provider' ? 'Clinic or Professional Name' : 'Your Department or Admin ID'}
                         type="text"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook Superadmin | System Performance Metrics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-tertiary-container": "#79849a",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-surface-variant": "#45464d",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-background": "#191c1e",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-bright": "#f7f9fb",
+                        "secondary": "#00668a",
+                        "primary-fixed": "#dae2fd",
+                        "tertiary-fixed": "#d8e3fb",
+                        "surface": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary-container": "#40c2fd",
+                        "tertiary": "#000000",
+                        "outline": "#76777d",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#c4e7ff",
+                        "surface-dim": "#d8dadc",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#bec6e0",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#131b2e",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#565e74",
+                        "outline-variant": "#c6c6cd",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#004d6a",
+                        "on-primary-container": "#7c839b",
+                        "tertiary-container": "#111c2d",
+                        "primary": "#000000",
+                        "on-surface": "#191c1e",
+                        "background": "#f7f9fb",
+                        "surface-container": "#eceef0",
+                        "on-secondary-fixed": "#001e2c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "1.5rem",
+                        "sidebar-width": "280px",
+                        "margin-mobile": "1rem",
+                        "stack-compact": "0.5rem",
+                        "container-max": "1440px",
+                        "stack-default": "1rem"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "mono-data": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #38BDF8;
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SIDEBAR -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-primary-container text-on-primary-container flex flex-col z-50">
+<!-- Logo Area -->
+<div class="p-6">
+<div class="bg-white w-12 h-12 flex items-center justify-center rounded-lg mb-8">
+<span class="material-symbols-outlined text-primary-container text-3xl font-bold" data-icon="terminal">terminal</span>
+</div>
+<div class="mb-8">
+<h2 class="text-headline-md font-headline-md text-white">Command Center</h2>
+<p class="text-label-md font-label-md text-on-primary-container/60 uppercase tracking-widest">Enterprise Tier</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="text-body-md font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="storage">storage</span>
+<span class="text-body-md font-body-md">Infrastructure</span>
+</a>
+<!-- ACTIVE ITEM: System KPI (Semantic mapping from user prompt) -->
+<a class="flex items-center text-white font-bold bg-white/10 px-4 py-3 transition-all duration-150 scale-[0.98]" href="#">
+<div class="sidebar-active-indicator"></div>
+<span class="material-symbols-outlined mr-3" data-icon="monitoring">monitoring</span>
+<span class="text-body-md font-body-md">System KPI</span>
+</a>
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="security">security</span>
+<span class="text-body-md font-body-md">Security</span>
+</a>
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="group">group</span>
+<span class="text-body-md font-body-md">User Access</span>
+</a>
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="history">history</span>
+<span class="text-body-md font-body-md">Audit Logs</span>
+</a>
+<a class="flex items-center text-on-tertiary-container hover:text-white px-4 py-3 transition-colors relative group" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</a>
+</nav>
+<!-- Footer Action -->
+<div class="p-6">
+<button class="w-full bg-error text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg shadow-error/20">
+<span class="material-symbols-outlined mr-2" data-icon="report">report</span>
+<span class="text-label-md font-label-md">Global Killswitch</span>
+</button>
+</div>
+</aside>
+<!-- MAIN CONTENT -->
+<main class="ml-[280px] flex-1 flex flex-col min-w-0">
+<!-- TOP NAVBAR -->
+<header class="h-16 bg-surface-container-lowest border-b border-surface-container-highest flex items-center justify-between px-gutter sticky top-0 z-40">
+<div class="flex items-center space-x-6">
+<div class="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200">
+<span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+<span class="text-label-md font-label-md">All Systems Operational</span>
+</div>
+</div>
+<!-- Oval Search Bar -->
+<div class="flex-1 max-w-xl px-12">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-12 pr-4 focus:ring-2 focus:ring-secondary/50 text-body-md font-body-md placeholder:text-on-surface-variant/50" placeholder="Search system entities, logs, or clusters..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-white"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="dashboard_customize">dashboard_customize</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center space-x-3">
+<div class="text-right">
+<p class="text-label-md font-bold text-on-surface uppercase tracking-tight">System Admin</p>
+<p class="text-[10px] text-on-surface-variant font-mono">ROOT AUTHORITY</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover border-2 border-secondary-container" data-alt="A focused male professional in a high-tech dark environment with subtle neon lighting reflecting off his face, conveying ultimate control and precision in a modern command center. The image is crisp, cinematic, and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC40aI2fr49Ug9yCq_FwD8gdWbSxplM4CeHco3-lbvJgGlyhKHenaQsukcJEners5rtFODM0TP5I78_aAPirCuuQxwHA9LhGbfd4hACWvg2nWNPG5rIc8Y4xmmx7c1tUHCe0zTwi4GfuXCoyaCghGN5mq_CQ8btrGPENqH3PZ1gTvNsvtUxmdyir3FVtltfeFLqXF8haiLZZW-9KJe03hdK0W8z337xvl156Td6g7V1SP_IGrtTG7qf"/>
+</div>
+</div>
+</header>
+<!-- DASHBOARD CONTENT -->
+<div class="p-8 max-w-container-max mx-auto w-full">
+<!-- HEADER SECTION -->
+<div class="flex items-end justify-between mb-8">
+<div>
+<h1 class="text-headline-lg font-headline-lg text-primary">System Performance Metrics</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Real-time telemetry and cluster orchestration monitor.</p>
+</div>
+<button class="flex items-center bg-surface-container-lowest border border-outline-variant px-4 py-2 rounded-lg text-body-md font-medium hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined mr-2" data-icon="filter_list">filter_list</span>
+                    Last 24 Hours
+                    <span class="material-symbols-outlined ml-2" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+<!-- METRIC CARDS -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<!-- CPU -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 bg-secondary-container/20 rounded-lg flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl" data-icon="memory">memory</span>
+</div>
+<span class="text-green-600 font-mono-data text-label-md flex items-center">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="trending_down">trending_down</span> -2.4%
+                        </span>
+</div>
+<div class="mt-4">
+<h3 class="text-headline-lg font-headline-lg text-primary">24%</h3>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">CPU UTILIZATION (STABLE)</p>
+</div>
+</div>
+<!-- Memory -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600">
+<span class="material-symbols-outlined text-2xl" data-icon="rebase_edit">rebase_edit</span>
+</div>
+<span class="text-yellow-600 font-mono-data text-label-md flex items-center">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="trending_up">trending_up</span> +0.5%
+                        </span>
+</div>
+<div class="mt-4">
+<h3 class="text-headline-lg font-headline-lg text-primary">45%</h3>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">JVM HEAP MEMORY (OPTIMIZED)</p>
+</div>
+</div>
+<!-- Storage -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-orange-600">
+<span class="material-symbols-outlined text-2xl" data-icon="database">database</span>
+</div>
+<span class="text-on-surface-variant font-mono-data text-label-md">Linear Growth</span>
+</div>
+<div class="mt-4">
+<h3 class="text-headline-lg font-headline-lg text-primary">45 GB / 100 GB</h3>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">POSTGRESQL STORAGE</p>
+</div>
+</div>
+<!-- Network Latency -->
+<div class="bg-primary-container text-white p-6 rounded-xl flex flex-col justify-between shadow-xl shadow-primary/20">
+<div class="flex justify-between items-start">
+<div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center text-secondary-container">
+<span class="material-symbols-outlined text-2xl" data-icon="network_check">network_check</span>
+</div>
+<div class="flex items-center space-x-1">
+<span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
+<span class="text-[10px] font-bold text-green-400 uppercase">HEALTHY</span>
+</div>
+</div>
+<div class="mt-4">
+<h3 class="text-headline-lg font-headline-lg text-white">45ms</h3>
+<p class="text-label-md font-label-md text-white/60 uppercase tracking-wider">AVERAGE API LATENCY</p>
+</div>
+</div>
+</div>
+<!-- DATA PANEL SECTION -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<!-- Tabs Header -->
+<div class="px-8 pt-6 border-b border-surface-container-highest">
+<h2 class="text-headline-md font-headline-md text-primary mb-4">Infrastructure Diagnostics &amp; Gateway Status</h2>
+<div class="flex space-x-8">
+<button class="pb-4 border-b-2 border-secondary text-primary font-bold text-body-md">All Logs</button>
+<button class="pb-4 text-on-surface-variant font-medium text-body-md hover:text-primary transition-colors">Database</button>
+<button class="pb-4 text-on-surface-variant font-medium text-body-md hover:text-primary transition-colors">API Gateway</button>
+<button class="pb-4 text-on-surface-variant font-medium text-body-md hover:text-primary transition-colors">Third-Party</button>
+</div>
+</div>
+<!-- Content Area: Graphs -->
+<div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+<!-- Left: API Latency vs Throughput Trends -->
+<div class="flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h4 class="text-label-md font-bold text-on-surface uppercase tracking-widest">API Latency vs. Throughput Trends</h4>
+<div class="flex items-center space-x-4">
+<div class="flex items-center"><span class="w-3 h-3 bg-secondary-container rounded-full mr-2"></span><span class="text-[10px] font-mono text-on-surface-variant">LATENCY</span></div>
+<div class="flex items-center"><span class="w-3 h-3 bg-orange-400 rounded-full mr-2"></span><span class="text-[10px] font-mono text-on-surface-variant">THROUGHPUT</span></div>
+</div>
+</div>
+<div class="chart-container flex items-end justify-between space-x-2 border-b border-l border-surface-container-highest pt-4 pl-4">
+<!-- Visual placeholder for a line chart using CSS gradients and bars for abstraction -->
+<div class="flex-1 h-3/4 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative group cursor-crosshair">
+<div class="absolute bottom-1/2 left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-2/3 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[40%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-1/2 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[60%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-3/4 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[45%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-[90%] bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[30%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-2/3 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[55%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+<div class="flex-1 h-4/5 bg-gradient-to-t from-secondary-container/20 to-secondary-container/40 rounded-t-sm relative">
+<div class="absolute bottom-[40%] left-0 w-full h-[2px] bg-orange-400/60"></div>
+</div>
+</div>
+</div>
+<!-- Right: PostgreSQL Active Connections -->
+<div class="flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<h4 class="text-label-md font-bold text-on-surface uppercase tracking-widest">PostgreSQL Active Connections</h4>
+<div class="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded border border-blue-100">
+<span class="text-mono-data">Current: 18</span>
+</div>
+</div>
+<div class="chart-container flex items-end space-x-1 border-b border-l border-surface-container-highest pt-4 pl-4 overflow-hidden">
+<!-- Area chart abstraction -->
+<div class="flex-1 h-[40%] bg-secondary/80 rounded-t-sm hover:h-[45%] transition-all"></div>
+<div class="flex-1 h-[42%] bg-secondary/80 rounded-t-sm hover:h-[47%] transition-all"></div>
+<div class="flex-1 h-[38%] bg-secondary/80 rounded-t-sm hover:h-[43%] transition-all"></div>
+<div class="flex-1 h-[45%] bg-secondary/80 rounded-t-sm hover:h-[50%] transition-all"></div>
+<div class="flex-1 h-[48%] bg-secondary/80 rounded-t-sm hover:h-[53%] transition-all"></div>
+<div class="flex-1 h-[44%] bg-secondary/80 rounded-t-sm hover:h-[49%] transition-all"></div>
+<div class="flex-1 h-[40%] bg-secondary/80 rounded-t-sm hover:h-[45%] transition-all"></div>
+<div class="flex-1 h-[39%] bg-secondary/80 rounded-t-sm hover:h-[44%] transition-all"></div>
+<div class="flex-1 h-[41%] bg-secondary/80 rounded-t-sm hover:h-[46%] transition-all"></div>
+<div class="flex-1 h-[45%] bg-secondary/80 rounded-t-sm hover:h-[50%] transition-all"></div>
+<div class="flex-1 h-[47%] bg-secondary/80 rounded-t-sm hover:h-[52%] transition-all"></div>
+<div class="flex-1 h-[45%] bg-secondary/80 rounded-t-sm hover:h-[50%] transition-all"></div>
+<div class="flex-1 h-[42%] bg-secondary/80 rounded-t-sm hover:h-[47%] transition-all"></div>
+<div class="flex-1 h-[44%] bg-secondary/80 rounded-t-sm hover:h-[49%] transition-all"></div>
+</div>
+</div>
+</div>
+<!-- Footer Stats -->
+<div class="bg-surface-container-low px-8 py-4 flex items-center justify-between border-t border-surface-container-highest">
+<div class="flex items-center space-x-8">
+<div>
+<span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Master Node</span>
+<p class="font-mono-data text-label-md text-primary">node-01.us-east.aws</p>
+</div>
+<div>
+<span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Uptime</span>
+<p class="font-mono-data text-label-md text-primary">14d 06h 22m</p>
+</div>
+</div>
+<div class="flex items-center text-green-600 font-bold text-label-md">
+<span class="material-symbols-outlined mr-1" data-icon="verified_user">verified_user</span>
+                        SECURE ENCLAVE ACTIVE
+                    </div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for sidebar tabs
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('mousedown', function() {
+                this.classList.add('scale-[0.98]');
+            });
+            link.addEventListener('mouseup', function() {
+                this.classList.remove('scale-[0.98]');
+            });
+        });
+
+        // Atmospheric effect: Subtle cursor glow on the dashboard area
+        const main = document.querySelector('main');
+        main.addEventListener('mousemove', (e) => {
+            // Logic for a very subtle spotlight effect could go here
+            // but keeping it performant and clean for enterprise
+        });
+    </script>
+</body></html>

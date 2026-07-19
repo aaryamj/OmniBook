@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniBook Services Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#F0F5FF',
+                            100: '#E1EBFF',
+                            500: '#2563EB',
+                            600: '#1A56DB',
+                            700: '#1E40AF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F4F7FB; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        
+        #slide-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel-open { transform: translateX(0%); }
+        .panel-closed { transform: translateX(100%); }
+    </style>
+</head>
+<body class="text-slate-800 h-screen flex flex-col">
+
+    <header class="bg-white border-b border-gray-200 h-[70px] flex items-center justify-between px-8 shrink-0 z-30 relative">
+        <div class="text-2xl font-extrabold text-brand-600 tracking-tight">OmniBook</div>
+        <div class="flex items-center gap-8">
+            <div class="text-sm font-semibold text-gray-500">01:54 PM • Wednesday, July 8</div>
+            <button class="relative text-gray-500 hover:text-gray-800 transition-colors">
+                <i class="fa-regular fa-bell text-xl"></i>
+            </button>
+            <div class="flex items-center gap-3 border-l border-gray-200 pl-8">
+                <div class="text-right">
+                    <div class="text-sm font-bold text-gray-900">Dr. Rahul Sharma</div>
+                    <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Lalitpur Clinic</div>
+                </div>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul&backgroundColor=e2e8f0" class="w-10 h-10 rounded-full border border-gray-200">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <aside class="w-[260px] bg-white border-r border-gray-200 flex flex-col pt-6 pb-8 shrink-0 z-20">
+            <nav class="flex flex-col gap-1 px-4">
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-border-all w-5 text-center text-gray-400"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-regular fa-calendar-days w-5 text-center text-gray-400"></i> Master Calendar
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-user-group w-5 text-center text-gray-400"></i> Patients
+                </a>
+                <!-- Active State -->
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl bg-brand-50 text-brand-600 font-bold transition-colors">
+                    <i class="fa-regular fa-square-plus w-5 text-center"></i> Services
+                </a>
+                <a href="#" class="flex items-center gap-4 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <i class="fa-solid fa-chart-simple w-5 text-center text-gray-400"></i> Analytics
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col relative overflow-hidden p-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-[32px] font-bold text-gray-900 tracking-tight">Services Manager</h1>
+                    <p class="text-sm font-medium text-gray-500 mt-1">Configure your clinic's offerings and pricing.</p>
+                </div>
+                <button onclick="openPanel('Add New Service')" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 shadow-md shadow-brand-600/20 transition-all hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus"></i> Add Service
+                </button>
+            </div>
+
+            <div class="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50/80 sticky top-0">
+                        <tr>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Service Name</th>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Category</th>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Duration</th>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Price</th>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200">Status</th>
+                            <th class="py-4 px-6 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-200 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <!-- Row 1 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 font-bold text-gray-900">General Consultation</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">Cardiology</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">30 mins</td>
+                            <td class="py-4 px-6 font-bold text-gray-900">रू 1,500</td>
+                            <td class="py-4 px-6">
+                                <button class="w-10 h-5 bg-green-500 rounded-full relative"><span class="absolute right-1 top-0.5 w-4 h-4 bg-white rounded-full"></span></button>
+                            </td>
+                            <td class="py-4 px-6 text-right"><button onclick="openPanel('Edit Service')" class="text-brand-600 font-bold hover:underline">Edit</button></td>
+                        </tr>
+                        <!-- Row 2 -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-4 px-6 font-bold text-gray-900">ECG Screening</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">Cardiology</td>
+                            <td class="py-4 px-6 text-sm text-gray-600">15 mins</td>
+                            <td class="py-4 px-6 font-bold text-gray-900">रू 2,200</td>
+                            <td class="py-4 px-6">
+                                <button class="w-10 h-5 bg-green-500 rounded-full relative"><span class="absolute right-1 top-0.5 w-4 h-4 bg-white rounded-full"></span></button>
+                            </td>
+                            <td class="py-4 px-6 text-right"><button onclick="openPanel('Edit Service')" class="text-brand-600 font-bold hover:underline">Edit</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="panel-backdrop" class="absolute inset-0 bg-gray-900/20 backdrop-blur-sm z-40 hidden transition-opacity opacity-0 rounded-2xl" onclick="closePanel()"></div>
+            <div id="slide-panel" class="absolute top-0 right-0 bottom-0 w-[450px] bg-white border-l border-gray-200 shadow-2xl z-50 panel-closed flex flex-col rounded-l-2xl overflow-hidden">
+                <div class="px-8 py-6 flex justify-between items-center border-b">
+                    <h3 id="panel-title" class="font-bold text-xl">Service Details</h3>
+                    <button onclick="closePanel()"><i class="fa-solid fa-xmark text-gray-400"></i></button>
+                </div>
+                <div class="p-8 space-y-5">
+                    <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Service Name</label>
+                    <input type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all shadow-sm text-sm" placeholder="e.g. Dental Cleaning">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Category</label>
+                    <input type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 outline-none transition-all shadow-sm text-sm" placeholder="e.g. Cardiology, Dentistry, General">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Price (रू)</label>
+                            <input type="number" class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Duration</label>
+                            <select class="w-full px-4 py-3 rounded-xl border border-gray-200 outline-none">
+                                <option>15 mins</option>
+                                <option>30 mins</option>
+                                <option>60 mins</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="w-full bg-brand-600 text-white font-bold py-3.5 rounded-xl hover:bg-brand-700 transition">Save Service</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const panel = document.getElementById('slide-panel');
+        const backdrop = document.getElementById('panel-backdrop');
+        const title = document.getElementById('panel-title');
+
+        function openPanel(t) {
+            title.innerText = t;
+            backdrop.classList.remove('hidden');
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('panel-closed');
+                panel.classList.add('panel-open');
+            }, 10);
+        }
+
+        function closePanel() {
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('panel-open');
+            panel.classList.add('panel-closed');
+            setTimeout(() => backdrop.classList.add('hidden'), 300);
+        }
+    </script>
+</body>
+</html>
