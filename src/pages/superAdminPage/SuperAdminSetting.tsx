@@ -213,15 +213,15 @@ export default function SuperAdminSetting() {
                 <Sidebar />
                 <TopNavigation />
 
-                <main className="ml-[280px] pt-20 px-8 pb-12">
+                <main className="ml-sidebar-width pt-20 px-4 sm:px-8 pb-12">
                     <div className="max-w-7xl mx-auto">
                         {/* Page Header */}
-                        <div className="flex items-end justify-between mb-8 mt-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between mb-8 mt-4 gap-4">
                             <div>
-                                <h1 className="font-headline-lg text-headline-lg text-primary">Platform Configurations</h1>
-                                <p className="text-body-lg text-on-surface-variant mt-1">Manage global environment variables, external integrations, and onboarding policies.</p>
+                                <h1 className="text-2xl sm:text-headline-lg font-headline-lg text-primary">Platform Configurations</h1>
+                                <p className="text-body-md sm:text-body-lg text-on-surface-variant mt-1">Manage global environment variables, external integrations, and onboarding policies.</p>
                             </div>
-                            <button className="bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-zinc-800 transition-all shadow-sm">
+                            <button className="w-full sm:w-auto bg-primary text-white px-8 py-3 rounded-lg font-bold hover:bg-zinc-800 transition-all shadow-sm cursor-pointer">
                                 Save Changes
                             </button>
                         </div>

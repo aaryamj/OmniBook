@@ -1,90 +1,69 @@
 import React, { useState, useEffect } from 'react';
 
-const initialLogs = [
-    {
-        id: 1,
-        message: <>Superadmin invited <span className="font-bold">Lalitpur Wellness Center</span></>,
-        time: 'Today • 14:23:01',
-        dotColor: 'bg-secondary-container',
-        ringColor: 'ring-secondary-container/30'
-    },
-    {
-        id: 2,
-        message: <>System backup completed successfully.</>,
-        time: 'Today • 03:00:00',
-        dotColor: 'bg-surface-container-highest',
-        ringColor: ''
-    },
-    {
-        id: 3,
-        message: <>Failed login attempt from <span className="font-bold">IP 192.168.1.12</span></>,
-        time: 'Yesterday • 22:15:45',
-        dotColor: 'bg-error',
-        ringColor: 'ring-error/30'
-    },
-    {
-        id: 4,
-        message: <>Kantipath Clinic plan upgraded to <span className="font-bold">Pro</span></>,
-        time: 'Yesterday • 18:42:10',
-        dotColor: 'bg-secondary-container',
-        ringColor: ''
-    },
-    {
-        id: 5,
-        message: <>Data export initiated by <span className="font-bold">Admin (TN-40291)</span></>,
-        time: 'Yesterday • 15:30:22',
-        dotColor: 'bg-surface-container-highest',
-        ringColor: ''
-    },
-    {
-        id: 6,
-        message: <>Multiple failed API requests from <span className="font-bold">Gateway Node B</span></>,
-        time: '2 days ago • 11:20:05',
-        dotColor: 'bg-error',
-        ringColor: 'ring-error/30'
-    },
-    {
-        id: 7,
-        message: <>Payment gateway credentials rotated successfully.</>,
-        time: '3 days ago • 04:00:00',
-        dotColor: 'bg-green-500',
-        ringColor: 'ring-green-500/30'
-    }
-];
+// Empty initial array
+const initialLogs: any[] = [];
 
-export default function GlobalAuditLogs() {
-    const [logs, setLogs] = useState(initialLogs);
+import axios from 'axios';
+
+export default function GlobalAuditLogs({ timeFilter }: { timeFilter?: string }) {
+    const [logs, setLogs] = useState<any[]>(initialLogs);
     const [showAll, setShowAll] = useState(false);
 
-    // Simulate real-time incoming logs
     useEffect(() => {
-        const interval = setInterval(() => {
-            // 20% chance to generate a new log every 4 seconds
-            if (Math.random() > 0.8) {
-                const newId = Date.now();
-                const now = new Date();
-                const timeString = `Today • ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        const fetchLogs = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const url = timeFilter
+                    ? `http://localhost:8080/api/v1/superadmin/audit-logs?timeFilter=${encodeURIComponent(timeFilter)}`
+                    : 'http://localhost:8080/api/v1/superadmin/audit-logs';
+                const res = await axios.get(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 
-                const possibleLogs = [
-                    { msg: <>Health check passed for <span className="font-bold">Worker Node 3</span></>, dot: 'bg-green-500', ring: '' },
-                    { msg: <>New admin user provisioned via API.</>, dot: 'bg-secondary-container', ring: 'ring-secondary-container/30' },
-                    { msg: <>Warning: Elevated latency on <span className="font-bold">Database Cluster A</span></>, dot: 'bg-yellow-500', ring: 'ring-yellow-500/30' }
-                ];
-                const randomLog = possibleLogs[Math.floor(Math.random() * possibleLogs.length)];
+                const formattedLogs = res.data.map((log: any) => {
+                    const date = new Date(log.timestamp);
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const timeString = `${isToday ? 'Today' : date.toLocaleDateString()} • ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    let dotColor = 'bg-surface-container-highest';
+                    let ringColor = '';
+                    
+                    const action = log.eventAction.toUpperCase();
+                    if (action.includes('ERROR') || action.includes('FAILED') || action.includes('SUSPEND')) {
+                        dotColor = 'bg-error';
+                        ringColor = 'ring-error/30';
+                    } else if (action.includes('SUCCESS') || action.includes('APPROVE') || action.includes('REACTIVATE')) {
+                        dotColor = 'bg-green-500';
+                        ringColor = 'ring-green-500/30';
+                    } else if (action.includes('REGISTER') || action.includes('INVITE')) {
+                        dotColor = 'bg-secondary-container';
+                        ringColor = 'ring-secondary-container/30';
+                    }
+
+                    let messageText = log.eventAction;
+                    if (log.user) {
+                        messageText = `${log.user.email} (${log.user.role}): ${log.eventAction}`;
+                    }
+
+                    return {
+                        id: log.id,
+                        message: <>{messageText} <span className="font-bold text-[10px] text-on-surface-variant ml-1">IP: {log.sourceIp}</span></>,
+                        time: timeString,
+                        dotColor,
+                        ringColor
+                    };
+                });
                 
-                const newLog = {
-                    id: newId,
-                    message: randomLog.msg,
-                    time: timeString,
-                    dotColor: randomLog.dot,
-                    ringColor: randomLog.ring
-                };
-                
-                setLogs(prev => [newLog, ...prev]);
+                setLogs(formattedLogs);
+            } catch (error) {
+                console.error("Failed to fetch global audit logs", error);
             }
-        }, 4000);
+        };
+
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 15000); // refresh every 15 sec
         return () => clearInterval(interval);
-    }, []);
+    }, [timeFilter]);
 
     const displayedLogs = showAll ? logs : logs.slice(0, 4);
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import './superAdmin.css';
 import Sidebar from './components/Sidebar';
 import TopNavigation from './components/TopNavigation';
@@ -8,9 +9,79 @@ export default function GlobalEmergencyStop() {
     const [suspendApis, setSuspendApis] = useState(true);
     const [forceReadOnly, setForceReadOnly] = useState(true);
     const [globalTokenEviction, setGlobalTokenEviction] = useState(false);
+    const [metrics, setMetrics] = useState<any>({
+        platformState: 'ACTIVE',
+        concurrentSessions: 0,
+        liveDatabaseWrites: 0,
+        circuitBreakerStatus: 'ARMED',
+        isLockdown: false
+    });
+    const [logs, setLogs] = useState<string[]>([
+        `[${new Date().toLocaleTimeString()}] System.Status.Check: Ready for command.`
+    ]);
     
     const isAuthorized = confirmInput === 'FORCE-LOCKDOWN';
     const logAreaRef = useRef<HTMLDivElement>(null);
+
+    const fetchStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get('http://localhost:8080/api/v1/superadmin/system/status', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMetrics(res.data);
+            setSuspendApis(res.data.suspendApis);
+            setForceReadOnly(res.data.forceReadOnly);
+            setGlobalTokenEviction(res.data.globalTokenEviction);
+        } catch (error) {
+            console.error("Failed to fetch system status", error);
+        }
+    };
+
+    const initiateLockdown = async () => {
+        if (!isAuthorized) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post('http://localhost:8080/api/v1/superadmin/system/lockdown', {
+                suspendApis,
+                forceReadOnly,
+                globalTokenEviction
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMetrics(res.data);
+            setConfirmInput('');
+            addLog("Security.Monitor: SYSTEM LOCKDOWN INITIATED by SuperAdmin.");
+        } catch (error) {
+            addLog("Security.Monitor: Failed to initiate lockdown.");
+        }
+    };
+
+    const restoreSystem = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post('http://localhost:8080/api/v1/superadmin/system/restore', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMetrics(res.data);
+            setSuspendApis(res.data.suspendApis);
+            setForceReadOnly(res.data.forceReadOnly);
+            setGlobalTokenEviction(res.data.globalTokenEviction);
+            addLog("Security.Monitor: System restored to ACTIVE state.");
+        } catch (error) {
+            addLog("Security.Monitor: Failed to restore system.");
+        }
+    };
+
+    const addLog = (msg: string) => {
+        setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+    };
+
+    useEffect(() => {
+        fetchStatus();
+        const interval = setInterval(fetchStatus, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Auto-scroll log area
     useEffect(() => {
@@ -18,9 +89,9 @@ export default function GlobalEmergencyStop() {
             if (logAreaRef.current) {
                 logAreaRef.current.scrollTop = logAreaRef.current.scrollHeight;
             }
-        }, 3000);
+        }, 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [logs]);
 
     return (
         <div className="superadmin-theme">
@@ -29,14 +100,14 @@ export default function GlobalEmergencyStop() {
                 <TopNavigation />
 
                 {/* Main Wrapper */}
-                <div className="flex-1 flex flex-col ml-[280px] pt-16 min-h-screen relative overflow-hidden">
+                <div className="flex-1 flex flex-col ml-sidebar-width pt-16 min-h-screen relative overflow-hidden">
                     {/* Scrollable Content Canvas */}
                     <main className="flex-1 overflow-y-auto bg-background p-gutter">
                         <div className="max-w-[1440px] mx-auto space-y-6">
                             {/* Page Header & Action */}
                             <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 pb-4">
                                 <div>
-                                    <h1 className="font-headline-lg text-headline-lg text-primary flex items-center gap-3">
+                                    <h1 className="text-2xl sm:text-headline-lg font-headline-lg text-primary flex items-center gap-3">
                                         Global Emergency Stop & System Lockdown
                                     </h1>
                                     <p className="text-on-surface-variant font-body-md mt-1 max-w-2xl">
@@ -44,12 +115,25 @@ export default function GlobalEmergencyStop() {
                                         Unauthorized use is logged and will trigger an immediate security audit.
                                     </p>
                                 </div>
-                                <div className="flex flex-col items-end gap-3">
-                                    <span className="bg-error/10 text-error px-2 py-0.5 rounded text-label-md font-bold border border-error/20 whitespace-nowrap">LOCKED ACCESS</span>
-                                    <button className="bg-primary hover:bg-error px-8 py-4 text-white font-black rounded-lg transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-3 group">
-                                        <span className="material-symbols-outlined text-white group-hover:animate-spin">security</span>
-                                        <span className="tracking-widest uppercase">INITIATE SYSTEM LOCKDOWN</span>
-                                    </button>
+                                <div className="flex flex-col sm:items-end gap-3 w-full sm:w-auto">
+                                    {metrics.isLockdown && (
+                                        <button onClick={restoreSystem} className="bg-emerald-600 hover:bg-emerald-500 px-8 py-4 text-white font-black rounded-lg transition-all flex items-center justify-center gap-3">
+                                            <span className="material-symbols-outlined text-white">settings_backup_restore</span>
+                                            <span className="tracking-widest uppercase">RESTORE SYSTEM</span>
+                                        </button>
+                                    )}
+                                    {!metrics.isLockdown && (
+                                        <>
+                                            <span className="bg-error/10 text-error px-2 py-0.5 rounded text-label-md font-bold border border-error/20 whitespace-nowrap">DANGEROUS ZONE</span>
+                                            <button 
+                                                className="bg-primary hover:bg-error px-8 py-4 text-white font-black rounded-lg transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-3 group opacity-50 cursor-not-allowed"
+                                                title="Must authorize below first"
+                                            >
+                                                <span className="material-symbols-outlined text-white group-hover:animate-spin">security</span>
+                                                <span className="tracking-widest uppercase">INITIATE SYSTEM LOCKDOWN</span>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -57,12 +141,16 @@ export default function GlobalEmergencyStop() {
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                                 {/* Status Card */}
                                 <div className="bg-white p-5 border border-outline-variant rounded-xl flex items-center gap-4 group hover:border-secondary transition-all">
-                                    <div className="w-12 h-12 bg-secondary/10 flex items-center justify-center rounded-lg text-secondary group-hover:scale-110 transition-transform">
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                                    <div className={`w-12 h-12 flex items-center justify-center rounded-lg group-hover:scale-110 transition-transform ${metrics.platformState === 'ACTIVE' ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
+                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
+                                            {metrics.platformState === 'ACTIVE' ? 'verified_user' : 'gpp_bad'}
+                                        </span>
                                     </div>
                                     <div>
                                         <p className="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Current Platform State</p>
-                                        <h3 className="font-headline-md text-headline-md text-secondary font-black">ACTIVE</h3>
+                                        <h3 className={`font-headline-md text-headline-md font-black ${metrics.platformState === 'ACTIVE' ? 'text-secondary' : 'text-error'}`}>
+                                            {metrics.platformState}
+                                        </h3>
                                     </div>
                                 </div>
 
@@ -73,7 +161,7 @@ export default function GlobalEmergencyStop() {
                                     </div>
                                     <div>
                                         <p className="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Total Concurrent Sessions</p>
-                                        <h3 className="font-headline-md text-headline-md text-primary font-black">1,420 Live</h3>
+                                        <h3 className="font-headline-md text-headline-md text-primary font-black">{metrics.concurrentSessions} Live</h3>
                                     </div>
                                 </div>
 
@@ -84,18 +172,18 @@ export default function GlobalEmergencyStop() {
                                     </div>
                                     <div>
                                         <p className="font-label-md text-[10px] text-on-surface-variant uppercase tracking-widest leading-none mb-1">Live Database Writes</p>
-                                        <h3 className="font-headline-md text-headline-md text-amber-700 font-black">140 / sec</h3>
+                                        <h3 className="font-headline-md text-headline-md text-amber-700 font-black">{metrics.liveDatabaseWrites} / sec</h3>
                                     </div>
                                 </div>
 
                                 {/* Circuit Card */}
-                                <div className="bg-tertiary-container p-5 border border-primary-container rounded-xl flex items-center gap-4 group">
-                                    <div className="w-12 h-12 bg-on-primary-fixed-variant/20 flex items-center justify-center rounded-lg text-on-primary group-hover:text-amber-400 transition-colors">
+                                <div className={`p-5 border rounded-xl flex items-center gap-4 group ${metrics.circuitBreakerStatus === 'TRIPPED' ? 'bg-error text-white border-error' : 'bg-tertiary-container border-primary-container'}`}>
+                                    <div className="w-12 h-12 bg-on-primary-fixed-variant/20 flex items-center justify-center rounded-lg transition-colors">
                                         <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
                                     </div>
                                     <div>
-                                        <p className="font-label-md text-[10px] text-on-tertiary-container uppercase tracking-widest leading-none mb-1">Circuit Breaker Status</p>
-                                        <h3 className="font-headline-md text-headline-md text-white font-black">ARMED</h3>
+                                        <p className="font-label-md text-[10px] uppercase tracking-widest leading-none mb-1 text-white/70">Circuit Breaker Status</p>
+                                        <h3 className="font-headline-md text-headline-md text-white font-black">{metrics.circuitBreakerStatus}</h3>
                                     </div>
                                 </div>
                             </div>
@@ -197,9 +285,11 @@ export default function GlobalEmergencyStop() {
                                             />
                                         </div>
                                         <button 
-                                            className={`w-full py-3 text-white font-bold rounded-lg transition-colors ${isAuthorized ? 'bg-amber-600 hover:bg-amber-700 cursor-pointer animate-pulse' : 'bg-amber-600 opacity-50 cursor-not-allowed'}`}
+                                            onClick={initiateLockdown}
+                                            disabled={!isAuthorized || metrics.isLockdown}
+                                            className={`w-full py-3 text-white font-bold rounded-lg transition-colors ${isAuthorized && !metrics.isLockdown ? 'bg-amber-600 hover:bg-amber-700 cursor-pointer animate-pulse' : 'bg-amber-600 opacity-50 cursor-not-allowed'}`}
                                         >
-                                            LOCKDOWN AUTHORIZED
+                                            {metrics.isLockdown ? 'SYSTEM CURRENTLY LOCKED' : 'LOCKDOWN AUTHORIZED'}
                                         </button>
                                     </div>
                                 </div>
@@ -217,11 +307,11 @@ export default function GlobalEmergencyStop() {
                                     </button>
                                 </div>
                                 <div ref={logAreaRef} className="bg-black/30 rounded-xl p-4 font-mono-data text-[12px] space-y-2 h-40 overflow-y-auto">
-                                    <p className="text-on-tertiary-container"><span className="text-emerald-500">[14:22:01]</span> System.Status.Check: All nodes healthy. Primary DC-01 active.</p>
-                                    <p className="text-on-tertiary-container"><span className="text-emerald-500">[14:22:04]</span> Auth.Service: Issued 14 new session tokens (Regional EU-WEST).</p>
-                                    <p className="text-amber-400 font-bold"><span className="text-amber-500">[14:22:08]</span> Security.Monitor: Manual Access to Root Control Panel by user 'sysadmin_01'.</p>
-                                    <p className="text-on-tertiary-container"><span className="text-emerald-500">[14:22:15]</span> Database.IO: Write frequency stabilized at 140/sec.</p>
-                                    <p className="text-on-tertiary-container"><span className="text-emerald-500">[14:22:19]</span> Network.Shield: DDoS protection active. No threats detected.</p>
+                                    {logs.map((log, index) => (
+                                        <p key={index} className={log.includes('Failed') || log.includes('SYSTEM LOCKDOWN') ? 'text-error font-bold' : 'text-on-tertiary-container'}>
+                                            {log}
+                                        </p>
+                                    ))}
                                     <p className="text-on-tertiary-container opacity-50 italic animate-pulse">Waiting for telemetry data...</p>
                                 </div>
                             </div>

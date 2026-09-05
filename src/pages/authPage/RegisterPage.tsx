@@ -4,7 +4,7 @@ import axios from 'axios';
 import { SocialLogin } from '../../components/SocialLogin';
 
 const RegisterPage: React.FC = () => {
-  const [role, setRole] = useState<'user' | 'service_provider' | 'admin'>('user');
+  const role = 'user';
   const navigate = useNavigate();
 
   // Form states
@@ -124,6 +124,8 @@ const RegisterPage: React.FC = () => {
       localStorage.setItem('token', data.token);
       if (data.role) localStorage.setItem('role', data.role);
       if (data.fullName) localStorage.setItem('fullName', data.fullName);
+      
+      // Navigate to patient dashboard by default
       navigate('/dashboard');
     } else {
       setServerError(data.message || 'OAuth registration failed');
@@ -187,32 +189,7 @@ const RegisterPage: React.FC = () => {
 
             {!isVerificationSent ? (
               <>
-                {/* Role Selector */}
-                <div className="mb-12">
-                  <div className="flex p-1 bg-[#f0f3ff] rounded-xl gap-1">
-                    <button
-                      type="button"
-                      className={`flex-1 py-2 px-1 rounded-lg text-[14px] font-medium transition-all ${role === 'user' ? 'bg-white shadow-sm text-[#1853d9]' : 'text-[#737686] hover:text-[#151c27]'}`}
-                      onClick={() => setRole('user')}
-                    >
-                      User/Patient
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex-1 py-2 px-1 rounded-lg text-[14px] font-medium transition-all ${role === 'service_provider' ? 'bg-white shadow-sm text-[#1853d9]' : 'text-[#737686] hover:text-[#151c27]'}`}
-                      onClick={() => setRole('service_provider')}
-                    >
-                      Service Provider
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex-1 py-2 px-1 rounded-lg text-[14px] font-medium transition-all ${role === 'admin' ? 'bg-white shadow-sm text-[#1853d9]' : 'text-[#737686] hover:text-[#151c27]'}`}
-                      onClick={() => setRole('admin')}
-                    >
-                      Admin
-                    </button>
-                  </div>
-                </div>
+                {/* Role Selector Removed */}
 
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-2">
@@ -230,7 +207,7 @@ const RegisterPage: React.FC = () => {
                 <form className="space-y-4" onSubmit={handleRegister}>
                   <div className="space-y-2">
                     <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="fullname">
-                      {role === 'user' ? 'Full Name' : role === 'service_provider' ? 'Service Provider Name' : 'Administrator Name'}
+                      Full Name
                     </label>
                     <div className="relative group">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
@@ -239,7 +216,7 @@ const RegisterPage: React.FC = () => {
                       <input
                         className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.fullName ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
                         id="fullname"
-                        placeholder={role === 'user' ? 'John Doe' : role === 'service_provider' ? 'Clinic or Professional Name' : 'Your Department or Admin ID'}
+                        placeholder="John Doe"
                         type="text"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}

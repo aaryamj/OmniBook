@@ -71,15 +71,15 @@ const Platform: React.FC = () => {
       <main className="pt-20">
         {/* Hero Section */}
         <section 
-          className="relative overflow-hidden px-margin-mobile md:px-margin-desktop py-12 bg-white"
+          className="relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-margin-desktop py-12 sm:py-16 bg-white"
         >
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 w-full">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center relative z-10 w-full">
             <div className="space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#e1e8ff] text-on-background rounded-full text-sm font-medium border border-transparent">
                 <span className="material-symbols-outlined text-base">verified</span>
                 Enterprise Grade Scheduling
               </div>
-              <h1 className="text-5xl font-bold text-primary tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary tracking-tight leading-tight">
                 One Platform.<br />Infinite Possibilities.
               </h1>
               <p className="text-base text-secondary leading-relaxed max-w-xl mx-auto lg:mx-0">
@@ -132,7 +132,7 @@ const Platform: React.FC = () => {
         </section>
 
         {/* Role-Based Pillars */}
-        <section className="py-16 px-margin-mobile md:px-margin-desktop bg-white">
+        <section className="py-12 sm:py-16 px-4 sm:px-6 md:px-10 lg:px-margin-desktop bg-white">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-primary mb-4">Tailored for Every Stakeholder</h2>
@@ -163,7 +163,7 @@ const Platform: React.FC = () => {
         </section>
 
         {/* Integrations Section */}
-        <section className="py-12 px-margin-mobile md:px-margin-desktop bg-[#f4f7fc]">
+        <section className="py-12 px-4 sm:px-6 md:px-10 lg:px-margin-desktop bg-[#f4f7fc]">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row items-center justify-between gap-12">
               <div className="max-w-md w-full">

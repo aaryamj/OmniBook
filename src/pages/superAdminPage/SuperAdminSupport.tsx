@@ -7,7 +7,7 @@ import TopNavigation from './components/TopNavigation';
 const mockTickets = [
     {
         id: '#TK-8821',
-        clinicName: 'Lalitpur Wellness Center',
+        organizationName: 'Lalitpur Wellness Center',
         adminAccount: 'admin@lalitpurwell.np',
         issueType: 'Integration Bugs',
         slaTimeRemaining: '42 mins remaining',
@@ -19,7 +19,7 @@ const mockTickets = [
     },
     {
         id: '#TK-8819',
-        clinicName: 'Kantipath Clinic',
+        organizationName: 'Kantipath Clinic',
         adminAccount: 'ops@kantipath.org',
         issueType: 'Critical (SLA)',
         slaTimeRemaining: '12 mins remaining',
@@ -31,7 +31,7 @@ const mockTickets = [
     },
     {
         id: '#TK-8794',
-        clinicName: 'Bir Hospital Engine',
+        organizationName: 'Bir Hospital Engine',
         adminAccount: 'tech@bir.org',
         issueType: 'Integration Bugs',
         slaTimeRemaining: '4 hours remaining',
@@ -43,7 +43,7 @@ const mockTickets = [
     },
     {
         id: '#TK-8750',
-        clinicName: 'Mediciti Core',
+        organizationName: 'Mediciti Core',
         adminAccount: 'billing@mediciti.com',
         issueType: 'Billing Issues',
         slaTimeRemaining: 'Resolved',
@@ -95,18 +95,18 @@ export default function SuperAdminSupport() {
                 <TopNavigation />
 
                 {/* Main Wrapper */}
-                <div className="flex-1 flex flex-col ml-[280px] pt-16 min-h-screen relative">
+                <div className="flex-1 flex flex-col ml-sidebar-width pt-16 min-h-screen relative">
                     {/* Content Canvas */}
                     <main className="flex-1 p-gutter max-w-container-max w-full mx-auto">
                         
                         {/* Dashboard Header */}
                         <div className="flex flex-col md:flex-row justify-between md:items-end gap-4 mb-8">
                             <div className="max-w-2xl">
-                                <h2 className="font-headline-lg text-headline-lg text-primary mb-1">Enterprise Support & Escalations</h2>
-                                <p className="text-on-surface-variant font-body-lg text-body-lg">Tier-3 technical assistance, service level agreement (SLA) tracking, and tenant diagnostic dispatch.</p>
+                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary mb-1">Enterprise Support & Escalations</h2>
+                                <p className="text-on-surface-variant font-body-md sm:font-body-lg text-sm sm:text-body-lg">Tier-3 technical assistance, service level agreement (SLA) tracking, and tenant diagnostic dispatch.</p>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+                                <div className="relative flex-1 sm:flex-initial">
                                     <select className="appearance-none bg-surface border border-outline-variant pl-4 pr-10 py-2.5 rounded font-label-md text-label-md focus:ring-2 focus:ring-secondary focus:border-transparent outline-none">
                                         <option>Last 30 Days</option>
                                         <option>Last 7 Days</option>
@@ -196,7 +196,7 @@ export default function SuperAdminSupport() {
                             </div>
                             
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                                <table className="w-full min-w-[700px] text-left">
                                     <thead className="bg-surface-container-low border-b border-outline-variant">
                                         <tr>
                                             <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider whitespace-nowrap">Ticket ID & Clinic</th>
@@ -213,7 +213,7 @@ export default function SuperAdminSupport() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-col">
                                                         <span className="font-mono-data text-mono-data text-secondary">{ticket.id}</span>
-                                                        <span className="font-bold text-primary">{ticket.clinicName}</span>
+                                                        <span className="font-bold text-primary">{ticket.organizationName}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">

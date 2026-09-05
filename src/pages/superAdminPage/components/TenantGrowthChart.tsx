@@ -1,44 +1,104 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Tenant {
+    id: number;
+    createdAt: string;
+}
 
 export default function TenantGrowthChart() {
     const [view, setView] = useState('Yearly');
+    const [tenants, setTenants] = useState<Tenant[]>([]);
+    const [data, setData] = useState<number[]>([]);
     
-    // Data values 0-100 representing percentage of max height
-    const initialToday = [12, 10, 15, 18, 22, 20];
-    const initialThisWeek = [15, 18, 16, 22, 25, 20, 28];
-    const initialThisMonth = [20, 35, 30, 45, 50];
-    const initialQuarterly = [20, 45, 55, 85];
-    const initialYearly = [10, 15, 12, 25, 30, 28, 45, 55, 60, 50, 75, 85];
-    
-    const [data, setData] = useState(initialYearly);
-
-    // Simulate real-time data jitter for the most recent time period
+    // Fetch real data on mount and every 30 seconds
     useEffect(() => {
-        let baseData = initialYearly;
-        if (view === 'Today') baseData = initialToday;
-        if (view === 'This Week') baseData = initialThisWeek;
-        if (view === 'This Month') baseData = initialThisMonth;
-        if (view === 'Quarterly') baseData = initialQuarterly;
-        if (view === 'Yearly') baseData = initialYearly;
+        const fetchTenants = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('http://localhost:8080/api/v1/superadmin/tenants', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setTenants(res.data || []);
+            } catch (error) {
+                console.error("Failed to fetch tenants for growth chart", error);
+            }
+        };
         
-        setData([...baseData]);
-        
-        const interval = setInterval(() => {
-            setData(prev => {
-                const newData = [...prev];
-                const lastIdx = newData.length - 1;
-                // Random fluctuation between -3 and +3
-                const jitter = Math.floor(Math.random() * 7) - 3;
-                let newVal = newData[lastIdx] + jitter;
-                if (newVal > 95) newVal = 95; // keep it within bounds
-                if (newVal < 10) newVal = 10;
-                newData[lastIdx] = newVal;
-                return newData;
-            });
-        }, 1500); // Fast interval for a lively feel
-
+        fetchTenants();
+        const interval = setInterval(fetchTenants, 30000);
         return () => clearInterval(interval);
-    }, [view]);
+    }, []);
+
+    // Process data based on view
+    useEffect(() => {
+        const now = new Date();
+        let counts: number[] = [];
+
+        const isSameDay = (d1: Date, d2: Date) => 
+            d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+        
+        const isSameMonth = (d1: Date, d2: Date) => 
+            d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+            
+        const isSameYear = (d1: Date, d2: Date) => 
+            d1.getFullYear() === d2.getFullYear();
+
+        if (view === 'Today') {
+            counts = [0, 0, 0, 0, 0, 0];
+            tenants.forEach(t => {
+                const d = new Date(t.createdAt);
+                if (isSameDay(d, now)) {
+                    counts[Math.floor(d.getHours() / 4)]++;
+                }
+            });
+        } else if (view === 'This Week') {
+            counts = [0, 0, 0, 0, 0, 0, 0];
+            const startOfWeek = new Date(now);
+            const dayOfWeek = now.getDay() === 0 ? 6 : now.getDay() - 1; // Mon=0, Sun=6
+            startOfWeek.setDate(now.getDate() - dayOfWeek);
+            startOfWeek.setHours(0,0,0,0);
+            
+            tenants.forEach(t => {
+                const d = new Date(t.createdAt);
+                if (d >= startOfWeek && d <= now) {
+                    const dDay = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                    counts[dDay]++;
+                }
+            });
+        } else if (view === 'This Month') {
+            counts = [0, 0, 0, 0, 0];
+            tenants.forEach(t => {
+                const d = new Date(t.createdAt);
+                if (isSameMonth(d, now)) {
+                    counts[Math.min(Math.floor((d.getDate() - 1) / 7), 4)]++;
+                }
+            });
+        } else if (view === 'Quarterly') {
+            counts = [0, 0, 0, 0];
+            tenants.forEach(t => {
+                const d = new Date(t.createdAt);
+                if (isSameYear(d, now)) {
+                    counts[Math.floor(d.getMonth() / 3)]++;
+                }
+            });
+        } else if (view === 'Yearly') {
+            counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            tenants.forEach(t => {
+                const d = new Date(t.createdAt);
+                if (isSameYear(d, now)) {
+                    counts[d.getMonth()]++;
+                }
+            });
+        }
+
+        // Scale data for SVG (0-100 max height). Give it a base height so it's not totally flat at 0.
+        // If max is 0, we still want to show a line at the bottom.
+        const maxVal = Math.max(...counts, 1);
+        const scaledData = counts.map(val => (val / maxVal) * 80); // max 80% height
+        
+        setData(scaledData);
+    }, [view, tenants]);
 
     // Helper to generate a smooth bezier curve path for SVG
     const generateSmoothPath = (pts: number[]) => {
@@ -157,3 +217,4 @@ export default function TenantGrowthChart() {
         </div>
     );
 }
+

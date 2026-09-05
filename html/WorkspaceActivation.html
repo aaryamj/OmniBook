@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Workspace Activation</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#001e2c",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-container-high": "#e6e8ea",
+                        "on-primary-container": "#7c839b",
+                        "surface-tint": "#565e74",
+                        "secondary": "#00668a",
+                        "inverse-primary": "#bec6e0",
+                        "tertiary": "#000000",
+                        "on-secondary-container": "#004d6a",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#c4e7ff",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface": "#f7f9fb",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#000000",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-container": "#131b2e",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#111c2d",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-surface": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed": "#d8e3fb",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-tertiary-container": "#79849a",
+                        "outline": "#76777d",
+                        "surface-dim": "#d8dadc",
+                        "secondary-container": "#40c2fd",
+                        "on-background": "#191c1e",
+                        "primary-fixed": "#dae2fd",
+                        "on-primary-fixed": "#131b2e",
+                        "outline-variant": "#c6c6cd",
+                        "on-surface-variant": "#45464d",
+                        "background": "#f7f9fb",
+                        "brand-navy": "#0F172A",
+                        "brand-accent": "#38BDF8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "mono-data": ["JetBrains Mono"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .step-active { color: #0F172A; font-weight: 700; }
+        .step-muted { color: #94A3B8; }
+        .isometric-card {
+            transform: perspective(1000px) rotateX(10deg) rotateY(-15deg) rotateZ(5deg);
+            box-shadow: -20px 40px 60px rgba(15, 23, 42, 0.15);
+            transition: all 0.5s ease-out;
+        }
+        .isometric-card:hover {
+            transform: perspective(1000px) rotateX(5deg) rotateY(-8deg) rotateZ(2deg);
+        }
+    </style>
+</head>
+<body class="bg-surface overflow-hidden">
+<div class="flex min-h-screen">
+<!-- LEFT SIDE: WHITE CONTENT -->
+<div class="w-full lg:w-1/2 bg-surface-container-lowest flex flex-col p-12 overflow-y-auto">
+<!-- Header Section -->
+<div class="flex items-center space-x-4 mb-16">
+<span class="font-headline-md text-headline-md font-black text-primary tracking-tighter">OMNIBOOK</span>
+<div class="h-6 w-px bg-outline-variant"></div>
+<span class="font-label-md text-label-md text-on-surface-variant tracking-widest uppercase">Workspace Setup</span>
+</div>
+<div class="max-w-md mx-auto w-full flex flex-col space-y-8">
+<!-- Contextual Greeting -->
+<div class="bg-secondary-fixed/30 p-6 rounded-xl border border-secondary-fixed">
+<h1 class="font-headline-md text-headline-md text-on-secondary-fixed mb-1">Welcome to your Dedicated Tenant Environment</h1>
+<p class="font-body-md text-body-md text-on-secondary-fixed-variant">
+                        Workspace: <span class="font-mono-data text-mono-data">mediciti.omnibook.app</span><br/>
+                        Provisioned for: <span class="font-bold">Mediciti Core</span>
+</p>
+</div>
+<!-- Progress Tracker -->
+<div class="flex items-center space-x-6 py-2">
+<div class="flex items-center space-x-2">
+<div class="w-8 h-8 rounded-full bg-brand-navy flex items-center justify-center text-white font-bold text-xs">1</div>
+<span class="font-label-md text-label-md step-active">Account Security</span>
+</div>
+<div class="h-px w-8 bg-outline-variant"></div>
+<div class="flex items-center space-x-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold text-xs">2</div>
+<span class="font-label-md text-label-md step-muted">Progressive Profiling</span>
+</div>
+<div class="h-px w-8 bg-outline-variant"></div>
+<div class="flex items-center space-x-2 opacity-50">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold text-xs">3</div>
+<span class="font-label-md text-label-md step-muted">Financial Activation</span>
+</div>
+</div>
+<!-- Form Section -->
+<form class="space-y-5" onsubmit="event.preventDefault();">
+<div class="space-y-1.5">
+<label class="font-label-md text-label-md text-on-surface-variant">Administrator Email</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-low border-surface-variant text-on-surface-variant font-body-md text-body-md px-4 py-3 rounded-lg cursor-not-allowed focus:ring-0" readonly="" type="email" value="admin@mediciti.com"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant text-sm" data-icon="lock">lock</span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-label-md text-on-surface">Create Master Password</label>
+<input class="w-full bg-surface-container-lowest border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary text-body-md px-4 py-3 rounded-lg transition-all" placeholder="••••••••••••" type="password"/>
+<p class="text-[10px] text-on-surface-variant font-label-md">Minimum 12 characters, including one symbol.</p>
+</div>
+<div class="space-y-1.5">
+<label class="font-label-md text-label-md text-on-surface">Confirm Password</label>
+<input class="w-full bg-surface-container-lowest border-outline-variant focus:border-secondary focus:ring-1 focus:ring-secondary text-body-md px-4 py-3 rounded-lg transition-all" placeholder="••••••••••••" type="password"/>
+</div>
+<!-- MFA Banner -->
+<div class="flex items-start space-x-3 p-4 bg-error-container/10 border-l-4 border-error rounded-r-lg">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="security">security</span>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant font-bold uppercase">Strict Security Protocol</h4>
+<p class="font-body-md text-body-md text-on-surface-variant leading-tight">Multi-Factor Authentication (MFA) is strictly enforced for this environment. You will be prompted to link your authenticator app in the next step.</p>
+</div>
+</div>
+<button class="w-full bg-brand-navy hover:bg-slate-800 text-white font-label-md text-label-md py-4 rounded-lg flex items-center justify-center space-x-2 transition-transform active:scale-[0.98] mt-4">
+<span>Establish Credentials &amp; Continue</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<div class="pt-4 text-center">
+<p class="font-body-md text-body-md text-on-surface-variant">Need assistance? <a class="text-secondary font-bold hover:underline" href="#">Contact System Operations</a></p>
+</div>
+</div>
+<!-- Footer Small -->
+<div class="mt-auto pt-12 text-center lg:text-left">
+<p class="font-label-md text-label-md text-outline-variant">© 2024 OmniBook Platform Infrastructure. HIPAA &amp; GDPR Compliant.</p>
+</div>
+</div>
+<!-- RIGHT SIDE: ISOMETRIC PREVIEW -->
+<div class="hidden lg:flex w-1/2 bg-surface flex-col items-center justify-center relative p-16">
+<!-- Subtle background pattern -->
+<div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#0F172A 1px, transparent 1px); background-size: 32px 32px;"></div>
+<div class="relative w-full max-w-2xl flex flex-col items-center">
+<!-- Floating Dashboard Preview -->
+<div class="isometric-card w-full aspect-video bg-white rounded-2xl border border-surface-variant p-6 flex flex-col space-y-6 overflow-hidden">
+<!-- Fake Dashboard Header -->
+<div class="flex items-center justify-between border-b border-surface-variant pb-4">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high"></div>
+<div class="space-y-1">
+<div class="w-24 h-2 bg-surface-container-highest rounded"></div>
+<div class="w-16 h-2 bg-surface-container-high rounded"></div>
+</div>
+</div>
+<div class="flex space-x-2">
+<div class="w-20 h-8 rounded-lg bg-secondary-fixed"></div>
+<div class="w-8 h-8 rounded-lg bg-surface-container-high"></div>
+</div>
+</div>
+<!-- Fake Grid -->
+<div class="grid grid-cols-3 gap-4 h-full">
+<div class="col-span-2 bg-surface-container-low rounded-xl p-4 flex flex-col space-y-4">
+<div class="w-full h-4 bg-surface-container-highest rounded"></div>
+<div class="flex flex-col space-y-2">
+<div class="w-full h-12 bg-white rounded-lg border border-surface-variant"></div>
+<div class="w-full h-12 bg-white rounded-lg border border-surface-variant"></div>
+<div class="w-full h-12 bg-white rounded-lg border border-surface-variant"></div>
+</div>
+</div>
+<div class="col-span-1 flex flex-col space-y-4">
+<div class="flex-1 bg-brand-navy rounded-xl p-4 flex flex-col justify-end">
+<div class="w-full h-2 bg-brand-accent/30 rounded mb-2"></div>
+<div class="w-1/2 h-4 bg-white rounded"></div>
+</div>
+<div class="h-1/2 bg-surface-container-highest rounded-xl p-4">
+<div class="w-full h-full bg-white/50 rounded-lg"></div>
+</div>
+</div>
+</div>
+<!-- Decorative Overlay for 8K resolution feel -->
+<div class="absolute top-0 right-0 p-4">
+<div class="px-2 py-1 bg-brand-accent text-brand-navy font-mono-data text-[10px] rounded font-bold">LIVE_REPLICATION_V2</div>
+</div>
+</div>
+<!-- Text Content Below Preview -->
+<div class="mt-16 text-center space-y-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Your isolated B2B instance is ready to deploy.</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mx-auto">
+                        We've prepared your private cluster with Mediciti's custom data architecture. Secure your keys to begin the final orchestration.
+                    </p>
+<div class="flex items-center justify-center space-x-4 pt-6">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-300"></div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-400"></div>
+<div class="w-8 h-8 rounded-full border-2 border-white bg-slate-500"></div>
+</div>
+<span class="text-label-md font-label-md text-on-surface-variant">12 Admins online across clusters</span>
+</div>
+</div>
+</div>
+<!-- Absolute decorative elements -->
+<div class="absolute bottom-12 right-12 flex flex-col items-end space-y-1">
+<div class="text-[10px] font-mono-data text-outline-variant uppercase tracking-tighter">Latency: 24ms</div>
+<div class="text-[10px] font-mono-data text-outline-variant uppercase tracking-tighter">Region: US-EAST-1</div>
+</div>
+</div>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        document.addEventListener('mousemove', (e) => {
+            const card = document.querySelector('.isometric-card');
+            if (!card) return;
+            
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 100;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 100;
+            
+            card.style.transform = `perspective(1000px) rotateX(${10 + yAxis}deg) rotateY(${-15 + xAxis}deg) rotateZ(5deg)`;
+        });
+
+        // Simple validation styling
+        const inputs = document.querySelectorAll('input[type="password"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                if (input.value.length > 0 && input.value.length < 12) {
+                    input.classList.add('border-error');
+                    input.classList.remove('border-outline-variant');
+                } else {
+                    input.classList.remove('border-error');
+                    input.classList.add('border-outline-variant');
+                }
+            });
+        });
+    </script>
+</body></html>

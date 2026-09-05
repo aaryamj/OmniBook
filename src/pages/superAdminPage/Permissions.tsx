@@ -153,14 +153,14 @@ export default function Permissions() {
 
                         {/* Global Permissions Matrix */}
                         <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
-                            <div className="p-6 border-b border-surface-container flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="p-4 sm:p-6 border-b border-surface-container flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <h3 className="font-headline-md text-headline-md">Global Permissions Matrix</h3>
-                                <div className="flex bg-surface-container p-1 rounded-lg">
+                                <div className="flex bg-surface-container p-1 rounded-lg overflow-x-auto w-full sm:w-auto">
                                     {(['System Roles', 'Medical Staff', 'Administrative'] as TabName[]).map(tab => (
                                         <button 
                                             key={tab}
                                             onClick={() => setActiveTab(tab)}
-                                            className={`px-4 py-1.5 rounded-md text-label-md font-label-md transition-all duration-200 ${activeTab === tab ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant hover:text-primary'}`}
+                                            className={`px-4 py-1.5 rounded-md text-label-md font-label-md transition-all duration-200 whitespace-nowrap cursor-pointer ${activeTab === tab ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant hover:text-primary'}`}
                                         >
                                             {tab}
                                         </button>
@@ -168,7 +168,7 @@ export default function Permissions() {
                                 </div>
                             </div>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left">
+                                <table className="w-full min-w-[650px] text-left">
                                     <thead>
                                         <tr className="bg-surface-container-low border-b border-surface-container">
                                             <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Features / Actions</th>

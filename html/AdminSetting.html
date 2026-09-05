@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook Enterprise | Tenant Configuration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed-variant": "#3f465c",
+                        "background": "#f7f9fb",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-container": "#004d6a",
+                        "primary-container": "#131b2e",
+                        "secondary-container": "#40c2fd",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#bec6e0",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline-variant": "#c6c6cd",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#131b2e",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "tertiary": "#000000",
+                        "primary-fixed": "#dae2fd",
+                        "surface-dim": "#d8dadc",
+                        "tertiary-fixed": "#d8e3fb",
+                        "secondary-fixed": "#c4e7ff",
+                        "on-surface": "#191c1e",
+                        "inverse-surface": "#2d3133",
+                        "outline": "#76777d",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary": "#0F172A",
+                        "surface-tint": "#565e74",
+                        "on-surface-variant": "#45464d",
+                        "on-background": "#191c1e",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-tertiary-container": "#79849a",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-primary-container": "#7c839b",
+                        "tertiary-container": "#111c2d",
+                        "surface-container-highest": "#e0e3e5",
+                        "secondary": "#00668a",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e0e3e5",
+                        "on-secondary-fixed": "#001e2c",
+                        "surface-container-high": "#e6e8ea",
+                        "surface": "#f7f9fb",
+                        "accent-teal": "#0D9488",
+                        "accent-neon": "#38BDF8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "280px",
+                        "gutter": "1.5rem",
+                        "stack-compact": "0.5rem",
+                        "margin-mobile": "1rem",
+                        "stack-default": "1rem",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "mono-data": ["JetBrains Mono", "monospace"],
+                        "headline-md": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .active-glow {
+            box-shadow: inset 4px 0 0 0 #38BDF8;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #0D9488;
+        }
+        .toggle-checkbox:checked + .toggle-label .toggle-dot {
+            transform: translateX(100%);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased overflow-hidden">
+<!-- Fixed Sidebar Shell -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-primary-container z-50 flex flex-col shadow-xl">
+<!-- Brand Header -->
+<div class="px-6 py-8 flex flex-col gap-1">
+<h1 class="font-headline-md text-headline-md font-bold text-white tracking-tight">OmniBook</h1>
+<p class="font-label-md text-label-md text-on-tertiary-container uppercase tracking-widest">Medical Enterprise</p>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-0 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+<span class="font-label-md text-label-md">All Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">medical_services</span>
+<span class="font-label-md text-label-md">Providers</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all group" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Ledger</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-6 py-3 text-white bg-on-primary-fixed-variant border-l-4 border-accent-neon transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="font-label-md text-label-md font-bold">Settings</span>
+</a>
+</nav>
+<!-- Footer Actions -->
+<div class="px-0 py-6 border-t border-on-primary-fixed-variant/30">
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">contact_support</span>
+<span class="font-label-md text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-tertiary-container hover:bg-on-primary-fixed-variant transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="font-label-md text-label-md">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="ml-sidebar-width flex flex-col h-screen overflow-hidden">
+<!-- Top Navigation Bar -->
+<header class="h-16 bg-white border-b border-outline-variant flex items-center justify-between px-gutter sticky top-0 z-40">
+<div class="flex items-center gap-4">
+<nav aria-label="Breadcrumb" class="flex text-on-surface-variant font-label-md text-label-md">
+<ol class="inline-flex items-center space-x-1">
+<li>Workspace</li>
+<li><span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span></li>
+<li>Settings</li>
+<li><span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span></li>
+<li class="text-primary font-bold">Configuration</li>
+</ol>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">help_outline</span>
+</div>
+<div class="flex items-center gap-3 border-l border-outline-variant pl-6">
+<div class="text-right hidden lg:block">
+<p class="font-label-md text-label-md text-primary font-bold">ROOT AUTHORITY</p>
+<p class="font-label-md text-[10px] text-on-surface-variant uppercase">Global Admin</p>
+</div>
+<div class="w-9 h-9 rounded bg-primary-container flex items-center justify-center text-white overflow-hidden border border-outline-variant">
+<span class="material-symbols-outlined">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Page Header & Actions -->
+<section class="px-gutter pt-8 pb-4 flex justify-between items-end bg-background">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary tracking-tight">Tenant Configuration</h2>
+<p class="text-on-surface-variant mt-1">Manage global enterprise settings, white-label assets, and financial integrations.</p>
+</div>
+<button class="bg-accent-teal hover:bg-[#0b7a6f] text-white px-6 py-2.5 rounded font-label-md text-label-md flex items-center gap-2 shadow-sm transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                Save Configuration
+            </button>
+</section>
+<!-- Dual Column Workspace -->
+<div class="flex-1 px-gutter pb-8 flex gap-gutter overflow-hidden">
+<!-- Left Inner Menu (25%) -->
+<aside class="w-1/4 h-full">
+<div class="bg-white border border-outline-variant rounded-lg overflow-hidden sticky top-0">
+<nav class="flex flex-col">
+<a class="p-4 border-b border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-[20px]">person_outline</span>
+<span class="font-label-md text-label-md">General Profile</span>
+</a>
+<a class="p-4 border-b border-outline-variant flex items-center gap-3 bg-surface-container-high text-primary font-bold border-l-4 border-accent-teal" href="#">
+<span class="material-symbols-outlined text-[20px]">palette</span>
+<span class="font-label-md text-label-md">Branding &amp; White-Label</span>
+</a>
+<a class="p-4 border-b border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+<span class="font-label-md text-label-md">Payment Gateways</span>
+</a>
+<a class="p-4 border-b border-outline-variant flex items-center gap-3 hover:bg-surface-container-low transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<span class="font-label-md text-label-md">Operating Hours</span>
+</a>
+<a class="p-4 flex items-center gap-3 hover:bg-surface-container-low transition-colors text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+<span class="font-label-md text-label-md">Security</span>
+</a>
+</nav>
+</div>
+</aside>
+<!-- Right Inner Form (75%) -->
+<div class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+<div class="bg-white border border-outline-variant rounded-lg p-8 space-y-12">
+<!-- Section 1: Clinic Branding -->
+<section>
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant pb-4">
+<span class="material-symbols-outlined text-accent-teal">auto_awesome</span>
+<h3 class="font-headline-md text-headline-md text-primary">Patient Portal Branding</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Enterprise Logo</label>
+<div class="relative group cursor-pointer border-2 border-dashed border-outline-variant rounded-lg p-10 flex flex-col items-center justify-center bg-surface hover:bg-surface-container transition-all">
+<div class="mb-4 bg-white p-4 rounded shadow-sm">
+<div class="w-32 h-12 flex items-center justify-center font-bold text-primary italic border-2 border-primary/10">
+                                            MediGlobal
+                                        </div>
+</div>
+<p class="text-on-surface-variant font-label-md text-label-md">Drag &amp; Drop Logo Here</p>
+<p class="text-on-surface-variant/60 text-[11px] mt-1">SVG, PNG or JPEG (Max 2MB)</p>
+<input class="absolute inset-0 opacity-0 cursor-pointer" type="file"/>
+</div>
+</div>
+<div class="flex flex-col justify-center">
+<label class="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Primary Brand Color</label>
+<div class="flex items-center gap-4 bg-surface-container-low p-4 rounded border border-outline-variant">
+<div class="w-12 h-12 rounded bg-accent-teal shadow-inner border border-white/20"></div>
+<div class="flex-1">
+<input class="bg-transparent border-none focus:ring-0 font-mono-data text-mono-data w-full text-primary" type="text" value="#0D9488"/>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">colorize</span>
+</div>
+<p class="text-on-surface-variant text-[12px] mt-3 italic">This color will be applied to patient portal headers, primary buttons, and booking confirmations.</p>
+</div>
+</div>
+</section>
+<!-- Section 2: Financial Integrations -->
+<section>
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant pb-4">
+<span class="material-symbols-outlined text-accent-teal">account_balance</span>
+<h3 class="font-headline-md text-headline-md text-primary">Financial Integrations</h3>
+</div>
+<div class="space-y-4">
+<!-- Stripe Row -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded hover:bg-surface transition-colors">
+<div class="flex items-center gap-6">
+<div class="w-14 h-8 bg-[#635BFF] rounded flex items-center justify-center text-white font-bold text-[12px]">Stripe</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Secret Live Key</p>
+<code class="font-mono-data text-mono-data text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">sk_live_••••8392</code>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="bg-green-100 text-green-700 text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                        Connected
+                                    </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</div>
+<!-- eSewa Row -->
+<div class="flex items-center justify-between p-4 bg-white border border-outline-variant rounded hover:bg-surface transition-colors">
+<div class="flex items-center gap-6">
+<div class="w-14 h-8 bg-[#41a124] rounded flex items-center justify-center text-white font-bold text-[12px]">eSewa</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Merchant ID</p>
+<code class="font-mono-data text-mono-data text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">EPAY_••••44</code>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="bg-green-100 text-green-700 text-[10px] font-bold uppercase px-2 py-1 rounded-full flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                        Connected
+                                    </span>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Operational Rules -->
+<section>
+<div class="flex items-center gap-3 mb-6 border-b border-outline-variant pb-4">
+<span class="material-symbols-outlined text-accent-teal">settings_ethernet</span>
+<h3 class="font-headline-md text-headline-md text-primary">Operational Rules</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Toggle Card -->
+<div class="bg-surface-container-low p-6 border border-outline-variant rounded-lg flex items-center justify-between">
+<div class="max-w-[70%]">
+<h4 class="font-label-md text-label-md text-primary font-bold">Automated Patient SMS Reminders</h4>
+<p class="text-[12px] text-on-surface-variant mt-1 leading-relaxed">Send automated text notifications 24 hours prior to appointment start time.</p>
+</div>
+<div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-outline-variant appearance-none cursor-pointer focus:ring-0 transition-all" id="sms_toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-outline-variant cursor-pointer transition-all" for="sms_toggle"></label>
+</div>
+</div>
+<!-- Dropdown Card -->
+<div class="bg-surface-container-low p-6 border border-outline-variant rounded-lg">
+<label class="block font-label-md text-label-md text-primary font-bold mb-3">Default Appointment Slot Duration</label>
+<div class="relative">
+<select class="w-full bg-white border border-outline-variant rounded px-4 py-2.5 font-label-md text-label-md text-primary appearance-none focus:ring-2 focus:ring-accent-teal/20 focus:border-accent-teal transition-all">
+<option>15 Minutes</option>
+<option selected="">30 Minutes</option>
+<option>45 Minutes</option>
+<option>60 Minutes</option>
+<option>Custom Interval</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-2">New providers will inherit this duration for their primary booking calendar.</p>
+</div>
+</div>
+</section>
+<!-- Advanced Data Visualization Placeholder -->
+<div class="bg-primary-container rounded-lg p-6 flex items-center justify-between border-l-4 border-accent-neon">
+<div class="flex items-center gap-4">
+<div class="p-3 bg-on-primary-fixed-variant rounded">
+<span class="material-symbols-outlined text-accent-neon">monitoring</span>
+</div>
+<div>
+<h4 class="text-white font-bold font-label-md text-label-md">Audit Trail: Last Configuration Update</h4>
+<p class="text-on-tertiary-container text-[12px]">Oct 24, 2023 at 09:42 AM by Admin <span class="font-mono-data text-accent-neon ml-2">#83921-A</span></p>
+</div>
+</div>
+<button class="text-accent-neon font-label-md text-label-md hover:underline decoration-2 underline-offset-4">View Full History</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for UI elements
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if(e.currentTarget.getAttribute('href') === '#') e.preventDefault();
+            });
+        });
+
+        // Toggle animation logic handled by CSS, but we can add interaction feedback
+        const toggle = document.getElementById('sms_toggle');
+        toggle.addEventListener('change', function() {
+            if(this.checked) {
+                console.log('Automated SMS Reminders Enabled');
+            } else {
+                console.log('Automated SMS Reminders Disabled');
+            }
+        });
+    </script>
+</body></html>

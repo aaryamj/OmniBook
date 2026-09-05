@@ -35,8 +35,8 @@ const Healthcare: React.FC = () => {
       <main className="pt-20">
         {/* Hero Section */}
         <section 
-          className="bg-primary pt-24 pb-32 flex flex-col justify-center items-center relative overflow-hidden px-margin-desktop transition-all duration-700 ease-out"
-          style={{ clipPath: 'polygon(0 0, 100% 0, 100% 90%, 0 100%)' }}
+          className="bg-primary pt-16 sm:pt-24 pb-24 sm:pb-32 flex flex-col justify-center items-center relative overflow-hidden px-4 sm:px-6 md:px-10 lg:px-margin-desktop transition-all duration-700 ease-out"
+          style={{ clipPath: 'polygon(0 0, 100% 0, 100% 92%, 0 100%)' }}
         >
           <div className="max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
             <div className="space-y-6 text-center lg:text-left">
@@ -70,7 +70,7 @@ const Healthcare: React.FC = () => {
         </section>
 
         {/* Zig-Zag Sections */}
-        <section className="py-24 px-margin-desktop space-y-24 max-w-7xl mx-auto transition-all duration-700 ease-out">
+        <section className="py-12 sm:py-24 px-4 sm:px-6 md:px-10 lg:px-margin-desktop space-y-16 sm:space-y-24 max-w-7xl mx-auto transition-all duration-700 ease-out">
           {/* Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-6">
@@ -138,7 +138,7 @@ const Healthcare: React.FC = () => {
         </section>
 
         {/* Smart Scheduling Showcase */}
-        <section className="bg-[#E1EFFE] py-24 px-margin-desktop transition-all duration-700 ease-out">
+        <section className="bg-[#E1EFFE] py-12 sm:py-24 px-4 sm:px-6 md:px-10 lg:px-margin-desktop transition-all duration-700 ease-out">
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-16">
               <h2 className="text-[32px] font-bold text-primary">Smart Scheduling Innovation</h2>
@@ -197,7 +197,7 @@ const Healthcare: React.FC = () => {
         </section>
 
         {/* Bento Grid Feature Highlight */}
-        <section className="py-24 px-margin-desktop max-w-7xl mx-auto transition-all duration-700 ease-out">
+        <section className="py-12 sm:py-24 px-4 sm:px-6 md:px-10 lg:px-margin-desktop max-w-7xl mx-auto transition-all duration-700 ease-out">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-auto lg:h-[420px]">
             {/* Cell 1 */}
             <div className="lg:col-span-2 rounded-[12px] p-8 flex flex-col justify-between bg-white shadow-[0_4px_20px_rgba(26,86,219,0.05)] border border-black/5">
@@ -250,7 +250,7 @@ const Healthcare: React.FC = () => {
         </section>
 
         {/* Newsletter Banner */}
-        <section className="bg-primary px-margin-desktop py-16 transition-all duration-700 ease-out">
+        <section className="bg-primary px-4 sm:px-6 md:px-10 lg:px-margin-desktop py-12 sm:py-16 transition-all duration-700 ease-out">
           <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="text-white max-w-lg text-center lg:text-left">
               <h2 className="text-[24px] font-bold mb-2">Stay updated with healthcare insights.</h2>

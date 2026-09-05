@@ -8,7 +8,7 @@ import TenantGrowthChart from './components/TenantGrowthChart';
 import GlobalAuditLogs from './components/GlobalAuditLogs';
 
 export default function TenantManagement() {
-    const [timeFilter, setTimeFilter] = useState('Last 30 Days');
+    const [timeFilter, setTimeFilter] = useState('This Year');
     const [showDateMenu, setShowDateMenu] = useState(false);
     
     // Export button states: 'idle' | 'exporting' | 'success'
@@ -69,12 +69,12 @@ export default function TenantManagement() {
                     <div className="max-w-container-max mx-auto space-y-gutter">
                         
                         {/* Page Heading */}
-                        <div className="flex justify-between items-end relative">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative">
                             <div>
-                                <h2 className="font-headline-lg text-headline-lg text-primary">Platform Overview</h2>
+                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary">Platform Overview</h2>
                                 <p className="font-body-md text-body-md text-on-surface-variant">Real-time surveillance across the OmniBook ecosystem.</p>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
                                 
                                 {/* Date Filter Dropdown */}
                                 <div className="relative" ref={dateMenuRef}>
@@ -138,10 +138,10 @@ export default function TenantManagement() {
                         </div>
                         
                         {/* Global SaaS KPIs */}
-                        <PlatformOverviewCards />
+                        <PlatformOverviewCards timeFilter={timeFilter} />
                         
                         {/* Tenant Management Hub Table */}
-                        <TenantManagementHub />
+                        <TenantManagementHub timeFilter={timeFilter} />
                         
                         {/* Bottom Row Split */}
                         <div className="grid grid-cols-1 lg:grid-cols-10 gap-gutter pb-8">
@@ -149,7 +149,7 @@ export default function TenantManagement() {
                             <TenantGrowthChart />
                             
                             {/* Right (30%): Global Audit Logs */}
-                            <GlobalAuditLogs />
+                            <GlobalAuditLogs timeFilter={timeFilter} />
                         </div>
                         
                     </div>

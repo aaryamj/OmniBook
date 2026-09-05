@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
-import NotificationBell from './NotificationBell';
+import { useNavigate } from 'react-router-dom';
+import UserTopNavigation from './components/UserTopNavigation';
+import { useGoogleLogin } from '@react-oauth/google';
+import FacebookLoginModule from 'react-facebook-login/dist/facebook-login-render-props';
+const FacebookLogin = (FacebookLoginModule as any).default || FacebookLoginModule;
+
+const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCZHbfckUTer_B0V4UGQdj6hbBl570n8rDL9W4JkPDf3H1CS3X7zEPuMZEEMHqM4QcREe0vvmFj7eFDF40sCwDFpdcxptvdOXqb-wY6Vk0D46L2Cv6SkL3JWi9kyovrUX3dFYoFQ_QF1dmI5QjkoGXvKRDN3bwzJS49lRpz2iqUkbbNup2jWzngG9hdKWIq82Xv6BhIOBFN9w53rg1vieG_xUV2ddTnNei-WAoOZ2HvmXZgJjBlcNZocp6nVRwlDN7zCqnL9GFlLAc';
 
 const ProfileSettingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,9 +21,29 @@ const ProfileSettingPage: React.FC = () => {
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [phone, setPhone] = useState<string>('5550123456');
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+  const [country, setCountry] = useState<string>('+1');
   const [phoneError, setPhoneError] = useState<string>('');
   
+  // Patient Profile Fields
+  const [dateOfBirth, setDateOfBirth] = useState<string>('');
+  const [bloodGroup, setBloodGroup] = useState<string>('');
+  const [allergies, setAllergies] = useState<string>('');
+  const [weight, setWeight] = useState<string>('');
+  const [heartRate, setHeartRate] = useState<string>('');
+  
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleEmail, setGoogleEmail] = useState('');
+  const [facebookConnected, setFacebookConnected] = useState(false);
+  const [facebookEmail, setFacebookEmail] = useState('');
+  
+  const [createdAt, setCreatedAt] = useState<string>('');
+  const [updatedAt, setUpdatedAt] = useState<string>('');
+  const [lastLoginAt, setLastLoginAt] = useState<string>('');
+  const [lastLoginLocation, setLastLoginLocation] = useState<string>('');
+  const [sessions, setSessions] = useState<any[]>([]);
+
   // Notification states
   const [bookingConfirmations, setBookingConfirmations] = useState({ email: true, sms: true, inApp: true });
   const [upcomingReminders, setUpcomingReminders] = useState({ email: true, sms: true, inApp: false });
@@ -27,7 +52,7 @@ const ProfileSettingPage: React.FC = () => {
   const [newsletter, setNewsletter] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  const [avatarUrl, setAvatarUrl] = useState<string>('https://lh3.googleusercontent.com/aida-public/AB6AXuCZHbfckUTer_B0V4UGQdj6hbBl570n8rDL9W4JkPDf3H1CS3X7zEPuMZEEMHqM4QcREe0vvmFj7eFDF40sCwDFpdcxptvdOXqb-wY6Vk0D46L2Cv6SkL3JWi9kyovrUX3dFYoFQ_QF1dmI5QjkoGXvKRDN3bwzJS49lRpz2iqUkbbNup2jWzngG9hdKWIq82Xv6BhIOBFN9w53rg1vieG_xUV2ddTnNei-WAoOZ2HvmXZgJjBlcNZocp6nVRwlDN7zCqnL9GFlLAc');
+  const [avatarUrl, setAvatarUrl] = useState<string>(DEFAULT_AVATAR);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,12 +62,108 @@ const ProfileSettingPage: React.FC = () => {
     if (!token || role !== 'user') {
       navigate('/login');
     } else {
-      const storedName = localStorage.getItem('fullName');
-      if (storedName) {
-        setFullName(storedName);
-      }
+      fetchProfile(token);
     }
   }, [navigate]);
+
+  const fetchProfile = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/v1/user/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setFullName(data.fullName || '');
+        setEmail(data.email || '');
+        setPhone(data.phone || '');
+        setCountry(data.country || '+1');
+        
+        setDateOfBirth(data.dateOfBirth || '');
+        setBloodGroup(data.bloodGroup || '');
+        setAllergies(data.allergies || '');
+        setWeight(data.weight || '');
+        setHeartRate(data.heartRate || '');
+        
+        setGoogleConnected(data.googleConnected || false);
+        setGoogleEmail(data.googleEmail || '');
+        setFacebookConnected(data.facebookConnected || false);
+        setFacebookEmail(data.facebookEmail || '');
+        
+        const fetchedAvatar = data.profilePicture || DEFAULT_AVATAR;
+        setAvatarUrl(fetchedAvatar);
+        localStorage.setItem('profilePicture', fetchedAvatar);
+        setTwoStepEnabled(data.twoStepEnabled || false);
+        setCreatedAt(data.createdAt || '');
+        setUpdatedAt(data.updatedAt || '');
+        setLastLoginAt(data.lastLoginAt || '');
+        setLastLoginLocation(data.lastLoginLocation || 'Unknown Location');
+        setSessions(data.sessions || []);
+        setBookingConfirmations({
+          email: data.notifBookingEmail,
+          sms: data.notifBookingSms,
+          inApp: data.notifBookingInApp
+        });
+        setUpcomingReminders({
+          email: data.notifReminderEmail,
+          sms: data.notifReminderSms,
+          inApp: data.notifReminderInApp
+        });
+        setCancellations({
+          email: data.notifCancellationEmail,
+          sms: data.notifCancellationSms,
+          inApp: data.notifCancellationInApp
+        });
+        setExclusiveDiscounts(data.notifExclusiveDiscounts || false);
+        setNewsletter(data.notifNewsletter || false);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+    const handleGoogleConnect = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch('http://localhost:8080/api/v1/user/connect/google', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ token: tokenResponse.access_token }) 
+                });
+                if (res.ok) fetchProfile(token!);
+            } catch (error) { console.error(error); }
+        }
+    });
+
+    const handleFacebookConnect = async (response: any) => {
+        if (!response.accessToken) return;
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('http://localhost:8080/api/v1/user/connect/facebook', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ token: response.accessToken })
+            });
+            if (res.ok) fetchProfile(token!);
+        } catch (error) { console.error(error); }
+    };
+
+    const handleDisconnect = async (provider: string) => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`http://localhost:8080/api/v1/user/disconnect/${provider}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchProfile(token!);
+        } catch (error) { console.error(error); }
+    };
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,17 +173,95 @@ const ProfileSettingPage: React.FC = () => {
     navigate('/login');
   };
 
-  const handleSaveNotifications = () => {
-    setSaveStatus('saving');
-    setTimeout(() => {
-      setSaveStatus('saved');
-      setTimeout(() => {
-        setSaveStatus('idle');
-      }, 2000);
-    }, 1000);
+  const saveProfileSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:8080/api/v1/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fullName,
+          phone,
+          country,
+          profilePicture: avatarUrl,
+          twoStepEnabled,
+          dateOfBirth,
+          bloodGroup,
+          weight,
+          heartRate,
+          allergies,
+          notifBookingEmail: bookingConfirmations.email,
+          notifBookingSms: bookingConfirmations.sms,
+          notifBookingInApp: bookingConfirmations.inApp,
+          notifReminderEmail: upcomingReminders.email,
+          notifReminderSms: upcomingReminders.sms,
+          notifReminderInApp: upcomingReminders.inApp,
+          notifCancellationEmail: cancellations.email,
+          notifCancellationSms: cancellations.sms,
+          notifCancellationInApp: cancellations.inApp,
+          notifExclusiveDiscounts: exclusiveDiscounts,
+          notifNewsletter: newsletter
+        })
+      });
+      // Option: Refetch if needed, but state is already updated.
+    } catch (error) {
+      console.error('Error saving profile:', error);
+    }
   };
 
-  const handleUpdatePassword = () => {
+  const handleSaveNotifications = async () => {
+    setSaveStatus('saving');
+    await saveProfileSettings();
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+    }, 2000);
+  };
+
+  const handleTwoStepToggle = async () => {
+      const newValue = !twoStepEnabled;
+      setTwoStepEnabled(newValue);
+      try {
+        const token = localStorage.getItem('token');
+        await fetch('http://localhost:8080/api/v1/user/profile', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            fullName,
+            phone,
+            country,
+            profilePicture: avatarUrl,
+            twoStepEnabled: newValue,
+            dateOfBirth,
+            bloodGroup,
+            weight,
+            heartRate,
+            allergies,
+            notifBookingEmail: bookingConfirmations.email,
+            notifBookingSms: bookingConfirmations.sms,
+            notifBookingInApp: bookingConfirmations.inApp,
+            notifReminderEmail: upcomingReminders.email,
+            notifReminderSms: upcomingReminders.sms,
+            notifReminderInApp: upcomingReminders.inApp,
+            notifCancellationEmail: cancellations.email,
+            notifCancellationSms: cancellations.sms,
+            notifCancellationInApp: cancellations.inApp,
+            notifExclusiveDiscounts: exclusiveDiscounts,
+            notifNewsletter: newsletter
+          })
+        });
+      } catch (error) {
+        console.error('Error saving profile:', error);
+      }
+    };
+
+  const handleUpdatePassword = async () => {
     const newErrors: Record<string, string> = {};
     if (!currentPassword || currentPassword === '••••••••••••') {
       newErrors.currentPassword = 'Current password is required';
@@ -79,109 +278,146 @@ const ProfileSettingPage: React.FC = () => {
     setPasswordErrors(newErrors);
     
     if (Object.keys(newErrors).length === 0) {
-      setCurrentPassword('••••••••••••');
-      setNewPassword('');
-      setConfirmPassword('');
-      alert("Password updated successfully!");
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:8080/api/v1/user/password', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            currentPassword,
+            newPassword,
+            confirmPassword
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setCurrentPassword('••••••••••••');
+          setNewPassword('');
+          setConfirmPassword('');
+          alert("Password updated successfully!");
+        } else {
+          setPasswordErrors({ currentPassword: data.message || "Failed to update password" });
+        }
+      } catch (error) {
+        console.error("Error updating password:", error);
+      }
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!/^\d{10}$/.test(phone)) {
       setPhoneError('Phone number must be exactly 10 digits');
       return;
     }
     setPhoneError('');
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsEditing(false);
-    }, 1500);
+    await saveProfileSettings();
+    localStorage.setItem('fullName', fullName);
+    localStorage.setItem('profilePicture', avatarUrl);
+    setIsSaving(false);
+    setIsEditing(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setAvatarUrl(url);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleRemovePhoto = () => {
-    setAvatarUrl('https://lh3.googleusercontent.com/aida-public/AB6AXuCZHbfckUTer_B0V4UGQdj6hbBl570n8rDL9W4JkPDf3H1CS3X7zEPuMZEEMHqM4QcREe0vvmFj7eFDF40sCwDFpdcxptvdOXqb-wY6Vk0D46L2Cv6SkL3JWi9kyovrUX3dFYoFQ_QF1dmI5QjkoGXvKRDN3bwzJS49lRpz2iqUkbbNup2jWzngG9hdKWIq82Xv6BhIOBFN9w53rg1vieG_xUV2ddTnNei-WAoOZ2HvmXZgJjBlcNZocp6nVRwlDN7zCqnL9GFlLAc');
+    setAvatarUrl(DEFAULT_AVATAR);
   };
+
+  const handleRevokeSessions = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8080/api/v1/user/sessions', {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            fetchProfile(token!);
+        } else {
+            console.error('Failed to revoke sessions:', data.message);
+        }
+    } catch (e) {
+        console.error('Error revoking sessions:', e);
+    }
+  };
+
+  const calculateSecurityScore = () => {
+      let score = 0;
+      if (twoStepEnabled) score += 40;
+      if (googleConnected || facebookConnected) score += 30;
+      if (phone && phone.trim() !== '') score += 30;
+      return score;
+  };
+
+  const getSecurityScoreDisplay = () => {
+      const score = calculateSecurityScore();
+      if (score === 100) return { text: 'Excellent', subtext: 'Account fully secured', color: 'text-[#10B981]' };
+      if (score >= 70) return { text: 'Good', subtext: 'Mostly secure', color: 'text-[#F59E0B]' };
+      if (score >= 40) return { text: 'Fair', subtext: 'Could be better', color: 'text-[#F59E0B]' };
+      return { text: 'Poor', subtext: 'Take action now', color: 'text-[#ba1a1a]' };
+  };
+
+  const securityScore = getSecurityScoreDisplay();
+  const displayDate = updatedAt ? new Date(updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : (createdAt ? new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A');
 
   return (
     <div className="bg-[#f9f9ff] text-[#151c27] font-sans antialiased min-h-screen flex flex-col">
-      {/* TopNavBar (Fixed) */}
-      <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/80 backdrop-blur-md shadow-sm border-b border-[#c3c5d7]/30">
-        <div className="flex justify-between items-center px-4 md:px-10 h-20 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <img
-              alt="OmniBook Logo"
-              className="object-contain h-[40px]"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuANVa2DIMhxwJVhPP1FnM5XPZK669t-OaZbij7sEQY2BcRjKXoLi4Xlx3422j-PoJTMmPiR5Xs2jHyWkiOQbHG2PC_dwX1bTvLCKfZJr4xERFe5jC_Eg1nCXbH4JYQNcg8LmT7jvnS2rIU1qOMeCUzpati4NDHk55Jw4yD9q-c3RF-j48vJ6qqLiyYcMo90ZH-HOFSGJv14g2VG5oLaR8SvPRMAYcJZQSHy3gVOym_POA_776_joTMmbnqxiUzecB0QZUzztl5CrHw"
-            />
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) => 
-                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
-              }
-            >
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/book-appointment"
-              className={({ isActive }) => 
-                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
-              }
-            >
-              Book Appointment
-            </NavLink>
-            <NavLink
-              to="/my-history"
-              className={({ isActive }) => 
-                `text-[16px] font-semibold pb-1 ${isActive ? 'text-[#003fb1] border-b-2 border-[#003fb1]' : 'text-[#53606c] hover:text-[#003fb1] transition-colors duration-200'}`
-              }
-            >
-              My History
-            </NavLink>
-          </nav>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <div className="relative group ml-2">
-              <div className="h-10 w-10 rounded-full overflow-hidden border border-[#c3c5d7] hover:scale-105 transition-transform cursor-pointer shadow-sm">
-                <img
-                  alt="User Profile Avatar"
-                  className="w-full h-full object-cover"
-                  src={avatarUrl}
-                />
-              </div>
-              <div className="absolute right-0 mt-2 w-48 bg-white shadow-xl rounded-xl border border-[#dce2f3] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 py-2 z-[60]">
-                <NavLink
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-[#f0f3ff] text-[#151c27] text-[14px] font-medium transition-colors"
-                  to="/profile-settings"
-                >
-                  <span className="material-symbols-outlined text-[20px]">settings</span>
-                  Settings
-                </NavLink>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-[#ffdad6]/20 text-[#ba1a1a] text-[14px] font-medium transition-colors w-full text-left"
-                >
-                  <span className="material-symbols-outlined text-[20px]">logout</span>
-                  Log Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* TopNavBar */}
+      <UserTopNavigation />
+
+      {/* Mobile Tab Selector */}
+      <div className="flex md:hidden overflow-x-auto p-3 gap-2 border-b border-[#e2e8f0] bg-white sticky top-20 z-30 shadow-xs">
+        <button 
+          onClick={() => setActiveTab('personal-info')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+            activeTab === 'personal-info' ? 'bg-[#003fb1] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Personal Info
+        </button>
+        <button 
+          onClick={() => setActiveTab('security')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+            activeTab === 'security' ? 'bg-[#003fb1] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Security
+        </button>
+        <button 
+          onClick={() => setActiveTab('notifications')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+            activeTab === 'notifications' ? 'bg-[#003fb1] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Notifications
+        </button>
+        <button 
+          onClick={() => setActiveTab('public-profile')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+            activeTab === 'public-profile' ? 'bg-[#003fb1] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          Public Profile
+        </button>
+      </div>
 
       {/* Main Content Area */}
-      <div className="flex pt-20 min-h-screen max-w-7xl mx-auto w-full">
+      <div className="flex flex-col md:flex-row pt-4 md:pt-20 min-h-screen max-w-7xl mx-auto w-full">
         {/* SideNavBar */}
         <aside className="hidden md:flex flex-col gap-2 p-6 w-64 shrink-0 sticky top-20 h-[calc(100vh-80px)] overflow-y-auto">
           <div className="mb-6 px-2">
@@ -263,20 +499,40 @@ const ProfileSettingPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-6">
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Full Name</label>
-                        <p className="text-[18px] text-[#151c27] font-bold">Alexander Mitchell</p>
+                        <p className="text-[18px] text-[#151c27] font-bold">{fullName}</p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Email Address</label>
-                        <p className="text-[16px] text-[#434654]">alex.mitchell@omnibook.com</p>
+                        <p className="text-[16px] text-[#434654]">{email}</p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Phone Number</label>
-                        <p className="text-[16px] text-[#434654]">+1 {phone.length === 10 ? phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3') : phone}</p>
+                        <p className="text-[16px] text-[#434654]">{country} {phone.length === 10 ? phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3') : phone}</p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Country/Region</label>
-                        <p className="text-[16px] text-[#434654]">United States</p>
+                        <p className="text-[16px] text-[#434654]">{country === '+1' ? 'United States' : country === '+44' ? 'United Kingdom' : country === '+91' ? 'India' : country === '+61' ? 'Australia' : country === '+977' ? 'Nepal' : country}</p>
                       </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Date of Birth</label>
+                        <p className="text-[16px] text-[#434654]">{dateOfBirth ? new Date(dateOfBirth).toLocaleDateString() : 'Not Set'}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Blood Group</label>
+                        <p className="text-[16px] text-[#434654]">{bloodGroup || 'Not Set'}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Weight</label>
+                        <p className="text-[16px] text-[#434654]">{weight ? `${weight} kg` : 'Not Set'}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Heart Rate</label>
+                        <p className="text-[16px] text-[#434654]">{heartRate ? `${heartRate} bpm` : 'Not Set'}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 mt-8">
+                      <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Allergies</label>
+                      <p className="text-[16px] text-[#434654]">{allergies || 'None'}</p>
                     </div>
                   </div>
                 </div>
@@ -290,7 +546,7 @@ const ProfileSettingPage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[14px] font-medium text-[#151c27]">Verified Member</p>
-                        <p className="text-[12px] text-[#434654] mt-1">Your identity was verified on Jan 2024.</p>
+                        <p className="text-[12px] text-[#434654] mt-1">Your identity was verified on {createdAt ? new Date(createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'recently'}.</p>
                     </div>
                 </div>
                 <div className="bg-[#006f4b]/10 p-6 rounded-xl flex items-start gap-4">
@@ -299,7 +555,18 @@ const ProfileSettingPage: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-[14px] font-medium text-[#151c27]">Last Login</p>
-                        <p className="text-[12px] text-[#434654] mt-1">2 hours ago from San Francisco, CA.</p>
+                        <p className="text-[12px] text-[#434654] mt-1">
+                          {lastLoginAt ? (() => {
+                            const diffMins = Math.floor((new Date().getTime() - new Date(lastLoginAt).getTime()) / 60000);
+                            const diffHours = Math.floor(diffMins / 60);
+                            const diffDays = Math.floor(diffHours / 24);
+                            let timeStr = 'recently';
+                            if (diffDays > 0) timeStr = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+                            else if (diffHours > 0) timeStr = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+                            else if (diffMins > 0) timeStr = `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+                            return `${timeStr} from ${lastLoginLocation}`;
+                          })() : `Recently from ${lastLoginLocation}`}
+                        </p>
                     </div>
                 </div>
               </div>
@@ -359,13 +626,18 @@ const ProfileSettingPage: React.FC = () => {
                           <label className="font-medium text-[14px] text-[#151c27] ml-1">Full Name</label>
                           <input
                               className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                              placeholder="Enter your full name" type="text" defaultValue="Alexander Mitchell" />
+                              placeholder="Enter your full name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                       </div>
                       <div className="flex flex-col gap-2">
                           <label className="font-medium text-[14px] text-[#151c27] ml-1">Phone Number</label>
                           <div className="relative group">
                             <div className="absolute left-[1px] top-[1px] bottom-[1px] flex items-center border-r border-[#c3c5d7] pr-2 pl-3 bg-[#f9f9ff] rounded-l-[7px] pointer-events-auto">
-                              <select className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} id="countryCode">
+                              <select 
+                                value={country}
+                                onChange={(e) => setCountry(e.target.value)}
+                                className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" 
+                                style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} id="countryCode"
+                              >
                                 <option value="+1">🇺🇸 +1</option>
                                 <option value="+44">🇬🇧 +44</option>
                                 <option value="+91">🇮🇳 +91</option>
@@ -390,10 +662,75 @@ const ProfileSettingPage: React.FC = () => {
                           <div className="relative">
                               <input
                                   className="w-full bg-[#f0f3ff] border border-[#c3c5d7] text-[#434654] cursor-not-allowed rounded-lg px-6 py-3 text-[16px] outline-none"
-                                  readOnly type="email" defaultValue="alex.mitchell@omnibook.com" />
+                                  readOnly type="email" value={email} />
                               <span className="absolute right-6 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686] text-[20px]">lock</span>
                           </div>
                           <p className="text-[#434654] font-medium text-[12px] ml-1">Email address cannot be changed. Contact support for help.</p>
+                      </div>
+                  </div>
+                  
+                  {/* Medical/Patient Profile Fields Section */}
+                  <div className="mt-8 border-t border-[#e7eefe] pt-8">
+                      <h4 className="text-[18px] font-semibold text-[#151c27] mb-6">Medical Profile</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="flex flex-col gap-2">
+                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Date of Birth</label>
+                              <input
+                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                  type="date"
+                                  value={dateOfBirth}
+                                  onChange={(e) => setDateOfBirth(e.target.value)}
+                              />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Blood Group</label>
+                              <select
+                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                  value={bloodGroup}
+                                  onChange={(e) => setBloodGroup(e.target.value)}
+                              >
+                                  <option value="">Select Blood Group</option>
+                                  <option value="A+">A+</option>
+                                  <option value="A-">A-</option>
+                                  <option value="B+">B+</option>
+                                  <option value="B-">B-</option>
+                                  <option value="O+">O+</option>
+                                  <option value="O-">O-</option>
+                                  <option value="AB+">AB+</option>
+                                  <option value="AB-">AB-</option>
+                              </select>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Weight (kg)</label>
+                              <input
+                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                  placeholder="E.g., 70"
+                                  type="number"
+                                  step="0.1"
+                                  value={weight}
+                                  onChange={(e) => setWeight(e.target.value)}
+                              />
+                          </div>
+                          <div className="flex flex-col gap-2">
+                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Heart Rate (bpm)</label>
+                              <input
+                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                  placeholder="E.g., 72"
+                                  type="number"
+                                  value={heartRate}
+                                  onChange={(e) => setHeartRate(e.target.value)}
+                              />
+                          </div>
+                      </div>
+                      <div className="flex flex-col gap-2 mt-6">
+                          <label className="font-medium text-[14px] text-[#151c27] ml-1">Allergies (if any)</label>
+                          <input
+                              className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                              placeholder="E.g., Peanuts, Penicillin"
+                              type="text"
+                              value={allergies}
+                              onChange={(e) => setAllergies(e.target.value)}
+                          />
                       </div>
                   </div>
 
@@ -445,7 +782,7 @@ const ProfileSettingPage: React.FC = () => {
                           </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" checked={twoStepEnabled} onChange={() => setTwoStepEnabled(!twoStepEnabled)} />
+                          <input type="checkbox" className="sr-only peer" checked={twoStepEnabled} onChange={handleTwoStepToggle} />
                           <div className={`w-12 h-6 rounded-full peer transition-all ${twoStepEnabled ? 'bg-[#10B981]' : 'bg-[#c3c5d7]'} relative after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${twoStepEnabled ? 'after:translate-x-full after:border-white' : ''}`}></div>
                           <span className={`ms-3 text-[14px] font-bold ${twoStepEnabled ? 'text-[#10B981]' : 'text-[#434654]'}`}>{twoStepEnabled ? 'On' : 'Off'}</span>
                       </label>
@@ -562,12 +899,16 @@ const ProfileSettingPage: React.FC = () => {
                                           </div>
                                           <div>
                                               <p className="text-[14px] font-bold text-[#151c27]">Google</p>
-                                              <p className="text-[12px] font-medium text-[#434654]">Connected to alex@gmail.com</p>
+                                              <p className="text-[12px] font-medium text-[#434654]">{googleConnected ? `Connected to ${googleEmail}` : 'Not Connected'}</p>
                                           </div>
                                       </div>
-                                      <button className="px-3 py-1 text-[12px] font-bold bg-[#dce2f3] text-[#434654] rounded hover:bg-[#c3c5d7] transition-colors">Disconnect</button>
+                                      {googleConnected ? (
+                                          <button onClick={() => handleDisconnect('google')} className="px-3 py-1 text-[12px] font-bold bg-[#dce2f3] text-[#434654] rounded hover:bg-[#c3c5d7] transition-colors">Disconnect</button>
+                                      ) : (
+                                          <button onClick={() => handleGoogleConnect()} className="px-3 py-1 text-[12px] font-bold border border-[#003fb1] text-[#003fb1] rounded hover:bg-[#003fb1]/5 transition-colors">Connect</button>
+                                      )}
                                   </div>
-                                  <div className="flex items-center justify-between p-4 rounded-lg bg-white border border-dashed border-[#c3c5d7]">
+                                  <div className={`flex items-center justify-between p-4 rounded-lg ${facebookConnected ? 'bg-[#f0f3ff] border border-[#dce2f3]/50' : 'bg-white border border-dashed border-[#c3c5d7]'}`}>
                                       <div className="flex items-center gap-4">
                                           <div className="w-8 h-8 rounded-full bg-[#d6e4f3]/30 flex items-center justify-center">
                                               <svg fill="#1877F2" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
@@ -576,39 +917,64 @@ const ProfileSettingPage: React.FC = () => {
                                           </div>
                                           <div>
                                               <p className="text-[14px] font-bold text-[#151c27]">Facebook</p>
-                                              <p className="text-[12px] text-[#53606c] font-medium">Not Connected</p>
+                                              <p className="text-[12px] text-[#53606c] font-medium">{facebookConnected ? `Connected to ${facebookEmail}` : 'Not Connected'}</p>
                                           </div>
                                       </div>
-                                      <button className="px-3 py-1 text-[12px] font-bold border border-[#003fb1] text-[#003fb1] rounded hover:bg-[#003fb1]/5 transition-colors">Connect</button>
+                                      {facebookConnected ? (
+                                          <button onClick={() => handleDisconnect('facebook')} className="px-3 py-1 text-[12px] font-bold bg-[#dce2f3] text-[#434654] rounded hover:bg-[#c3c5d7] transition-colors">Disconnect</button>
+                                      ) : (
+                                          <FacebookLogin
+                                              appId="1963537654308866"
+                                              fields="name,email,picture"
+                                              callback={handleFacebookConnect}
+                                              render={(renderProps: any) => (
+                                                  <button onClick={renderProps.onClick} className="px-3 py-1 text-[12px] font-bold border border-[#003fb1] text-[#003fb1] rounded hover:bg-[#003fb1]/5 transition-colors">Connect</button>
+                                              )}
+                                          />
+                                      )}
                                   </div>
                               </div>
                           </section>
                           
                           {/* Active Sessions */}
-                          <section className="bg-white rounded-xl p-6 shadow-[0_4px_20px_rgba(26,86,219,0.05)] border border-[#151c27]/5 space-y-6">
-                              <div className="flex items-center gap-4 border-b border-[#dce2f3] pb-4">
-                                  <span className="material-symbols-outlined text-[#003fb1]">devices</span>
-                                  <h3 className="text-[20px] font-medium">Where You're Logged In</h3>
-                              </div>
-                              <div className="flex items-start gap-6 p-4 hover:bg-[#f0f3ff] rounded-lg transition-colors cursor-default">
-                                  <div className="w-10 h-10 rounded-lg bg-[#003fb1]/5 flex items-center justify-center text-[#003fb1]">
-                                      <span className="material-symbols-outlined">laptop</span>
-                                  </div>
-                                  <div className="flex-1">
-                                      <div className="flex justify-between items-start">
-                                          <p className="text-[16px] font-bold text-[#151c27]">Mac OS • Chrome</p>
-                                          <span className="text-[10px] font-bold px-2 py-0.5 bg-[#005438]/10 text-[#005438] rounded-full uppercase tracking-wider">Active Now</span>
-                                      </div>
-                                      <p className="text-[14px] font-medium text-[#434654] mt-1">Kathmandu, Nepal</p>
-                                      <div className="mt-2 flex items-center gap-2 text-[#10B981]">
-                                          <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
-                                          <span className="text-[12px] font-medium">Verified session</span>
-                                      </div>
-                                  </div>
-                              </div>
-                              <button className="w-full text-[14px] font-bold text-[#ba1a1a] py-2 hover:bg-[#ba1a1a]/5 rounded-lg transition-colors">
-                                  Log out from all other sessions
-                              </button>
+                          <section className="bg-white rounded-xl p-6 shadow-[0_4px_20px_rgba(26,86,219,0.05)] border border-[#151c27]/5">
+                                <div className="flex items-center gap-4 border-b border-[#dce2f3] pb-4">
+                                    <span className="material-symbols-outlined text-[#003fb1]">devices</span>
+                                    <h3 className="text-[20px] font-medium">Where You're Logged In</h3>
+                                </div>
+                                
+                                {sessions && sessions.length > 0 ? (
+                                    sessions.map((session, index) => (
+                                        <div key={index} className="flex items-start gap-6 p-4 hover:bg-[#f0f3ff] rounded-lg transition-colors cursor-default">
+                                            <div className="w-10 h-10 rounded-lg bg-[#003fb1]/5 flex items-center justify-center text-[#003fb1]">
+                                                <span className="material-symbols-outlined">
+                                                    {session.deviceOS && (session.deviceOS.toLowerCase().includes('mac') || session.deviceOS.toLowerCase().includes('windows')) ? 'laptop' : 'smartphone'}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-start">
+                                                    <p className="text-[16px] font-bold text-[#151c27]">
+                                                        {session.deviceOS} • {session.browser}
+                                                    </p>
+                                                    {session.isCurrentSession && (
+                                                        <span className="text-[10px] font-bold px-2 py-0.5 bg-[#005438]/10 text-[#005438] rounded-full uppercase tracking-wider">Active Now</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[14px] font-medium text-[#434654] mt-1">{session.location || 'Unknown Location'}</p>
+                                                <div className="mt-2 flex items-center gap-2 text-[#10B981]">
+                                                    <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+                                                    <span className="text-[12px] font-medium">Verified session</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-[14px] font-medium text-[#434654] mt-1">No session history available.</p>
+                                )}
+
+                                <button onClick={handleRevokeSessions} className="w-full text-[14px] font-bold text-[#ba1a1a] py-2 hover:bg-[#ba1a1a]/5 rounded-lg transition-colors">
+                                    Log out from all other sessions
+                                </button>
                           </section>
                       </div>
                   </div>
@@ -618,12 +984,12 @@ const ProfileSettingPage: React.FC = () => {
                       <div className="bg-[#f0f3ff] p-6 rounded-xl border border-[#dce2f3]/30 text-center">
                           <span className="material-symbols-outlined text-[#003fb1] mb-2">history</span>
                           <p className="text-[12px] font-bold text-[#151c27]">Last Changed</p>
-                          <p className="text-[12px] font-medium text-[#434654]">March 12, 2024</p>
+                          <p className="text-[12px] font-medium text-[#434654]">{displayDate}</p>
                       </div>
                       <div className="bg-[#f0f3ff] p-6 rounded-xl border border-[#dce2f3]/30 text-center">
-                          <span className="material-symbols-outlined text-[#10B981] mb-2">shield_lock</span>
-                          <p className="text-[12px] font-bold text-[#151c27]">Score: Excellent</p>
-                          <p className="text-[12px] font-medium text-[#434654]">Account fully secured</p>
+                          <span className={`material-symbols-outlined ${securityScore.color} mb-2`}>shield_lock</span>
+                          <p className="text-[12px] font-bold text-[#151c27]">Score: {securityScore.text}</p>
+                          <p className="text-[12px] font-medium text-[#434654]">{securityScore.subtext}</p>
                       </div>
                       <div className="bg-[#f0f3ff] p-6 rounded-xl border border-[#dce2f3]/30 text-center">
                           <span className="material-symbols-outlined text-[#53606c] mb-2">help</span>
@@ -788,10 +1154,10 @@ const ProfileSettingPage: React.FC = () => {
                     </div>
                     <div className="relative z-10 flex flex-col items-center">
                         <div className="p-1 bg-white rounded-full shadow-lg mb-6">
-                            <img alt="Alexander Mitchell Profile" className="w-32 h-32 rounded-full object-cover"
+                            <img alt={`${fullName} Profile`} className="w-32 h-32 rounded-full object-cover"
                                 src={avatarUrl} />
                         </div>
-                        <h2 className="text-[24px] font-semibold text-[#151c27] mb-2">{fullName || 'Alexander Mitchell'}</h2>
+                        <h2 className="text-[24px] font-semibold text-[#151c27] mb-2">{fullName}</h2>
                         <div className="flex items-center gap-2 px-6 py-1 bg-[#005438]/10 rounded-full">
                             <span className="material-symbols-outlined text-[18px] text-[#005438]"
                                 style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>

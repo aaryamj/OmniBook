@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Patient CRM 360 - Marcus Vance</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-background": "#191c1e",
+                "error-container": "#ffdad6",
+                "tertiary": "#000000",
+                "primary-container": "#0F172A",
+                "on-tertiary-fixed": "#111c2d",
+                "on-tertiary-container": "#94A3B8",
+                "on-primary-container": "#7c839b",
+                "surface-variant": "#e0e3e5",
+                "background": "#F8FAFC",
+                "surface-bright": "#f7f9fb",
+                "on-error": "#ffffff",
+                "outline": "#E2E8F0",
+                "inverse-on-surface": "#eff1f3",
+                "on-surface-variant": "#45464d",
+                "inverse-primary": "#bec6e0",
+                "surface-container-high": "#e6e8ea",
+                "tertiary-fixed-dim": "#bcc7de",
+                "surface-dim": "#d8dadc",
+                "on-primary-fixed": "#131b2e",
+                "surface-container": "#eceef0",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed": "#d8e3fb",
+                "outline-variant": "#c6c6cd",
+                "on-tertiary-fixed-variant": "#1E293B",
+                "surface-container-lowest": "#ffffff",
+                "surface-tint": "#565e74",
+                "surface": "#f7f9fb",
+                "secondary-fixed": "#38BDF8",
+                "on-primary-fixed-variant": "#3f465c",
+                "on-secondary": "#ffffff",
+                "inverse-surface": "#2d3133",
+                "secondary-container": "#38BDF8",
+                "primary": "#000000",
+                "on-secondary-fixed-variant": "#004c69",
+                "secondary-fixed-dim": "#7bd0ff",
+                "on-secondary-container": "#004d6a",
+                "on-secondary-fixed": "#001e2c",
+                "error": "#EF4444",
+                "on-primary": "#ffffff",
+                "tertiary-container": "#111c2d",
+                "surface-container-low": "#f2f4f6",
+                "primary-fixed-dim": "#bec6e0",
+                "secondary": "#00668a",
+                "on-error-container": "#93000a",
+                "primary-fixed": "#dae2fd",
+                "on-surface": "#191c1e",
+                "surface-container-highest": "#e0e3e5"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "stack-default": "1rem",
+                "stack-compact": "0.5rem",
+                "gutter": "1.5rem",
+                "sidebar-width": "280px",
+                "container-max": "1440px",
+                "margin-mobile": "1rem"
+            },
+            "fontFamily": {
+                "headline-lg": ["Inter", "sans-serif"],
+                "headline-md": ["Inter", "sans-serif"],
+                "body-lg": ["Inter", "sans-serif"],
+                "body-md": ["Inter", "sans-serif"],
+                "label-md": ["Inter", "sans-serif"],
+                "mono-data": ["JetBrains Mono", "monospace"]
+            },
+            "fontSize": {
+                "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .sidebar-active-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #38BDF8;
+        }
+        .blur-text {
+            filter: blur(4px);
+            user-select: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased overflow-hidden">
+<!-- FIXED SIDEBAR -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-primary-container text-on-tertiary z-50 flex flex-col transition-all duration-200 ease-in-out">
+<div class="p-gutter flex flex-col gap-1">
+<h1 class="font-headline-md text-headline-md font-bold text-on-tertiary">OmniBook</h1>
+<p class="text-[10px] tracking-widest text-on-tertiary-container font-semibold uppercase">God Mode Admin</p>
+</div>
+<nav class="flex-1 mt-4 overflow-y-auto custom-scrollbar">
+<ul class="space-y-1 px-3">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary-container hover:bg-on-tertiary-fixed-variant hover:text-on-tertiary group" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary-container hover:bg-on-tertiary-fixed-variant hover:text-on-tertiary group" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md text-body-md">All Appointments</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary-container hover:bg-on-tertiary-fixed-variant hover:text-on-tertiary group" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-md text-body-md">Providers</span>
+</a>
+</li>
+<li class="relative">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary bg-on-tertiary-fixed-variant" href="#">
+<div class="sidebar-active-indicator"></div>
+<span class="material-symbols-outlined text-secondary-fixed">group</span>
+<span class="font-body-md text-body-md">CRM</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary-container hover:bg-on-tertiary-fixed-variant hover:text-on-tertiary group" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-body-md text-body-md">Ledger</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out text-on-tertiary-container hover:bg-on-tertiary-fixed-variant hover:text-on-tertiary group" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<div class="p-6 border-t border-white/5">
+<button class="flex items-center gap-3 w-full px-4 py-3 text-error hover:bg-error/10 rounded-lg transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-md text-body-md font-semibold">Logout</span>
+</button>
+</div>
+</aside>
+<!-- MAIN CONTENT AREA -->
+<div class="ml-sidebar-width h-screen flex flex-col">
+<!-- TOP NAVBAR -->
+<header class="h-16 bg-surface-container-lowest flex items-center justify-between px-gutter border-b border-outline-variant shrink-0">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full border border-green-200">
+<span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+<span class="text-[11px] font-bold tracking-tight">SYSTEM LIVE</span>
+</div>
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-1 focus:ring-secondary-fixed" placeholder="Global search entities..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">grid_view</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right">
+<p class="font-label-md text-label-md text-on-background">System Admin</p>
+<p class="text-[10px] text-secondary-fixed font-bold tracking-widest leading-none">ROOT AUTHORITY</p>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-tertiary font-bold text-sm">
+                        AD
+                    </div>
+</div>
+</div>
+</header>
+<!-- INNER WORKSPACE CANVAS -->
+<main class="flex-1 overflow-y-auto p-gutter max-w-container-max mx-auto w-full space-y-8 pb-20">
+<!-- BREADCRUMB & HEADER -->
+<section>
+<nav class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="font-label-md text-label-md">Workspace</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-label-md text-label-md">CRM</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-label-md text-label-md text-on-background">Patient Directory</span>
+</nav>
+<div class="flex justify-between items-end">
+<div class="flex items-baseline gap-4">
+<h2 class="font-headline-lg text-headline-lg text-on-background">Marcus Vance</h2>
+<span class="font-mono-data text-mono-data text-on-surface-variant">#MV-882910</span>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-5 py-2.5 border border-outline rounded-lg font-body-md text-body-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]">upload_file</span>
+                            Upload Document
+                        </button>
+<button class="flex items-center gap-2 px-5 py-2.5 bg-secondary-container text-on-secondary-fixed font-bold rounded-lg font-body-md text-body-md hover:brightness-110 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+                            Book Follow-Up
+                        </button>
+</div>
+</div>
+</section>
+<!-- 3-COLUMN DATA GRID -->
+<div class="grid grid-cols-12 gap-gutter items-start">
+<!-- COLUMN 1: PROFILE & METRICS -->
+<div class="col-span-12 lg:col-span-3 space-y-gutter">
+<!-- Profile Card -->
+<div class="bg-surface-container-lowest border border-outline p-6 rounded-xl space-y-6">
+<div class="flex flex-col items-center text-center">
+<div class="w-32 h-32 rounded-full ring-4 ring-surface-container-low p-1 mb-4">
+<img class="w-full h-full object-cover rounded-full" data-alt="A professional studio headshot of a 45-year-old man named Marcus Vance, featuring a kind but serious expression. He has short dark hair with hints of grey at the temples, wearing a sophisticated minimalist grey sweater. The background is a clean, corporate light-mode gradient of soft whites and pale blues, consistent with a high-end medical CRM interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuYJf8VpclBtvf0tUwW3OQT6RZIaSIG4kDlaYL-XipVNJvle_ZiOwb-9fSFrzwHl0UEj0OOkt-YwQSifx6aocc1ljY089D1IuYLp0B7PtPT_eLM3zarFt1DvLvGAEeB1fZbNvQKnRrzXvAJfZYj8-HDhB6482eYGY5JC3w5Ljrx8V_jMhwrTOAF1wUYPPdMxsX0NkQh12t4tsNU2zAUh2kYzVbjEzDsn0ixkH4LH526S72jp4VdeqpvmxujZp7rnMrqJ_pNbuwkJE"/>
+</div>
+<h3 class="font-headline-md text-headline-md">Marcus Vance</h3>
+<p class="text-on-surface-variant font-body-md">Patient since May 2021</p>
+<div class="mt-4 flex gap-2 flex-wrap justify-center">
+<span class="bg-primary-container text-white px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Age 45</span>
+<span class="bg-secondary-fixed/20 text-on-secondary-container px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider">Blood O-</span>
+</div>
+</div>
+<div class="p-4 bg-error-container rounded-lg border border-error/20">
+<div class="flex items-center gap-2 text-error mb-1">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="font-label-md text-label-md uppercase tracking-widest">Allergies Warning</span>
+</div>
+<p class="font-mono-data text-mono-data text-on-error-container">Penicillin, Peanuts (Severe)</p>
+</div>
+<div class="space-y-4 pt-4 border-t border-outline">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">mail</span>
+<span class="font-body-md text-body-md">m.vance@corporate.net</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">call</span>
+<span class="font-body-md text-body-md">+1 (555) 902-1143</span>
+</div>
+</div>
+</div>
+<!-- Metrics Card -->
+<div class="bg-surface-container-lowest border border-outline p-6 rounded-xl">
+<h4 class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant mb-6">Recent Metrics</h4>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-lg">
+<p class="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Heart Rate</p>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-on-background">72</span>
+<span class="text-[11px] text-on-surface-variant">BPM</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg">
+<p class="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Weight</p>
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-on-background">182</span>
+<span class="text-[11px] text-on-surface-variant">LBS</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- COLUMN 2: CLINICAL TIMELINE -->
+<div class="col-span-12 lg:col-span-5 space-y-gutter">
+<div class="bg-surface-container-lowest border border-outline rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-outline flex justify-between items-center">
+<h4 class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">Clinical Timeline</h4>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">history</span>
+</div>
+<div class="p-6 space-y-8 relative">
+<!-- Timeline Line -->
+<div class="absolute left-[39px] top-8 bottom-8 w-[1px] bg-outline-variant"></div>
+<!-- Entry 1 -->
+<div class="relative pl-12">
+<div class="absolute left-[-5px] top-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center ring-4 ring-white">
+<span class="material-symbols-outlined text-[14px] text-on-secondary-fixed">stethoscope</span>
+</div>
+<div class="flex justify-between items-start mb-2">
+<div>
+<h5 class="font-headline-md text-[16px] leading-tight">Routine Checkup &amp; Consultation</h5>
+<p class="text-on-surface-variant text-body-md">Primary Physician: <span class="font-semibold text-on-background">Dr. Thorne</span></p>
+</div>
+<span class="font-mono-data text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1 rounded">OCT 20, 2026</span>
+</div>
+<!-- Locked Note -->
+<div class="relative bg-surface-container-low rounded-lg p-6 border border-outline border-dashed group overflow-hidden mt-4">
+<div class="blur-text opacity-40 font-body-md leading-relaxed">
+                                        The patient presents with mild hypertension and reports intermittent headaches... further testing required for cardiovascular baseline. Prescription issued for...
+                                    </div>
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-surface-container-low/60 backdrop-blur-[2px] transition-all group-hover:backdrop-blur-none">
+<span class="material-symbols-outlined text-on-surface-variant mb-2">lock</span>
+<p class="text-on-surface-variant font-label-md uppercase tracking-wider text-[11px]">Unlock Clinical Notes</p>
+<p class="text-[10px] text-on-surface-variant/70 mt-1">Doctor Access Required</p>
+</div>
+</div>
+<!-- Attachments -->
+<div class="flex gap-3 mt-4">
+<div class="flex items-center gap-3 p-2 border border-outline rounded-lg bg-surface hover:border-secondary-fixed cursor-pointer transition-colors group w-1/2">
+<div class="w-10 h-10 rounded bg-red-50 flex items-center justify-center text-red-600">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-body-md font-semibold truncate">Lab_Results.pdf</p>
+<p class="text-[10px] text-on-surface-variant">2.4 MB • Complete</p>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 border border-outline rounded-lg bg-surface hover:border-secondary-fixed cursor-pointer transition-colors group w-1/2">
+<div class="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-blue-600">
+<span class="material-symbols-outlined">image</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-body-md font-semibold truncate">Dental_XRay.jpg</p>
+<p class="text-[10px] text-on-surface-variant">4.1 MB • Raw</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Entry 2 (Small) -->
+<div class="relative pl-12 opacity-60">
+<div class="absolute left-[-5px] top-1 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center ring-4 ring-white">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">vaccines</span>
+</div>
+<div class="flex justify-between items-start">
+<div>
+<h5 class="font-headline-md text-[16px] leading-tight">Annual Flu Vaccination</h5>
+<p class="text-on-surface-variant text-body-md">Nurse: <span class="font-semibold">Sarah Jenkins</span></p>
+</div>
+<span class="font-mono-data text-[11px] text-on-surface-variant">SEP 12, 2026</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- COLUMN 3: FINANCIAL LEDGER -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<div class="bg-primary-container text-white rounded-xl p-6 shadow-xl relative overflow-hidden">
+<!-- Abstract glow effect -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed opacity-10 blur-3xl -mr-16 -mt-16"></div>
+<h4 class="font-label-md text-label-md uppercase tracking-widest text-on-tertiary-container mb-6">Patient Financials</h4>
+<div class="space-y-6">
+<div>
+<p class="text-[11px] font-bold text-on-tertiary-container uppercase tracking-tighter mb-1">Lifetime Billed</p>
+<div class="flex items-baseline gap-4">
+<span class="font-headline-lg text-headline-lg">$150.00</span>
+<span class="text-on-tertiary-container text-sm">/</span>
+<span class="text-on-tertiary-container font-mono-data">Rs. 12,000</span>
+</div>
+</div>
+<div class="p-4 bg-white/5 rounded-lg border border-white/10">
+<p class="text-[11px] font-bold text-secondary-fixed uppercase tracking-tighter mb-1">Outstanding Balance</p>
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-headline-md text-white">Rs. 2,500</span>
+<span class="bg-on-tertiary-fixed-variant text-secondary-fixed px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest">Pending</span>
+</div>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<button class="w-full py-3 bg-secondary-fixed text-primary-container font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">payments</span>
+                                Generate Invoice Link
+                            </button>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-outline">
+<h4 class="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">Transaction History</h4>
+</div>
+<div class="p-6 space-y-4">
+<!-- Transaction 1 -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">wallet</span>
+</div>
+<div>
+<p class="font-body-md font-bold">eSewa Wallet</p>
+<p class="text-[11px] text-on-surface-variant">Ref: #TX-99201</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-mono-data text-on-background">Rs. 2,000</p>
+<span class="text-[9px] font-bold text-green-600 uppercase tracking-widest">Settled</span>
+</div>
+</div>
+<!-- Transaction 2 -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">language</span>
+</div>
+<div>
+<p class="font-body-md font-bold">Stripe Portal</p>
+<p class="text-[11px] text-on-surface-variant">Ref: #TX-99188</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-mono-data text-on-background">$50.00</p>
+<span class="text-[9px] font-bold text-green-600 uppercase tracking-widest">Settled</span>
+</div>
+</div>
+</div>
+<a class="block w-full py-3 text-center text-label-md text-on-surface-variant bg-surface-container-low hover:text-primary transition-colors border-t border-outline" href="#">
+                            View Full Ledger Details
+                        </a>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.style.transform = 'scale(0.98)';
+            });
+            el.addEventListener('mouseup', () => {
+                el.style.transform = 'scale(1)';
+            });
+            el.addEventListener('mouseleave', () => {
+                el.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>

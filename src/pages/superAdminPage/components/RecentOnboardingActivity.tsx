@@ -1,90 +1,20 @@
-import { useState } from 'react';
+interface Activity {
+    id: number;
+    name: string;
+    status: string;
+    location: string;
+    time: string;
+    icon: string;
+    bgClass: string;
+    textHover: string;
+}
+
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import GlobalAuditLogs from './GlobalAuditLogs';
 
-const mockActivities = [
-    {
-        id: 1,
-        name: 'Kathmandu Central Hospital',
-        status: 'Account Activated',
-        location: 'Kathmandu, Nepal',
-        time: '2h ago',
-        icon: 'domain',
-        bgClass: 'bg-blue-50 text-blue-600',
-        textHover: 'group-hover:text-blue-700'
-    },
-    {
-        id: 2,
-        name: 'Dr. Sharma Clinics',
-        status: 'Credentials Verified',
-        location: 'Pokhara',
-        time: '5h ago',
-        icon: 'verified_user',
-        bgClass: 'bg-green-50 text-green-600',
-        textHover: 'group-hover:text-green-700'
-    },
-    {
-        id: 3,
-        name: 'Patan Polyclinic',
-        status: 'Awaiting Documentation Review',
-        location: 'Patan',
-        time: '12h ago',
-        icon: 'pending_actions',
-        bgClass: 'bg-orange-50 text-orange-600',
-        textHover: 'group-hover:text-orange-700'
-    },
-    {
-        id: 4,
-        name: 'Lalitpur Eye Center',
-        status: 'Account Activated',
-        location: 'Lalitpur',
-        time: '1d ago',
-        icon: 'domain',
-        bgClass: 'bg-blue-50 text-blue-600',
-        textHover: 'group-hover:text-blue-700'
-    },
-    {
-        id: 5,
-        name: 'Everest Medical',
-        status: 'Payment Pending',
-        location: 'Namche',
-        time: '1d ago',
-        icon: 'payments',
-        bgClass: 'bg-orange-50 text-orange-600',
-        textHover: 'group-hover:text-orange-700'
-    },
-    {
-        id: 6,
-        name: 'Biratnagar Health Post',
-        status: 'Credentials Verified',
-        location: 'Biratnagar',
-        time: '2d ago',
-        icon: 'verified_user',
-        bgClass: 'bg-green-50 text-green-600',
-        textHover: 'group-hover:text-green-700'
-    },
-    {
-        id: 7,
-        name: 'Dharan Dental Care',
-        status: 'Account Activated',
-        location: 'Dharan',
-        time: '2d ago',
-        icon: 'domain',
-        bgClass: 'bg-blue-50 text-blue-600',
-        textHover: 'group-hover:text-blue-700'
-    },
-    {
-        id: 8,
-        name: 'Bhairahawa Diagnostics',
-        status: 'Application Received',
-        location: 'Bhairahawa',
-        time: '3d ago',
-        icon: 'inbox',
-        bgClass: 'bg-purple-50 text-purple-600',
-        textHover: 'group-hover:text-purple-700'
-    }
-];
-
 export default function RecentOnboardingActivity() {
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [showAll, setShowAll] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [enforce2FA, setEnforce2FA] = useState(true);
@@ -92,17 +22,92 @@ export default function RecentOnboardingActivity() {
     const [currentStep, setCurrentStep] = useState(1);
     const [isDispatching, setIsDispatching] = useState(false);
     
+    const fetchActivities = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            const response = await axios.get('http://localhost:8080/api/v1/superadmin/tenants', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            const tenants = response.data;
+            const mappedActivities: Activity[] = tenants.map((tenant: any) => {
+                const createdAt = new Date(tenant.createdAt);
+                const now = new Date();
+                const diffMs = now.getTime() - createdAt.getTime();
+                const diffMins = Math.round(diffMs / 60000);
+                let timeAgo = '';
+                if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+                else if (diffMins < 1440) timeAgo = `${Math.round(diffMins/60)}h ago`;
+                else timeAgo = `${Math.round(diffMins/1440)}d ago`;
+                
+                return {
+                    id: tenant.id,
+                    name: tenant.organizationName,
+                    status: tenant.status === 'ACTIVE' ? 'Account Activated' : 'Pending',
+                    location: tenant.address || 'Location not provided',
+                    time: timeAgo,
+                    icon: tenant.status === 'ACTIVE' ? 'domain' : 'pending_actions',
+                    bgClass: tenant.status === 'ACTIVE' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600',
+                    textHover: tenant.status === 'ACTIVE' ? 'group-hover:text-blue-700' : 'group-hover:text-orange-700'
+                };
+            });
+            
+            mappedActivities.sort((a, b) => b.id - a.id);
+            setActivities(mappedActivities);
+        } catch (error) {
+            console.error("Error fetching activities:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchActivities();
+    }, []);
+    
+    // Form State
+    const [formData, setFormData] = useState({
+        organizationName: '',
+        registrationNumber: '',
+        adminEmail: '',
+        adminFullName: '',
+        adminPhone: '',
+        address: '',
+        subscriptionTier: 'Enterprise (Unlimited Providers)'
+    });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+    
+    const validateStep1 = () => {
+        const errors: Record<string, string> = {};
+        if (!formData.organizationName.trim()) errors.organizationName = 'Clinic / Hospital Name is required';
+        if (!formData.registrationNumber.trim()) errors.registrationNumber = 'Registration Number is required';
+        if (!formData.adminFullName.trim()) errors.adminFullName = 'Admin Full Name is required';
+        if (!formData.adminEmail.trim()) {
+            errors.adminEmail = 'Primary Admin Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.adminEmail)) {
+            errors.adminEmail = 'Invalid email address';
+        }
+        if (!formData.adminPhone.trim()) errors.adminPhone = 'Admin Phone is required';
+        if (!formData.address.trim()) errors.address = 'Address / Location is required';
+        
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+    
     // Financial Report State
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportType, setReportType] = useState('comprehensive');
     const [reportFormat, setReportFormat] = useState('pdf');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [timePeriod, setTimePeriod] = useState('Last 30 Days');
     
     // Audit Drawer State
     const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
     
     // Determine which activities to show based on state
-    const displayedActivities = showAll ? mockActivities : mockActivities.slice(0, 4);
+    const displayedActivities = showAll ? activities : activities.slice(0, 4);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-gutter">
@@ -241,20 +246,89 @@ export default function RecentOnboardingActivity() {
                                             <input 
                                                 type="text" 
                                                 placeholder="e.g., Mediciti Core"
-                                                className="w-full bg-surface border border-outline-variant px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow"
+                                                value={formData.organizationName}
+                                                onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
+                                                className={`w-full bg-surface border px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.organizationName ? 'border-error' : 'border-outline-variant'}`}
                                             />
+                                            {formErrors.organizationName && <p className="text-error text-xs mt-1">{formErrors.organizationName}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Registration Number</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="e.g., NMC-459921"
+                                                value={formData.registrationNumber}
+                                                onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
+                                                className={`w-full bg-surface border px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.registrationNumber ? 'border-error' : 'border-outline-variant'}`}
+                                            />
+                                            {formErrors.registrationNumber && <p className="text-error text-xs mt-1">{formErrors.registrationNumber}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Address / Location</label>
+                                            <div className="relative">
+                                                <span className="material-symbols-outlined absolute left-4 top-2.5 text-on-surface-variant text-[20px]">location_on</span>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="e.g., Bhaisepati, Lalitpur"
+                                                    value={formData.address}
+                                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                                    className={`w-full bg-surface border pl-12 pr-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.address ? 'border-error' : 'border-outline-variant'}`}
+                                                />
+                                            </div>
+                                            {formErrors.address && <p className="text-error text-xs mt-1">{formErrors.address}</p>}
                                         </div>
                                         
                                         <div>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Admin Full Name</label>
+                                            <input 
+                                                type="text" 
+                                                placeholder="e.g., Dr. Ramesh Sharma"
+                                                value={formData.adminFullName}
+                                                onChange={(e) => setFormData({...formData, adminFullName: e.target.value})}
+                                                className={`w-full bg-surface border px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.adminFullName ? 'border-error' : 'border-outline-variant'}`}
+                                            />
+                                            {formErrors.adminFullName && <p className="text-error text-xs mt-1">{formErrors.adminFullName}</p>}
+                                        </div>
+
+                                        <div>
                                             <label className="block text-sm font-bold text-on-surface mb-2">Primary Admin Email</label>
                                             <div className="relative">
-                                                <span className="material-symbols-outlined absolute left-4 top-2.5 text-on-surface-variant text-[20px]">lock</span>
+                                                <span className="material-symbols-outlined absolute left-4 top-2.5 text-on-surface-variant text-[20px]">mail</span>
                                                 <input 
                                                     type="email" 
                                                     placeholder="e.g., admin@mediciti.com"
-                                                    className="w-full bg-surface border border-outline-variant pl-12 pr-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow"
+                                                    value={formData.adminEmail}
+                                                    onChange={(e) => setFormData({...formData, adminEmail: e.target.value})}
+                                                    className={`w-full bg-surface border pl-12 pr-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.adminEmail ? 'border-error' : 'border-outline-variant'}`}
                                                 />
                                             </div>
+                                            {formErrors.adminEmail && <p className="text-error text-xs mt-1">{formErrors.adminEmail}</p>}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Admin Phone</label>
+                                            <div className="relative group">
+                                                <div className="absolute left-[1px] top-[1px] bottom-[1px] flex items-center border-r border-outline-variant pr-2 pl-3 bg-surface-container-low rounded-l-[11px] pointer-events-auto z-10">
+                                                    <select className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-on-surface-variant font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}}>
+                                                        <option value="+1">🇺🇸 +1</option>
+                                                        <option value="+44">🇬🇧 +44</option>
+                                                        <option value="+91">🇮🇳 +91</option>
+                                                        <option value="+61">🇦🇺 +61</option>
+                                                        <option value="+977">🇳🇵 +977</option>
+                                                    </select>
+                                                </div>
+                                                <input 
+                                                    type="tel" 
+                                                    maxLength={10}
+                                                    placeholder="0000000000"
+                                                    value={formData.adminPhone}
+                                                    onChange={(e) => setFormData({...formData, adminPhone: e.target.value.replace(/[^0-9]/g, '')})}
+                                                    className={`w-full bg-surface border pl-[95px] pr-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.adminPhone ? 'border-error' : 'border-outline-variant'}`}
+                                                />
+                                            </div>
+                                            {formErrors.adminPhone && <p className="text-error text-xs mt-1">{formErrors.adminPhone}</p>}
                                         </div>
                                     </section>
                                     
@@ -262,27 +336,19 @@ export default function RecentOnboardingActivity() {
                                     <section className="space-y-5 mb-8">
                                         <h3 className="text-sm font-bold text-primary border-b border-surface-container pb-2">Workspace Configuration</h3>
                                         
-                                        <div>
-                                            <label className="block text-sm font-bold text-on-surface mb-2">Subdomain Binding</label>
-                                            <div className="flex shadow-sm rounded-lg overflow-hidden border border-outline-variant focus-within:ring-2 focus-within:ring-blue-500 transition-shadow">
-                                                <input 
-                                                    type="text" 
-                                                    defaultValue="mediciti"
-                                                    className="flex-1 bg-surface px-4 py-2.5 text-body-md outline-none border-none"
-                                                />
-                                                <div className="bg-surface-container px-4 py-2.5 text-on-surface-variant text-body-md font-mono-data border-l border-outline-variant flex items-center">
-                                                    .omnibook.app
-                                                </div>
-                                            </div>
-                                        </div>
+
                                         
                                         <div>
                                             <label className="block text-sm font-bold text-on-surface mb-2">Select Subscription Tier</label>
                                             <div className="relative">
-                                                <select className="w-full appearance-none bg-surface border border-outline-variant px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow cursor-pointer">
-                                                    <option>Starter (Up to 5 Providers)</option>
-                                                    <option>Professional (Up to 20 Providers)</option>
-                                                    <option selected>Enterprise (Unlimited Providers)</option>
+                                                <select 
+                                                    value={formData.subscriptionTier}
+                                                    onChange={(e) => setFormData({...formData, subscriptionTier: e.target.value})}
+                                                    className="w-full appearance-none bg-surface border border-outline-variant px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow cursor-pointer"
+                                                >
+                                                    <option value="Starter (Up to 5 Providers)">Starter (Up to 5 Providers)</option>
+                                                    <option value="Professional (Up to 20 Providers)">Professional (Up to 20 Providers)</option>
+                                                    <option value="Enterprise (Unlimited Providers)">Enterprise (Unlimited Providers)</option>
                                                 </select>
                                                 <span className="material-symbols-outlined absolute right-4 top-2.5 pointer-events-none text-on-surface-variant">expand_more</span>
                                             </div>
@@ -387,7 +453,9 @@ export default function RecentOnboardingActivity() {
                             
                             {currentStep === 1 ? (
                                 <button 
-                                    onClick={() => setCurrentStep(2)}
+                                    onClick={() => {
+                                        if (validateStep1()) setCurrentStep(2);
+                                    }}
                                     className="flex-1 bg-primary text-on-primary px-6 py-3.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all active:scale-[0.98]"
                                 >
                                     Continue to Dispatch Invite
@@ -395,14 +463,39 @@ export default function RecentOnboardingActivity() {
                                 </button>
                             ) : (
                                 <button 
-                                    onClick={() => {
+                                    onClick={async () => {
                                         setIsDispatching(true);
-                                        setTimeout(() => {
-                                            alert('Secure Invite Dispatched to root admin! Tenant provisioned successfully.');
+                                        try {
+                                            const token = localStorage.getItem('token');
+                                            const response = await axios.post('http://localhost:8080/api/v1/superadmin/tenants', {
+                                                organizationName: formData.organizationName,
+                                                registrationNumber: formData.registrationNumber,
+                                                adminEmail: formData.adminEmail,
+                                                adminFullName: formData.adminFullName,
+                                                adminPhone: formData.adminPhone,
+                                                address: formData.address,
+                                                subscriptionTier: formData.subscriptionTier.split(' ')[0],
+                                                enforce2FA: enforce2FA,
+                                                requireHIPAA: requireHIPAA
+                                            }, {
+                                                headers: {
+                                                    Authorization: `Bearer ${token}`
+                                                }
+                                            });
+                                            if (response.status === 200) {
+                                                alert('Secure Invite Dispatched to root admin! Tenant provisioned successfully.');
+                                                setIsDrawerOpen(false);
+                                                setCurrentStep(1);
+                                                setFormData({ organizationName: '', registrationNumber: '', adminFullName: '', adminEmail: '', adminPhone: '', address: '', subscriptionTier: 'ENTERPRISE' });
+                                                fetchActivities(); // Refresh list after adding
+                                            } else {
+                                                alert('Failed to dispatch invite.');
+                                            }
+                                        } catch (error: any) {
+                                            alert(error.response?.data?.message || 'Error communicating with server.');
+                                        } finally {
                                             setIsDispatching(false);
-                                            setIsDrawerOpen(false);
-                                            setCurrentStep(1);
-                                        }, 1500);
+                                        }
                                     }}
                                     disabled={isDispatching}
                                     className="flex-1 bg-primary text-on-primary px-6 py-3.5 rounded-lg font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-800 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
@@ -455,11 +548,17 @@ export default function RecentOnboardingActivity() {
                             <div>
                                 <label className="block text-sm font-bold text-on-surface mb-2">Time Period</label>
                                 <div className="relative">
-                                    <select className="w-full appearance-none bg-surface border border-outline-variant px-4 py-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow cursor-pointer font-medium">
-                                        <option>Last 30 Days</option>
-                                        <option>This Quarter (Q3 2026)</option>
-                                        <option>Year to Date (YTD)</option>
-                                        <option>Custom Range...</option>
+                                    <select 
+                                        value={timePeriod}
+                                        onChange={(e) => setTimePeriod(e.target.value)}
+                                        className="w-full appearance-none bg-surface border border-outline-variant px-4 py-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow cursor-pointer font-medium"
+                                    >
+                                        <option value="Last 30 Days">Last 30 Days</option>
+                                        <option value="This Quarter">This Quarter</option>
+                                        <option value="Year to Date">Year to Date</option>
+                                        <option value="Last 24 Hours">Last 24 Hours</option>
+                                        <option value="Last 7 Days">Last 7 Days</option>
+                                        <option value="This Year">This Year</option>
                                     </select>
                                     <span className="material-symbols-outlined absolute right-4 top-3 pointer-events-none text-on-surface-variant">calendar_today</span>
                                 </div>
@@ -517,13 +616,35 @@ export default function RecentOnboardingActivity() {
                                 Cancel
                             </button>
                             <button 
-                                onClick={() => {
+                                onClick={async () => {
                                     setIsGenerating(true);
-                                    setTimeout(() => {
-                                        setIsGenerating(false);
+                                    try {
+                                        const token = localStorage.getItem('token');
+                                        const response = await axios.get(`http://localhost:8080/api/v1/superadmin/reports/financial`, {
+                                            params: {
+                                                timePeriod,
+                                                reportType,
+                                                format: reportFormat
+                                            },
+                                            headers: { Authorization: `Bearer ${token}` },
+                                            responseType: 'blob'
+                                        });
+                                        
+                                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                                        const link = document.createElement('link');
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.setAttribute('download', `financial-report-${reportType}.${reportFormat}`);
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        a.parentNode?.removeChild(a);
+                                        
                                         setIsReportModalOpen(false);
-                                        alert(`Successfully generated ${reportType} report as ${reportFormat.toUpperCase()}! Initiating download...`);
-                                    }, 2000);
+                                    } catch (error) {
+                                        alert('Failed to generate report.');
+                                    } finally {
+                                        setIsGenerating(false);
+                                    }
                                 }}
                                 disabled={isGenerating}
                                 className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait"

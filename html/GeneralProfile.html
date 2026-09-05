@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | General Profile Configuration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#111c2d",
+                    "on-secondary-container": "#004d6a",
+                    "surface-dim": "#d8dadc",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary-fixed-variant": "#004c69",
+                    "primary-container": "#131b2e",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed-dim": "#bcc7de",
+                    "surface-tint": "#565e74",
+                    "primary-fixed": "#dae2fd",
+                    "surface-variant": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "background": "#f7f9fb",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-fixed": "#d8e3fb",
+                    "tertiary": "#000000",
+                    "surface-container": "#eceef0",
+                    "surface-bright": "#f7f9fb",
+                    "on-surface": "#191c1e",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-primary-container": "#7c839b",
+                    "on-secondary-fixed": "#001e2c",
+                    "on-tertiary-container": "#79849a",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e0e3e5",
+                    "secondary-fixed-dim": "#7bd0ff",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-background": "#191c1e",
+                    "outline": "#76777d",
+                    "on-primary-fixed": "#131b2e",
+                    "surface-container-high": "#e6e8ea",
+                    "secondary": "#00668a",
+                    "inverse-on-surface": "#eff1f3",
+                    "error-container": "#ffdad6",
+                    "surface-container-low": "#f2f4f6",
+                    "primary": "#000000",
+                    "on-tertiary-fixed-variant": "#3c475a",
+                    "secondary-container": "#40c2fd",
+                    "on-tertiary-fixed": "#111c2d",
+                    "secondary-fixed": "#c4e7ff",
+                    "inverse-primary": "#bec6e0",
+                    "surface": "#f7f9fb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "1rem",
+                    "stack-default": "1rem",
+                    "gutter": "1.5rem",
+                    "stack-compact": "0.5rem",
+                    "sidebar-width": "280px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "mono-data": ["JetBrains Mono"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Inter', sans-serif;
+            color: #191c1e;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- Sidebar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-tertiary-container border-r border-outline-variant flex flex-col z-50">
+<div class="p-6 flex flex-col gap-1">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-secondary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-on-primary">Admin Console</h1>
+<p class="font-label-md text-label-md text-on-primary-container opacity-80 uppercase tracking-widest">System Oversight</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:bg-primary-container hover:text-on-primary transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:bg-primary-container hover:text-on-primary transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+                    All Appointments
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:bg-primary-container hover:text-on-primary transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+                    Providers
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:bg-primary-container hover:text-on-primary transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+                    CRM
+                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-tertiary-container hover:bg-primary-container hover:text-on-primary transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+                    Ledger
+                </a>
+<!-- Active Item -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary bg-primary-container border-l-4 border-secondary-container font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</nav>
+</div>
+<div class="mt-auto p-6">
+<div class="flex items-center gap-3 p-3 bg-primary-container rounded-lg border border-outline/10">
+<div class="w-8 h-8 rounded-full bg-secondary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional portrait of a senior system administrator in a high-tech control room environment. The lighting is moody and focused with blue and slate tones. The individual has a serious and authoritative expression, wearing a clean, modern corporate attire, representing the ROOT AUTHORITY persona of the OmniBook platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC58W7lhJ36J-8HUSO3cM07URw08F2j-9Njs5gBLKaJVf5GVxgvKWonu5Pnnrs_YHUYyPrXXajB8Rr-6QY9oFfxabOvwMMC0s5RQ1oaUQEo2JueUvL4tBJUgH3E8FbxBV9vFklN-Ap2a6fFSwqTQ73SiD9-7FwsQ5cLAM2ovEfssyjhPoiGI5DAlGyO7HpYI7qZeGDJNOv7kxhPnmQHa2FloQ-T7Rfkq3BAUopdbbe_emLFqKulaN9_"/>
+</div>
+<div>
+<p class="text-white font-label-md text-xs font-bold uppercase tracking-tight">Root Authority</p>
+<p class="text-on-primary-container text-[10px] uppercase">Superadmin Layer</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 bg-surface-container-lowest border-b border-surface-variant flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-6">
+<h2 class="font-headline-md text-headline-md font-black text-on-surface">System Control</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md font-body-md focus:outline-none focus:border-secondary w-64" placeholder="Global system search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1 bg-[#F1FDF6] border border-[#DCFCE7] rounded-full">
+<span class="w-2 h-2 bg-[#22C55E] rounded-full animate-pulse"></span>
+<span class="font-mono-data text-mono-data text-[#166534]">All Systems Operational</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">sensors</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase">ROOT AUTHORITY</span>
+<div class="w-10 h-10 rounded-full border-2 border-secondary-container p-0.5 group-hover:scale-105 transition-transform">
+<img class="w-full h-full rounded-full object-cover" data-alt="A macro close-up of a high-security biometric identification icon. The design is sleek, using neon-blue and deep slate colors with sharp geometric lines and a subtle digital glow. It represents the ultimate level of administrative access in a high-density enterprise medical software." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBewuLTjl4AE0FzOaPyiebznRnw2GcZ8e-QZrF4UGFGqA-qzhqBC8yrpS5TYOibqsGd3cFbztd6InG-nL14EY0BbW_usJU85g9i81DDj1PO5D1BWBhzNijSfhFGnolJ2nHvScRJSuO7wO6jqFMMc5ff6R5EHNN_7jYqgFWFUWe4pASBZQ5db4-J0mVjkO7ZLUoK-za6lJ4_Ndx_WRq3kfwyrKpITX02qYOVMbKZp11RA9Q9_beP3cy"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="ml-[280px] pt-16 h-screen overflow-y-auto bg-surface">
+<div class="max-w-[1440px] mx-auto p-gutter pb-24">
+<!-- Breadcrumbs and Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<nav class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md mb-2">
+<span>Workspace</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span>Settings</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-primary font-bold">General Profile</span>
+</nav>
+<h1 class="font-headline-lg text-headline-lg text-primary">Clinic Identity &amp; Compliance</h1>
+</div>
+<button class="bg-[#00668a] hover:bg-[#004d6a] text-white px-8 py-3 rounded flex items-center gap-2 font-body-md text-body-md font-bold transition-all shadow-sm active:scale-95">
+<span class="material-symbols-outlined">save</span>
+                    Save Profile
+                </button>
+</div>
+<div class="flex gap-gutter">
+<!-- Left Inner Menu -->
+<aside class="w-72 flex-shrink-0">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low">
+<h3 class="font-label-md text-label-md font-black uppercase text-on-surface-variant">Configuration Layers</h3>
+</div>
+<nav class="flex flex-col">
+<a class="flex items-center justify-between px-5 py-4 bg-secondary-container/10 border-r-4 border-secondary text-secondary font-bold" href="#">
+<span class="flex items-center gap-3 font-body-md text-body-md">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">domain</span>
+                                    General Profile
+                                </span>
+</a>
+<a class="flex items-center gap-3 px-5 py-4 text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">palette</span>
+                                Branding &amp; White-Label
+                            </a>
+<a class="flex items-center gap-3 px-5 py-4 text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">payments</span>
+                                Payment Gateways
+                            </a>
+<a class="flex items-center gap-3 px-5 py-4 text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">schedule</span>
+                                Operating Hours
+                            </a>
+<a class="flex items-center gap-3 px-5 py-4 text-on-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">security</span>
+                                Security &amp; Permissions
+                            </a>
+</nav>
+</div>
+<div class="mt-6 p-4 bg-tertiary-container rounded-xl text-white">
+<p class="font-label-md text-[10px] uppercase text-on-tertiary-container mb-2">Live Node Status</p>
+<div class="flex items-center gap-3 mb-4">
+<div class="flex-1 h-1 bg-primary-container rounded-full overflow-hidden">
+<div class="bg-secondary-container h-full w-3/4"></div>
+</div>
+<span class="font-mono-data text-[10px]">75% Synced</span>
+</div>
+<p class="font-body-md text-xs text-on-primary-container">Cloud replication active across EU-Central clusters.</p>
+</div>
+</aside>
+<!-- Right Inner Form -->
+<div class="flex-1">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<!-- Top Banner -->
+<div class="p-6 bg-surface-container-low border-b border-outline-variant flex items-center justify-between">
+<div class="flex gap-8">
+<div class="flex flex-col">
+<span class="font-label-md text-[10px] uppercase text-outline">Tenant ID</span>
+<span class="font-mono-data text-mono-data font-bold">OMNI-NP-882</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-[10px] uppercase text-outline">Subscription</span>
+<span class="font-body-md text-body-md font-bold text-secondary">Enterprise Tier</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-on-secondary-container/5 border border-on-secondary-container/20 rounded">
+<span class="material-symbols-outlined text-[#22C55E] text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-md text-label-md font-bold uppercase text-on-secondary-container">Status: Verified</span>
+</div>
+</div>
+<div class="p-8 space-y-12">
+<!-- Section 1: Official Identity -->
+<section>
+<div class="flex items-center gap-2 mb-6">
+<span class="w-1.5 h-6 bg-secondary rounded-full"></span>
+<h3 class="font-headline-md text-headline-md">Official Identity</h3>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase">Registered Clinic Name</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none font-body-md text-body-md transition-all" type="text" value="MediGlobal Care Center"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase">Medical Board Registration No.</label>
+<div class="relative">
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none font-body-md text-body-md transition-all" type="text" value="NMC-459921"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#22C55E]">verified</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Contact Information -->
+<section>
+<div class="flex items-center gap-2 mb-6">
+<span class="w-1.5 h-6 bg-secondary rounded-full"></span>
+<h3 class="font-headline-md text-headline-md">Contact Information</h3>
+</div>
+<div class="grid grid-cols-2 gap-12">
+<!-- Public Facing -->
+<div class="space-y-4">
+<p class="font-label-md text-label-md text-secondary font-bold uppercase tracking-widest border-b border-secondary/20 pb-2">Public Facing</p>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase">Phone Number</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="tel" value="+977 984-XXXXXXX"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase">Public Email</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="email" value="contact@mediglobal.care"/>
+</div>
+</div>
+<!-- Administrative -->
+<div class="space-y-4">
+<p class="font-label-md text-label-md text-on-surface-variant font-bold uppercase tracking-widest border-b border-outline-variant pb-2">Administrative Billing</p>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase">Billing Email</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="email" value="billing@mediglobal.com"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-[10px] text-on-surface-variant uppercase">Finance Contact Person</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="text" value="Dr. Sarah Jenkins"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Geolocation & Address -->
+<section>
+<div class="flex items-center gap-2 mb-6">
+<span class="w-1.5 h-6 bg-secondary rounded-full"></span>
+<h3 class="font-headline-md text-headline-md">Geolocation &amp; Address</h3>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<div class="col-span-7 space-y-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase">Street Address</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="text" value="Plot 42, Healthcare Industrial Park"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase">City/Province</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="text" value="Bagmati Province"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase">Postal Code</label>
+<input class="w-full p-3 border border-outline-variant rounded bg-surface-bright font-body-md text-body-md" type="text" value="44600"/>
+</div>
+</div>
+<div class="flex items-center gap-2 p-3 bg-surface-container-low border border-outline-variant rounded">
+<span class="material-symbols-outlined text-outline">info</span>
+<p class="font-body-md text-xs text-on-surface-variant">Address changes require manual verification by regional authorities if the subscription is in the Compliance Tier.</p>
+</div>
+</div>
+<div class="col-span-5">
+<label class="font-label-md text-label-md text-on-surface-variant uppercase block mb-2">Map Reference</label>
+<div class="relative w-full h-[220px] rounded-lg border border-outline-variant overflow-hidden group shadow-inner">
+<div class="absolute inset-0 bg-slate-200" data-alt="A clean, minimalist satellite map view of a modern medical facility campus in Kathmandu, Nepal. The map features high-contrast rendering with clear labels for street names and building outlines. A prominent teal pin marks the location of the clinic, surrounded by a subtle digital ripple effect to denote the exact geolocation coordinates." data-location="Kathmandu" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDneu_7IAYu0wrUUrldHDHs4XRaNudJl8fmXCsg7jCtsoqSytIc7EbEFUqpAh2kgdVHFU8K_8fEOzT6e2ojGLrvjEWB0h2bYN9nJzU69G9bfW6zbArXms9VHoKd818T-3AlxZAQW5HfCVJOO9K28IMtEnNNv649Y3-y-2sTRaLnyX4ClqrZMu1uBzQBIKC0Sz7isitN36uR602cEF5l4nAESAzK7eC498BnJ3Xzru4ePwqRcQO28epX')"></div>
+<div class="absolute top-4 right-4 z-10">
+<button class="bg-white/90 backdrop-blur p-2 rounded shadow-md hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-on-surface">open_in_new</span>
+</button>
+</div>
+<div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors pointer-events-none"></div>
+</div>
+<p class="mt-2 font-mono-data text-[10px] text-outline text-right uppercase">Lat: 27.7172° N | Long: 85.3240° E</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Additional Footer Note -->
+<div class="mt-8 flex justify-between items-center text-on-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">history</span>
+<span class="font-body-md text-xs">Last updated on Oct 24, 2023 at 09:12 AM by System Admin</span>
+</div>
+<button class="text-secondary font-label-md text-label-md font-bold uppercase hover:underline">Download Identity Certificate (PDF)</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions for form focus
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+    </script>
+</body></html>

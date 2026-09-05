@@ -1,47 +1,38 @@
 import React, { useState, useEffect } from 'react';
 
-export default function InfrastructureDiagnostics() {
+export default function InfrastructureDiagnostics({ data }: { data?: any }) {
     const [activeTab, setActiveTab] = useState('All Logs');
     
     // Left Chart State: Latency vs Throughput (7 data points)
-    // values between 20 and 80
-    const [trendData, setTrendData] = useState(
-        Array.from({ length: 7 }, () => ({
-            latency: Math.floor(Math.random() * 40) + 20,
-            throughput: Math.floor(Math.random() * 50) + 30
-        }))
-    );
+    const [trendData, setTrendData] = useState<any[]>(Array(7).fill({ latency: 0, throughput: 0 }));
     
     // Right Chart State: PostgreSQL Active Connections (14 data points)
-    const [pgData, setPgData] = useState(
-        Array.from({ length: 14 }, () => Math.floor(Math.random() * 20) + 35)
-    );
+    const [pgData, setPgData] = useState<number[]>(Array(14).fill(0));
     
     const [uptimeStr, setUptimeStr] = useState("14d 06h 22m");
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            // Update left chart
-            setTrendData(prev => {
-                const newData = [...prev.slice(1)];
-                newData.push({
-                    latency: Math.floor(Math.random() * 40) + 20,
-                    throughput: Math.floor(Math.random() * 50) + 30
-                });
-                return newData;
-            });
-            
-            // Update right chart
-            setPgData(prev => {
-                const newData = [...prev.slice(1)];
-                newData.push(Math.floor(Math.random() * 20) + 35);
-                return newData;
-            });
-            
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, []);
+        if (!data) return;
+        
+        switch (activeTab) {
+            case 'Database':
+                setTrendData(data.dbTrendData || Array(7).fill({ latency: 0, throughput: 0 }));
+                break;
+            case 'API Gateway':
+                setTrendData(data.gatewayTrendData || Array(7).fill({ latency: 0, throughput: 0 }));
+                break;
+            case 'Third-Party':
+                setTrendData(data.thirdPartyTrendData || Array(7).fill({ latency: 0, throughput: 0 }));
+                break;
+            case 'All Logs':
+            default:
+                setTrendData(data.trendData || Array(7).fill({ latency: 0, throughput: 0 }));
+                break;
+        }
+        
+        setPgData(data.pgConnectionsHistory || Array(14).fill(0));
+        
+    }, [data, activeTab]);
 
     // Update uptime minute ticker
     useEffect(() => {

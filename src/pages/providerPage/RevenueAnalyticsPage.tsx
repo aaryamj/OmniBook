@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import NotificationBell from '../userPage/NotificationBell';
+import ProviderTopNavigation from './components/ProviderTopNavigation';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar 
@@ -40,7 +40,6 @@ const topServicesData = [
 
 const RevenueAnalyticsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState<string>('Provider');
   const [dateFilter, setDateFilter] = useState('Last 30 Days');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -92,11 +91,6 @@ const RevenueAnalyticsPage: React.FC = () => {
     
     if (!token || role !== 'service_provider') {
       navigate('/login');
-    } else {
-      const storedName = localStorage.getItem('fullName');
-      if (storedName) {
-        setFullName(storedName);
-      }
     }
   }, [navigate]);
 
@@ -110,38 +104,7 @@ const RevenueAnalyticsPage: React.FC = () => {
 
   return (
     <div className="bg-[#F3F4F6] text-[#151c27] font-sans min-h-screen flex overflow-x-hidden">
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/80 backdrop-blur-md shadow-sm border-b border-[#c3c5d7]/30">
-        <div className="flex justify-between items-center px-4 md:px-10 h-20 w-full">
-          <div className="flex items-center gap-4">
-            <img
-              alt="OmniBook Logo"
-              className="object-contain h-[40px]"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuANVa2DIMhxwJVhPP1FnM5XPZK669t-OaZbij7sEQY2BcRjKXoLi4Xlx3422j-PoJTMmPiR5Xs2jHyWkiOQbHG2PC_dwX1bTvLCKfZJr4xERFe5jC_Eg1nCXbH4JYQNcg8LmT7jvnS2rIU1qOMeCUzpati4NDHk55Jw4yD9q-c3RF-j48vJ6qqLiyYcMo90ZH-HOFSGJv14g2VG5oLaR8SvPRMAYcJZQSHy3gVOym_POA_776_joTMmbnqxiUzecB0QZUzztl5CrHw"
-            />
-            <div className="h-6 w-[1px] bg-[#c3c5d7]/30 mx-2 hidden md:block"></div>
-            <span className="text-[#53606c] font-medium hidden md:block">Operations Center</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            
-            <div className="hidden lg:flex flex-col items-end mr-2">
-              <span className="text-[14px] font-bold text-[#003fb1]">{fullName}</span>
-              <span className="text-[12px] text-[#53606c]">Service Provider</span>
-            </div>
-            
-            <div className="ml-2">
-              <div className="h-10 w-10 rounded-full overflow-hidden border border-[#c3c5d7] shadow-sm">
-                <img
-                  alt="User Profile Avatar"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <ProviderTopNavigation />
 
       {/* SideNavBar */}
       <nav className="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 bg-[#f0f3ff] border-r border-[#c3c5d7]/30 py-6 px-4 flex flex-col gap-2 z-40 hidden md:flex">
@@ -180,7 +143,7 @@ const RevenueAnalyticsPage: React.FC = () => {
         </NavLink>
 
         <div className="mt-auto flex flex-col gap-1">
-          <NavLink to="/profile-settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
+          <NavLink to="/provider/settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
             <span className="material-symbols-outlined text-[18px]">settings</span>
             Settings
           </NavLink>
@@ -197,15 +160,15 @@ const RevenueAnalyticsPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-[32px] font-bold text-[#151c27] tracking-tight">Analytics Overview</h1>
+            <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">Analytics Overview</h1>
             <p className="text-sm font-medium text-[#53606c] mt-1">Real-time revenue performance and booking trends.</p>
           </div>
-          <div className="flex gap-3">
-            <div className="relative">
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
               <select 
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="appearance-none bg-white text-[#003fb1] border border-[#c3c5d7] pl-10 pr-8 py-2 rounded-lg flex items-center gap-2 hover:bg-[#f9f9ff] transition-colors shadow-sm font-semibold text-sm outline-none focus:ring-2 focus:ring-[#1a56db]/20 focus:border-[#1a56db] cursor-pointer"
+                className="w-full sm:w-auto appearance-none bg-white text-[#003fb1] border border-[#c3c5d7] pl-10 pr-8 py-2 rounded-lg flex items-center gap-2 hover:bg-[#f9f9ff] transition-colors shadow-sm font-semibold text-sm outline-none focus:ring-2 focus:ring-[#1a56db]/20 focus:border-[#1a56db] cursor-pointer"
               >
                 <option value="Today" className="text-[#151c27]">Today</option>
                 <option value="Last 7 Days" className="text-[#151c27]">Last 7 Days</option>
@@ -215,7 +178,7 @@ const RevenueAnalyticsPage: React.FC = () => {
               <span className="material-symbols-outlined text-[18px] text-[#003fb1] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">calendar_today</span>
               <span className="material-symbols-outlined text-[18px] text-[#003fb1] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">arrow_drop_down</span>
             </div>
-            <button onClick={handleExport} className="bg-[#1a56db] text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-[#123e9e] transition-colors shadow-sm font-semibold text-sm active:scale-95">
+            <button onClick={handleExport} className="flex-1 sm:flex-initial bg-[#1a56db] text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#123e9e] transition-colors shadow-sm font-semibold text-sm active:scale-95 cursor-pointer">
               <span className="material-symbols-outlined text-[18px]">download</span>
               Export Report
             </button>
@@ -301,7 +264,7 @@ const RevenueAnalyticsPage: React.FC = () => {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#53606c', fontSize: 12}} tickFormatter={(value) => `${value / 1000}k`} />
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [`रू ${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value: any) => [`रू ${(Number(value) || 0).toLocaleString()}`, 'Revenue']}
                     />
                     <Area type="monotone" dataKey="mrr" stroke="#1a56db" strokeWidth={3} fillOpacity={1} fill="url(#colorMrr)" />
                   </AreaChart>
@@ -313,7 +276,7 @@ const RevenueAnalyticsPage: React.FC = () => {
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       cursor={{fill: '#f0f3ff'}}
-                      formatter={(value: number) => [`रू ${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value: any) => [`रू ${(Number(value) || 0).toLocaleString()}`, 'Revenue']}
                     />
                     <Bar dataKey="mrr" fill="#1a56db" radius={[4, 4, 0, 0]} barSize={32} />
                   </BarChart>
@@ -376,7 +339,7 @@ const RevenueAnalyticsPage: React.FC = () => {
           </div>
           
           <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full min-w-[650px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#c3c5d7]/50">
                   <th className="pb-3 px-4 text-xs font-bold text-[#53606c] uppercase tracking-wider">Transaction ID</th>

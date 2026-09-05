@@ -1,36 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-export default function SystemMetricsCards() {
-    const [cpu, setCpu] = useState(24);
-    const [jvm, setJvm] = useState(45);
-    const [storage, setStorage] = useState(45.2);
-    const [latency, setLatency] = useState(45);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCpu(prev => {
-                let next = prev + (Math.floor(Math.random() * 5) - 2);
-                return Math.max(10, Math.min(60, next));
-            });
-            
-            setJvm(prev => {
-                let next = prev + (Math.floor(Math.random() * 3) - 1);
-                return Math.max(30, Math.min(80, next));
-            });
-
-            setLatency(prev => {
-                let next = prev + (Math.floor(Math.random() * 15) - 7);
-                return Math.max(20, Math.min(120, next));
-            });
-            
-            setStorage(prev => {
-                // very slow growth
-                return prev + (Math.random() > 0.8 ? 0.1 : 0);
-            });
-        }, 2000);
-
-        return () => clearInterval(interval);
-    }, []);
+export default function SystemMetricsCards({ data }: { data?: any }) {
+    const cpu = data?.cpuUtilization ? data.cpuUtilization.toFixed(1) : 0;
+    const jvm = data?.jvmHeap ? data.jvmHeap.toFixed(1) : 0;
+    const storage = data?.dbStorageGB ? data.dbStorageGB.toFixed(2) : 0;
+    const latency = data?.averageApiLatency ? data.averageApiLatency.toFixed(0) : 0;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
@@ -79,7 +53,7 @@ export default function SystemMetricsCards() {
                     <span className="text-on-surface-variant font-mono-data text-label-md">Linear Growth</span>
                 </div>
                 <div className="mt-4">
-                    <h3 className="text-headline-lg font-headline-lg text-primary transition-all duration-500">{storage.toFixed(1)} GB / 100 GB</h3>
+                    <h3 className="text-headline-lg font-headline-lg text-primary transition-all duration-500">{storage} GB / 100 GB</h3>
                     <p className="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">POSTGRESQL STORAGE</p>
                 </div>
             </div>

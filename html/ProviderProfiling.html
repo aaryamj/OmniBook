@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Provider Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f7f9fb",
+                        "secondary": "#00668a",
+                        "surface-variant": "#e0e3e5",
+                        "primary-fixed": "#dae2fd",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "surface": "#f7f9fb",
+                        "primary-container": "#131b2e",
+                        "inverse-on-surface": "#eff1f3",
+                        "on-secondary-fixed": "#001e2c",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed-variant": "#004c69",
+                        "on-background": "#191c1e",
+                        "secondary-fixed": "#c4e7ff",
+                        "outline-variant": "#c6c6cd",
+                        "on-primary-container": "#7c839b",
+                        "surface-container": "#eceef0",
+                        "tertiary-container": "#111c2d",
+                        "on-error": "#ffffff",
+                        "primary": "#000000",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface": "#191c1e",
+                        "on-tertiary-container": "#79849a",
+                        "inverse-primary": "#bec6e0",
+                        "secondary-fixed-dim": "#7bd0ff",
+                        "on-surface-variant": "#45464d",
+                        "tertiary": "#000000",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-secondary-container": "#004d6a",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#131b2e",
+                        "background": "#f7f9fb",
+                        "surface-tint": "#565e74",
+                        "tertiary-fixed": "#d8e3fb",
+                        "secondary-container": "#40c2fd",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "surface-dim": "#d8dadc",
+                        "on-primary": "#ffffff",
+                        "outline": "#76777d",
+                        "surface-container-high": "#e6e8ea",
+                        "brand-navy": "#0F172A",
+                        "brand-teal": "#0D9488"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "1.5rem",
+                        "sidebar-width": "280px",
+                        "margin-mobile": "1rem",
+                        "stack-compact": "0.5rem",
+                        "stack-default": "1rem"
+                    },
+                    "fontFamily": {
+                        "mono-data": ["JetBrains Mono"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .pulse-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .bento-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .bento-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface antialiased overflow-hidden">
+<main class="flex h-screen w-full">
+<!-- LEFT PANEL: Data Entry Workspace -->
+<section class="w-1/2 bg-white flex flex-col border-r border-surface-variant z-10 shadow-xl">
+<!-- Header -->
+<header class="h-20 flex items-center px-gutter border-b border-surface-container">
+<h1 class="font-headline-md text-brand-navy tracking-tight">
+<span class="font-black">OMNIBOOK</span>
+<span class="mx-2 text-surface-variant">|</span>
+<span class="font-light">PROVIDER SETUP</span>
+</h1>
+</header>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto px-16 py-12 scroll-smooth">
+<!-- Progress Stepper -->
+<nav class="flex items-center gap-8 mb-12">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<span class="font-label-md text-emerald-700">Identity</span>
+</div>
+<div class="h-[1px] w-12 bg-surface-variant"></div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-brand-teal flex items-center justify-center text-white">
+<span class="font-mono-data">2</span>
+</div>
+<span class="font-label-md text-brand-teal">Schedule</span>
+</div>
+<div class="h-[1px] w-12 bg-surface-variant"></div>
+<div class="flex items-center gap-3 opacity-40">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="font-mono-data">3</span>
+</div>
+<span class="font-label-md text-on-surface-variant">Services</span>
+</div>
+</nav>
+<!-- Clinical Profile Section -->
+<div class="space-y-10">
+<div>
+<h2 class="font-headline-md text-brand-navy mb-1">Clinical Profile</h2>
+<p class="text-on-surface-variant font-body-md">Verify your medical credentials and professional presence.</p>
+</div>
+<!-- Upload Zone -->
+<div class="flex items-start gap-8">
+<div class="relative group">
+<div class="w-32 h-32 rounded-xl overflow-hidden bg-surface-container border-2 border-dashed border-outline-variant flex items-center justify-center transition-all group-hover:border-brand-teal">
+<img alt="Dr. Sarah Jenkins" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEQg66nlz3evrNxlp2b2-UICNntmx06r2kIT9Ed7wUcicxLmQah1abt5INTaNXPvpu5f7G5bQ4ZVeNLcayZlt_5kZZvigOBW-6cP3QGcM7t5e01TYZG9GCPfv0WKI70dZp6lt5lOcI_suoODGfMOzDNRQMCvYwC5omWyugvgUuw1_yXAfRRlwaLInjwvVbAyT497OgKXoaX1AEq-0cTY0tFEP1OT886XeLi7LdabnLjMAKrmoLWmkQ"/>
+<div class="absolute inset-0 bg-brand-navy/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1">cloud_upload</span>
+<span class="text-[10px] font-bold uppercase tracking-widest">Update</span>
+</div>
+</div>
+</div>
+<div class="flex-1 py-2">
+<h3 class="font-headline-md text-[16px] mb-2">Professional Headshot</h3>
+<p class="text-on-surface-variant text-[13px] leading-relaxed mb-4">
+                                Use a high-resolution, professional portrait. This image will be the primary visual for patients booking appointments.
+                            </p>
+<button class="flex items-center gap-2 text-brand-teal font-label-md border border-brand-teal/20 px-4 py-2 rounded-lg hover:bg-brand-teal/5 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                                Change Image
+                            </button>
+</div>
+</div>
+<!-- Input Grid -->
+<div class="grid grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant uppercase">First Name</label>
+<input class="w-full bg-surface-bright border-surface-variant rounded-lg p-3 text-on-surface focus:ring-brand-teal focus:border-brand-teal" type="text" value="Sarah"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant uppercase">Last Name</label>
+<input class="w-full bg-surface-bright border-surface-variant rounded-lg p-3 text-on-surface focus:ring-brand-teal focus:border-brand-teal" type="text" value="Jenkins"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant uppercase">Credentials</label>
+<input class="w-full bg-surface-bright border-surface-variant rounded-lg p-3 text-on-surface focus:ring-brand-teal focus:border-brand-teal" type="text" value="MD, FACC"/>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant uppercase">Medical License</label>
+<input class="w-full bg-surface-bright border-surface-variant rounded-lg p-3 font-mono-data text-on-surface focus:ring-brand-teal focus:border-brand-teal" type="text" value="NMC-88291"/>
+</div>
+</div>
+<!-- Clinical Assignment Section -->
+<div class="p-6 bg-surface-container-low rounded-xl border border-surface-container-highest space-y-4">
+<div class="flex items-center gap-2 text-brand-navy">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">stethoscope</span>
+<h3 class="font-headline-md text-[18px]">Clinical Assignment</h3>
+</div>
+<div class="space-y-2">
+<label class="font-label-md text-on-surface-variant uppercase">Primary Specialty</label>
+<div class="relative">
+<select class="w-full appearance-none bg-white border-surface-variant rounded-lg p-3 pr-10 text-on-surface focus:ring-brand-teal focus:border-brand-teal">
+<option selected="">Cardiology</option>
+<option>Internal Medicine</option>
+<option>Neurology</option>
+<option>Pediatrics</option>
+</select>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Bar -->
+<footer class="h-24 bg-white border-t border-surface-container flex items-center justify-end px-16">
+<button class="bg-brand-navy text-white px-8 py-4 rounded-xl font-label-md hover:bg-[#1E293B] transition-all flex items-center gap-3 active:scale-[0.98]">
+                    SAVE PROFILE &amp; PROCEED TO SCHEDULE
+                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</footer>
+</section>
+<!-- RIGHT PANEL: Live Preview -->
+<section class="w-1/2 bg-gradient-to-br from-[#F4F7F9] to-[#E2E8F0] relative flex flex-col items-center justify-center p-gutter">
+<!-- Live Indicator Badge -->
+<div class="absolute top-10 flex items-center gap-3 px-5 py-2 bg-white/80 backdrop-blur-md rounded-full border border-white/50 shadow-sm">
+<span class="pulse-dot w-2 h-2 bg-brand-teal rounded-full"></span>
+<span class="font-label-md text-brand-teal tracking-[0.2em] text-[10px] font-black">LIVE PATIENT-FACING PREVIEW</span>
+</div>
+<!-- Preview Canvas -->
+<div class="w-full max-w-[400px] animate-in fade-in duration-700 slide-in-from-bottom-12">
+<!-- Floating Doctor Card -->
+<div class="bg-white rounded-[2rem] p-8 shadow-2xl shadow-brand-navy/10 flex flex-col items-center text-center bento-card">
+<div class="w-32 h-32 rounded-full border-4 border-white shadow-xl overflow-hidden mb-6">
+<img alt="Live Preview Headshot" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEQg66nlz3evrNxlp2b2-UICNntmx06r2kIT9Ed7wUcicxLmQah1abt5INTaNXPvpu5f7G5bQ4ZVeNLcayZlt_5kZZvigOBW-6cP3QGcM7t5e01TYZG9GCPfv0WKI70dZp6lt5lOcI_suoODGfMOzDNRQMCvYwC5omWyugvgUuw1_yXAfRRlwaLInjwvVbAyT497OgKXoaX1AEq-0cTY0tFEP1OT886XeLi7LdabnLjMAKrmoLWmkQ"/>
+</div>
+<div class="flex items-center gap-2 mb-1">
+<h2 class="font-headline-lg text-[24px] text-brand-navy">Dr. Sarah Jenkins, MD, FACC</h2>
+<span class="material-symbols-outlined text-brand-teal" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="inline-flex items-center bg-surface-container-low px-4 py-1.5 rounded-full mb-6">
+<span class="text-on-surface-variant font-label-md tracking-wide">Cardiology</span>
+</div>
+<div class="flex items-center gap-4 mb-8">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-bold text-brand-navy">4.9</span>
+<span class="text-on-surface-variant text-sm">(120 Reviews)</span>
+</div>
+</div>
+<!-- CTA -->
+<button class="w-full bg-brand-teal text-white py-4 rounded-2xl font-bold text-lg hover:brightness-110 transition-all shadow-lg shadow-brand-teal/20 active:scale-[0.98]">
+                        BOOK APPOINTMENT
+                    </button>
+<div class="mt-6 flex gap-4 w-full border-t border-surface-container pt-6">
+<div class="flex-1">
+<p class="text-[10px] font-label-md text-on-surface-variant uppercase mb-1">Next Available</p>
+<p class="font-bold text-brand-navy">Tomorrow, 9:00 AM</p>
+</div>
+<div class="w-[1px] bg-surface-container"></div>
+<div class="flex-1">
+<p class="text-[10px] font-label-md text-on-surface-variant uppercase mb-1">Clinic</p>
+<p class="font-bold text-brand-navy">North Heart Center</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Preview Footer -->
+<footer class="absolute bottom-10 px-gutter text-center">
+<p class="text-on-surface-variant/60 font-body-md max-w-[320px] text-[13px]">
+                    Changes to your professional profile are reflected instantly in the <span class="font-bold">OmniBook</span> patient portal.
+                </p>
+</footer>
+<!-- Background Decorations -->
+<div class="absolute -z-10 top-0 right-0 p-20 opacity-20">
+<span class="material-symbols-outlined text-[320px] text-brand-teal font-thin">health_metrics</span>
+</div>
+</section>
+</main>
+<script>
+        // Micro-interaction: Update text in preview when typing in inputs
+        const inputs = document.querySelectorAll('input, select');
+        const previewName = document.querySelector('h2.font-headline-lg');
+        const previewSpecialty = document.querySelector('span.text-on-surface-variant.font-label-md');
+
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                const fName = document.querySelectorAll('input')[0].value;
+                const lName = document.querySelectorAll('input')[1].value;
+                const creds = document.querySelectorAll('input')[2].value;
+                const specialty = document.querySelector('select').value;
+                
+                previewName.innerHTML = `Dr. ${fName} ${lName}${creds ? ', ' + creds : ''} <span class="material-symbols-outlined text-brand-teal" style="font-variation-settings: 'FILL' 1;">verified</span>`;
+                previewSpecialty.textContent = specialty;
+            });
+        });
+    </script>
+</body></html>

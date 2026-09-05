@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Security &amp; Access Control</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "surface-tint": "#565e74",
+                      "surface-bright": "#f7f9fb",
+                      "outline-variant": "#c6c6cd",
+                      "background": "#f7f9fb",
+                      "secondary-fixed-dim": "#7bd0ff",
+                      "secondary-container": "#40c2fd",
+                      "primary-fixed": "#dae2fd",
+                      "on-secondary-fixed": "#001e2c",
+                      "on-primary-container": "#7c839b",
+                      "on-background": "#191c1e",
+                      "tertiary": "#000000",
+                      "tertiary-fixed": "#d8e3fb",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#bcc7de",
+                      "on-surface-variant": "#45464d",
+                      "surface-container": "#eceef0",
+                      "surface": "#f7f9fb",
+                      "primary": "#000000",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed": "#131b2e",
+                      "tertiary-container": "#111c2d",
+                      "surface-container-low": "#f2f4f6",
+                      "on-secondary-container": "#004d6a",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed": "#111c2d",
+                      "error": "#ba1a1a",
+                      "secondary": "#00668a",
+                      "outline": "#76777d",
+                      "inverse-primary": "#bec6e0",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface-variant": "#e0e3e5",
+                      "on-secondary-fixed-variant": "#004c69",
+                      "surface-container-high": "#e6e8ea",
+                      "on-tertiary-container": "#79849a",
+                      "inverse-surface": "#2d3133",
+                      "on-tertiary-fixed-variant": "#3c475a",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "surface-dim": "#d8dadc",
+                      "secondary-fixed": "#c4e7ff",
+                      "on-primary": "#ffffff",
+                      "primary-fixed-dim": "#bec6e0",
+                      "on-surface": "#191c1e",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#131b2e"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-mobile": "1rem",
+                      "gutter": "1.5rem",
+                      "sidebar-width": "280px",
+                      "container-max": "1440px",
+                      "stack-default": "1rem",
+                      "stack-compact": "0.5rem"
+              },
+              "fontFamily": {
+                      "body-lg": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "mono-data": ["JetBrains Mono"],
+                      "headline-lg-mobile": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-md": ["Inter"]
+              },
+              "fontSize": {
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-background antialiased flex">
+<!-- Fixed SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-primary-container flex flex-col py-6 z-50">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">terminal</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md font-bold text-surface-container-lowest leading-none">OmniBook</h1>
+<p class="text-label-md font-label-md text-on-primary-container">Enterprise Admin</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container hover:bg-on-primary-fixed-variant hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- Analytics -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container hover:bg-on-primary-fixed-variant hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Analytics</span>
+</a>
+<!-- System Logs -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container hover:bg-on-primary-fixed-variant hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined">history_edu</span>
+<span class="font-label-md text-label-md">System Logs</span>
+</a>
+<!-- User Management -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container hover:bg-on-primary-fixed-variant hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md">User Management</span>
+</a>
+<!-- API Controls -->
+<a class="flex items-center gap-3 px-6 py-3 text-on-primary-container hover:bg-on-primary-fixed-variant hover:text-surface-container-lowest transition-colors" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-label-md text-label-md">API Controls</span>
+</a>
+<!-- Settings (ACTIVE) -->
+<a class="flex items-center gap-3 px-4 py-3 text-surface-container-lowest bg-on-primary-fixed-variant border-l-4 border-secondary-container transition-all duration-200 ease-in-out ml-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="px-6 py-4 border-t border-on-primary-fixed-variant/30 space-y-4">
+<button class="w-full bg-secondary-container text-on-secondary-container font-label-md text-label-md py-3 rounded-lg hover:opacity-90 transition-opacity">
+                System Overdrive
+            </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 py-2 text-on-primary-container hover:text-surface-container-lowest" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-label-md">Support</span>
+</a>
+<a class="flex items-center gap-3 py-2 text-on-primary-container hover:text-surface-container-lowest" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-label-md">Log Out</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Cluster -->
+<main class="ml-[280px] flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-280px)] h-16 bg-surface-container-lowest border-b border-surface-container-highest flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-6 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-body-md focus:ring-2 focus:ring-secondary-container" placeholder="Search system configs..." type="text"/>
+</div>
+<div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full border border-emerald-100">
+<div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+<span class="text-label-md font-mono-data">All Systems Operational</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-surface-container-highest pr-6">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-label-md font-bold text-primary leading-tight">ROOT AUTHORITY</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-mono-data">Superadmin Access</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-surface-container-highest object-cover" data-alt="A professional close-up portrait of a high-level system administrator with a serious expression, wearing a dark turtleneck against a clinical tech background. The aesthetic is clean, light-mode, and minimalist with cold, sharp lighting highlighting institutional precision and enterprise authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP2TwhqIqF0bV0WhkjeCZ4ghThPG1rYL_2qK_LRCKzTW-Lbx96rjG5XRhcPGkJ3qZ98afYlYvHly5WAQS_jcZan4Yc9v6Vnve4gCCy6L7wpLO4xfp7tLxuL3RZmE3TObsJlERAupI15Uuh8TTomXrlHVz5Eg-A6h8FpHIYK72ZSbaqsAZdX3D-hSaZrxJj0JnZaKcaPENGzJ7uF4nmAQ4W_FL-DMBTmyJb3UIFb8uJar1wbsCF2jwX"/>
+</div>
+</div>
+</header>
+<!-- Workspace Canvas -->
+<div class="mt-16 p-8 flex-1">
+<!-- Breadcrumbs & Header -->
+<div class="mb-8 flex justify-between items-end">
+<div>
+<nav class="flex text-label-md text-on-surface-variant gap-2 mb-2">
+<span>Workspace</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span>Settings</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Security</span>
+</nav>
+<h2 class="text-headline-lg font-headline-lg text-primary">Security &amp; Access Control</h2>
+</div>
+<button class="bg-[#2DD4BF] text-white font-label-md text-label-md px-6 py-3 rounded-lg flex items-center gap-2 shadow-lg shadow-teal-500/20 hover:bg-teal-500 transition-all active:scale-95">
+<span class="material-symbols-outlined">verified_user</span>
+                    Save Security Policy
+                </button>
+</div>
+<!-- Inner Two-Column Layout -->
+<div class="flex gap-8 items-start">
+<!-- Left Inner Nav (Settings Categories) -->
+<nav class="w-72 flex flex-col gap-1 sticky top-24">
+<a class="flex items-center justify-between px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white transition-colors group" href="#">
+<span class="font-label-md">General Profile</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</a>
+<a class="flex items-center justify-between px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white transition-colors group" href="#">
+<span class="font-label-md">Branding &amp; White-Label</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</a>
+<a class="flex items-center justify-between px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white transition-colors group" href="#">
+<span class="font-label-md">Payment Gateways</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</a>
+<a class="flex items-center justify-between px-4 py-3 rounded-lg text-on-surface-variant hover:bg-white transition-colors group" href="#">
+<span class="font-label-md">Operating Hours</span>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+</a>
+<a class="flex items-center justify-between px-4 py-4 rounded-lg bg-white border border-surface-container-highest shadow-sm text-primary group" href="#">
+<span class="font-label-md font-bold">Security &amp; Permissions</span>
+<div class="w-1.5 h-1.5 rounded-full bg-secondary-container"></div>
+</a>
+</nav>
+<!-- Right Form Area -->
+<div class="flex-1 space-y-8 max-w-container-max">
+<!-- Section 1: Global Auth -->
+<section class="bg-white border border-surface-container-highest rounded-xl p-6 shadow-sm overflow-hidden relative">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-secondary-container">lock_reset</span>
+<h3 class="font-headline-md text-headline-md">Global Authentication Rules</h3>
+</div>
+<div class="grid grid-cols-2 gap-12">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-surface-container-highest">
+<div>
+<p class="font-label-md text-primary mb-1">Two-Factor Authentication (2FA)</p>
+<p class="text-body-md text-on-surface-variant">Mandatory for all admin level accounts</p>
+</div>
+<button aria-checked="true" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-secondary-container" role="switch">
+<span aria-hidden="true" class="pointer-events-none inline-block h-5 w-5 translate-x-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-surface-container-highest">
+<div>
+<p class="font-label-md text-primary mb-1">Session Timeout</p>
+<p class="text-body-md text-on-surface-variant">Inactivity period before logout</p>
+</div>
+<select class="bg-white border-outline-variant rounded-lg text-label-md px-3 py-2 focus:ring-secondary-container focus:border-secondary-container">
+<option>15 minutes</option>
+<option selected="">30 minutes</option>
+<option>60 minutes</option>
+<option>4 hours</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Section 2: Roles & Permissions -->
+<section class="bg-white border border-surface-container-highest rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-surface-container-highest flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary-container">shield_person</span>
+<h3 class="font-headline-md text-headline-md">Active Roles &amp; Permissions</h3>
+</div>
+<button class="text-secondary font-label-md text-label-md hover:underline">+ Define New Role</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase tracking-wider">Role Name</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase tracking-wider">Access Scope</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase tracking-wider">Privilege Level</th>
+<th class="px-6 py-3 font-label-md text-on-surface-variant uppercase tracking-wider text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<p class="font-label-md text-primary">Clinic Administrator</p>
+<p class="text-xs text-on-surface-variant">4 assigned users</p>
+</td>
+<td class="px-6 py-4 text-body-md">Full Access</td>
+<td class="px-6 py-4">
+<span class="bg-red-50 text-red-700 font-mono-data text-[10px] px-2 py-1 rounded border border-red-100">HIGH PRIVILEGE</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<p class="font-label-md text-primary">Medical Provider</p>
+<p class="text-xs text-on-surface-variant">12 assigned users</p>
+</td>
+<td class="px-6 py-4 text-body-md">Clinical/Appointments</td>
+<td class="px-6 py-4">
+<span class="bg-blue-50 text-blue-700 font-mono-data text-[10px] px-2 py-1 rounded border border-blue-100">STANDARD</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4">
+<p class="font-label-md text-primary">Front Desk</p>
+<p class="text-xs text-on-surface-variant">8 assigned users</p>
+</td>
+<td class="px-6 py-4 text-body-md">Calendar only, Restricted Ledger</td>
+<td class="px-6 py-4">
+<span class="bg-blue-50 text-blue-700 font-mono-data text-[10px] px-2 py-1 rounded border border-blue-100">STANDARD</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 3: Recent System Activity -->
+<section class="bg-white border border-surface-container-highest rounded-xl shadow-sm overflow-hidden">
+<div class="p-6 border-b border-surface-container-highest flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary-container">manage_search</span>
+<h3 class="font-headline-md text-headline-md">Recent System Activity</h3>
+</div>
+<button class="bg-surface-container text-on-surface font-label-md text-label-md px-4 py-2 rounded-lg hover:bg-surface-container-high transition-colors">Export Logs</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-surface-container-low border-b border-surface-container-highest">
+<tr>
+<th class="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">User</th>
+<th class="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Event Action</th>
+<th class="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Timestamp</th>
+<th class="px-6 py-4 font-label-md text-on-surface-variant uppercase tracking-wider">Source IP</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-highest">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center text-[10px] font-bold">SJ</div>
+<span class="font-label-md">Sarah Jenkins</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-500"></span>
+<span class="text-body-md">Modified Role Permissions: Front Desk</span>
+</div>
+</td>
+<td class="px-6 py-4 font-mono-data text-xs text-on-surface-variant">2023-10-27 14:23:01</td>
+<td class="px-6 py-4 font-mono-data text-xs text-secondary">192.168.1.42</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-[10px] font-bold">SA</div>
+<span class="font-label-md">System Admin</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-body-md">Successful Root Login</span>
+</div>
+</td>
+<td class="px-6 py-4 font-mono-data text-xs text-on-surface-variant">2023-10-27 12:11:58</td>
+<td class="px-6 py-4 font-mono-data text-xs text-secondary">45.72.112.90</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-6 py-4 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center text-[10px] font-bold">SJ</div>
+<span class="font-label-md">Sarah Jenkins</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-blue-500"></span>
+<span class="text-body-md">Updated Global Auth: Session Timeout</span>
+</div>
+</td>
+<td class="px-6 py-4 font-mono-data text-xs text-on-surface-variant">2023-10-27 10:05:14</td>
+<td class="px-6 py-4 font-mono-data text-xs text-secondary">192.168.1.42</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-low text-center">
+<button class="text-label-md font-bold text-secondary uppercase tracking-widest hover:text-on-secondary-container transition-colors">View All Audit Logs</button>
+</div>
+</section>
+</div>
+</div>
+</div>
+<!-- Footer Visual Hint -->
+<footer class="p-gutter border-t border-surface-container-highest flex justify-between items-center text-label-md text-on-surface-variant">
+<p>© 2023 OmniBook Enterprise. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary" href="#">System Policy</a>
+<a class="hover:text-primary" href="#">Compliance</a>
+<a class="hover:text-primary" href="#">Audit Trail</a>
+</div>
+</footer>
+</main>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mousedown', () => {
+                el.classList.add('scale-95');
+            });
+            el.addEventListener('mouseup', () => {
+                el.classList.remove('scale-95');
+            });
+            el.addEventListener('mouseleave', () => {
+                el.classList.remove('scale-95');
+            });
+        });
+
+        // Search Bar Focus Effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-secondary-container/20');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-secondary-container/20');
+        });
+    </script>
+</body></html>

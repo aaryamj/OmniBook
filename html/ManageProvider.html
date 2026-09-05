@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniBook | Provider &amp; Access Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-container": "#79849a",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#131b2e",
+                    "on-primary-fixed": "#131b2e",
+                    "on-error": "#ffffff",
+                    "on-background": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-dim": "#d8dadc",
+                    "error-container": "#ffdad6",
+                    "primary-fixed-dim": "#bec6e0",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-fixed": "#d8e3fb",
+                    "primary": "#000000",
+                    "tertiary": "#000000",
+                    "surface-bright": "#f7f9fb",
+                    "on-primary-container": "#7c839b",
+                    "on-error-container": "#93000a",
+                    "surface": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#3c475a",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "surface-container-low": "#f2f4f6",
+                    "secondary-fixed": "#c4e7ff",
+                    "on-surface-variant": "#45464d",
+                    "background": "#f7f9fb",
+                    "inverse-primary": "#bec6e0",
+                    "on-secondary-container": "#004d6a",
+                    "secondary-fixed-dim": "#7bd0ff",
+                    "surface-variant": "#e0e3e5",
+                    "outline": "#76777d",
+                    "tertiary-fixed-dim": "#bcc7de",
+                    "surface-container-highest": "#e0e3e5",
+                    "secondary": "#00668a",
+                    "on-secondary-fixed": "#001e2c",
+                    "on-surface": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "surface-container": "#eceef0",
+                    "tertiary-container": "#111c2d",
+                    "surface-tint": "#565e74",
+                    "on-tertiary-fixed": "#111c2d",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#40c2fd",
+                    "on-secondary-fixed-variant": "#004c69",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed": "#dae2fd"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "1.5rem",
+                    "container-max": "1440px",
+                    "stack-default": "1rem",
+                    "sidebar-width": "280px",
+                    "margin-mobile": "1rem",
+                    "stack-compact": "0.5rem"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "mono-data": ["JetBrains Mono"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "mono-data": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        .sidebar-gradient {
+            background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+        }
+        .heatmap-glow-red {
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+        .heatmap-glow-green {
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex overflow-hidden">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="fixed left-0 top-0 h-screen w-sidebar-width sidebar-gradient border-r border-outline-variant flex flex-col py-stack-default z-50">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center shadow-lg shadow-secondary-container/20">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-white tracking-tight">MediAdmin</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-primary-container font-bold opacity-60">System Control</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation items from JSON -->
+<a class="flex items-center px-6 py-3 text-on-primary-container opacity-70 hover:bg-on-primary-fixed-variant hover:text-on-primary transition-colors cursor-pointer group" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary-container opacity-70 hover:bg-on-primary-fixed-variant hover:text-on-primary transition-colors cursor-pointer group" href="#">
+<span class="material-symbols-outlined mr-3">calendar_month</span>
+<span class="font-label-md text-label-md">All Appointments</span>
+</a>
+<!-- ACTIVE TAB: Providers -->
+<a class="flex items-center px-6 py-3 text-on-primary bg-on-primary-fixed-variant border-l-4 border-secondary-container transition-all duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span class="font-label-md text-label-md">Providers</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary-container opacity-70 hover:bg-on-primary-fixed-variant hover:text-on-primary transition-colors cursor-pointer group" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-label-md text-label-md">CRM</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary-container opacity-70 hover:bg-on-primary-fixed-variant hover:text-on-primary transition-colors cursor-pointer group" href="#">
+<span class="material-symbols-outlined mr-3">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Ledger</span>
+</a>
+<a class="flex items-center px-6 py-3 text-on-primary-container opacity-70 hover:bg-on-primary-fixed-variant hover:text-on-primary transition-colors cursor-pointer group" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</nav>
+<div class="px-6 pt-6 border-t border-white/5">
+<button class="w-full bg-[#0F172A] hover:bg-[#1E293B] text-white py-3 rounded-xl border border-white/10 font-label-md text-label-md transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                Add New Patient
+            </button>
+</div>
+<div class="mt-auto px-6 pb-6">
+<div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+<img class="w-10 h-10 rounded-full border border-white/20 object-cover" data-alt="A professional close-up studio portrait of a senior healthcare administrator with grey hair, wearing a navy suit and a neutral expression, high-end commercial photography style with soft bokeh background and warm cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDge-s148Dc5Z_-FrbB9S0y7RA5OiMii2NMxWnGiJdftRHwcqyZE7WQWccyNnj10MV1eBbv51udeWojMAjxos9KQw4yTAe6PTrqkzvq-fQCL_DagR3EzVMgHliBg6GofLgzVK-_gga-p0C_OwxKrFJLWkpwRNFf339ZLIcZGLUDkPgg-Gl3bHYcn4H4cTbBF1hxXbaz93eD9YQI0PFEEB0fgKk5u-r-ZW1F6vWXRCX8gUXeWPNB5t5Ywt57oD_84q7Qos1DPGZWNTA"/>
+<div class="overflow-hidden">
+<p class="text-white text-xs font-bold truncate">Administrator Avatar</p>
+<p class="text-on-primary-container text-[10px] truncate">Admin View</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="ml-sidebar-width flex-1 h-screen overflow-y-auto bg-slate-50 relative">
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="sticky top-0 right-0 w-full h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-4">
+<div class="flex items-center text-on-surface-variant text-xs gap-2">
+<span class="hover:text-primary cursor-pointer transition-colors">Workspace</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Medical Staff</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Directory</span>
+</div>
+</div>
+<div class="flex-1 max-w-md mx-8">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-secondary-container transition-all" placeholder="Search Global Command Center..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<button class="relative text-on-surface-variant hover:text-secondary transition-opacity">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<button class="text-on-surface-variant hover:text-secondary transition-opacity">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant"></div>
+<button class="bg-error text-white font-label-md px-4 py-2 rounded-full flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg shadow-error/20">
+<span class="material-symbols-outlined text-sm">emergency</span>
+                    Emergency Alert
+                </button>
+</div>
+</header>
+<!-- View Content -->
+<div class="p-gutter max-w-container-max mx-auto">
+<!-- Page Title & Actions -->
+<div class="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg font-black text-primary tracking-tight">Provider &amp; Access Management</h2>
+<p class="text-on-surface-variant mt-1">High-authority control over clinic staffing and medical permissions.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 border border-outline px-6 py-2.5 rounded-full font-label-md text-label-md hover:bg-surface-variant transition-all">
+<span class="material-symbols-outlined">calendar_today</span>
+                        Manage Shifts
+                    </button>
+<button class="flex items-center gap-2 bg-[#0F172A] text-white px-6 py-2.5 rounded-full font-label-md text-label-md hover:bg-[#1E293B] transition-all shadow-xl shadow-primary/10">
+<span class="material-symbols-outlined">person_add</span>
+                        Provision New Provider
+                    </button>
+</div>
+</div>
+<!-- KPI Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<!-- KPI 1 -->
+<div class="glass-card p-6 rounded-2xl flex items-center justify-between">
+<div>
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Active Medical Staff</p>
+<h3 class="text-4xl font-black text-primary">12 <span class="text-lg font-medium text-on-surface-variant">Providers</span></h3>
+</div>
+<div class="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="glass-card p-6 rounded-2xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Clinic Utilization</p>
+<h3 class="text-4xl font-black text-primary">84% <span class="text-lg font-medium text-on-surface-variant">Capacity</span></h3>
+</div>
+<div class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> +5.2%
+                        </div>
+</div>
+<!-- Mini Chart Visualization -->
+<div class="h-10 w-full flex items-end gap-1 overflow-hidden">
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[40%]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[60%]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[45%]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[80%]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[70%]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[95%] shadow-[0_0_15px_rgba(64,194,253,0.5)]"></div>
+<div class="flex-1 bg-secondary-container rounded-t-sm h-[84%]"></div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="glass-card p-6 rounded-2xl border-l-4 border-secondary-container">
+<p class="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-2">Top Earner (This Week)</p>
+<div class="flex items-center gap-3 mb-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A striking hyper-realistic portrait of a female cardiologist in her 40s, wearing white lab coat and stethoscope, with professional studio lighting and soft blue highlights, cinematic composition and high-end photographic detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZJSv49efLX5fD2Hu8f35aMHPVZq5N7H9rS4tx3RCKiOKH20Xvlq1pSEzYlmFPETv5o-deCMVigpd6tcDLi_bLmKUkNfivq3a-OteUznt_HSbouQxhqRYSkyjtd23G1gFATmGMHsezkDv_irvs4TTIdJS9NOmj4xKI1jjeCjEeHBAU90PNVDZlEBZ6I1k-Gy9twMo8F23ao_s4Kp1il4NNj_u37I1rKzNoIA6rjgJ576-fZ7TIYtr2FgOYIGGj_2SJIi6k9rsJxI"/>
+<div>
+<h4 class="font-bold text-primary">Dr. Sarah Adler</h4>
+<p class="text-[10px] text-on-surface-variant font-mono uppercase">Lead Cardiologist</p>
+</div>
+</div>
+<div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-outline-variant/30">
+<div class="text-center flex-1 border-r border-outline-variant/20">
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Stripe</p>
+<p class="font-mono-data text-secondary font-bold">$1.2k</p>
+</div>
+<div class="text-center flex-1">
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">eSewa</p>
+<p class="font-mono-data text-secondary font-bold">Rs. 40k</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Identity Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Dr. Sarah Adler Card -->
+<div class="glass-card rounded-3xl overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+<div class="h-40 relative">
+<img class="w-full h-full object-cover" data-alt="A wide cinematic landscape background showing a futuristic, clean medical laboratory with soft blue atmospheric lighting, glowing displays, and high-end diagnostic equipment, minimal and professional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHWD8ig2IGSdb6vtpEDeTbSywEiTLDgYBY5-TbH9iuaj5mzONXqPHSxqPDyQkvFDFSlgeeMx654HB0xHxXaJWOHoFoqqlt-hzLzfCBDPkZOrtTGL0eJVoBfwobcgK_6GSbJS3OTYtDpV4lteR1GTJy4YL4KFP_FA5Rw5rI-O-kk6XHZIoCs0dEUEeRTc3nBcNMTgLsmfcV01H62CrZBChe4Cbpg-0OaJPX6UoBxmEiKpnGSI6amPjY0SbjYY1ULB_lT38EMnpmf2o"/>
+<div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-6 flex items-end gap-4 translate-y-6">
+<div class="relative">
+<img class="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl" data-alt="A striking hyper-realistic portrait of a female cardiologist in her 40s, wearing white lab coat and stethoscope, with professional studio lighting and soft blue highlights, cinematic composition and high-end photographic detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWQO702KACk-4Gumfv1cnVWlZdMnsaxkOUb0zoPW8hm09X95pQJ6AYd4L-u927R3uv6ywADoq3_PS6SG9k4M20z-h_BQzLqF6mQ3KuUSyxORl5sUFLivXM0COXaF2phsqOhBFfVeXQs6x9nxHPPF-FvWtso7qHQCiSB1C58VqlRT2IizE__s5OpW6EMOu8ojlqZwbfC-smmd2OMlL-XiJwtHmDilurjOzquqYsd3o4sSS2zf9iRuoeoiX8Gn0Xm3UR-eZdnJIoB8U"/>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">check</span>
+</div>
+</div>
+</div>
+<div class="absolute top-4 right-4 bg-white/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/50 flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></div>
+<span class="font-mono-data text-[10px] font-bold text-primary">LIVE NOW</span>
+</div>
+</div>
+<div class="pt-10 px-6 pb-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-black text-primary">Dr. Sarah Adler</h4>
+<p class="text-on-surface-variant font-medium">Head of Cardiology</p>
+</div>
+<div class="bg-primary-container text-white px-3 py-1 rounded-md flex flex-col items-center">
+<span class="text-[9px] uppercase font-bold tracking-tighter opacity-70">Access</span>
+<span class="text-[10px] font-black">TIER 1</span>
+</div>
+</div>
+<!-- Heatmap -->
+<div class="mb-6">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Utilization Heatmap</span>
+<span class="text-[10px] font-mono-data text-green-600">Optimal (82%)</span>
+</div>
+<div class="flex gap-2">
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full h-1.5 rounded-full bg-slate-200"></div>
+<span class="text-[8px] font-bold text-on-surface-variant">MON</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full h-1.5 rounded-full bg-error heatmap-glow-red"></div>
+<span class="text-[8px] font-bold text-on-surface-variant">TUE</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full h-1.5 rounded-full bg-slate-200"></div>
+<span class="text-[8px] font-bold text-on-surface-variant">WED</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full h-1.5 rounded-full bg-error heatmap-glow-red"></div>
+<span class="text-[8px] font-bold text-on-surface-variant">THU</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-1">
+<div class="w-full h-1.5 rounded-full bg-green-500 heatmap-glow-green"></div>
+<span class="text-[8px] font-bold text-on-surface-variant">FRI</span>
+</div>
+</div>
+</div>
+<!-- Financial Summary -->
+<div class="bg-slate-50/50 border border-outline-variant p-4 rounded-2xl mb-6">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Stripe Revenue</p>
+<p class="font-mono-data text-lg font-black text-primary">$1,200.00</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">eSewa Wallet</p>
+<p class="font-mono-data text-lg font-black text-primary">Rs. 40,000</p>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-3 bg-secondary-container/10 hover:bg-secondary-container/20 text-secondary-container font-bold rounded-xl text-xs transition-colors border border-secondary-container/20">Edit Schedule</button>
+<button class="flex-1 py-3 bg-error/5 hover:bg-error/10 text-error font-bold rounded-xl text-xs transition-colors border border-error/10">Revoke Access</button>
+</div>
+</div>
+</div>
+<!-- Dr. Thorne Card -->
+<div class="glass-card rounded-3xl overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+<div class="h-40 relative">
+<img class="w-full h-full object-cover opacity-60" data-alt="A minimalist architectural detail of a modern clinic corridor with glass partitions, soft shadows, and clean grey and white textures, high-end photography style with cinematic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpoR1sz2z7Q1zg_iKjkzYfdsquaQrZmdTb97jaP_bVMs9sjTRdIEO_oXDcdWa0JYrmKBDLi1T8flYy0zc4Ck9td-lYTG_X3GAgZ3xmB7Dzh3k_HMgKMWVqDBe0CSGDMlV4g71UEOw_U7bmBLwBmfqGEbold6o01VBsfNymzr8ZjKs15F-NPmCWd8KqfYeE5v6NILeVgckg7Wbei66kGSEblG1irPqdyevV_gQsmn-mSiij_bPQtYc0JEdUEAhmkS1FL-PGSBHqKl8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-6 flex items-end gap-4 translate-y-6">
+<div class="relative">
+<img class="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl" data-alt="A professional close-up portrait of a male doctor in his 50s, friendly but authoritative, wearing a stethoscope over a navy scrub suit, soft natural lighting and blurred hospital interior background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmHOJD8-mTNCccCQIcRuy0ildrRdOXdNqQ1ZuGZFVa3ro4yTMTNoWdRNrVGJFY0_kwAdPjoTzNVYGcqrGaIdZ0KaDTCyDB5kXH6S7gZT3m4mGZh0oBovX_y4W3P3BXShaisk1KPSB5waCki0Ii_g8Nd5npTuvVfKR4MxR9TDAI9R2_esAGTHVG2MuCvI07E2ol5vs198pf032s_JivuOothsJRM5t7Hm7nO3kSSY4G8K0wlkOm__aoAJZ61pwMjJeglxZdW8kI2DY"/>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">check</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-10 px-6 pb-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-black text-primary">Dr. Elias Thorne</h4>
+<p class="text-on-surface-variant font-medium">General Medicine</p>
+</div>
+<div class="bg-outline-variant text-on-surface px-3 py-1 rounded-md flex flex-col items-center">
+<span class="text-[9px] uppercase font-bold tracking-tighter opacity-70">Access</span>
+<span class="text-[10px] font-black">TIER 2</span>
+</div>
+</div>
+<div class="mb-6">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Utilization</span>
+<span class="text-[10px] font-mono-data text-on-surface">Stable (80%)</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-[80%] rounded-full shadow-[0_0_8px_rgba(64,194,253,0.4)]"></div>
+</div>
+</div>
+<div class="bg-slate-50/50 border border-outline-variant p-4 rounded-2xl mb-6">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Stripe</p>
+<p class="font-mono-data text-lg font-bold text-primary">$900.00</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">eSewa</p>
+<p class="font-mono-data text-lg font-bold text-primary">Rs. 25,000</p>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-3 border border-outline-variant hover:bg-slate-100 font-bold rounded-xl text-xs transition-colors">Edit Schedule</button>
+<button class="flex-1 py-3 border border-error/20 text-error hover:bg-error/5 font-bold rounded-xl text-xs transition-colors">Revoke Access</button>
+</div>
+</div>
+</div>
+<!-- Dr. Gupta Card -->
+<div class="glass-card rounded-3xl overflow-hidden group hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+<div class="h-40 relative">
+<img class="w-full h-full object-cover opacity-60" data-alt="A brightly lit, modern pediatric examination room with colorful murals of animals, soft wooden floors, and high-key lighting that creates a welcoming and friendly atmosphere, high-end photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAERTJL1DO3LZLXoqBLV7SR3JigMJG50XPXhb84htb0JeBgNgQ5oujaslrIK1PVu3JbeJb8fvxm5v2qgOIOhaysh7ycgqVuiLRT3lzIx_jqnsv6XkcaYhc6GGpxxXQP8NaRwZAGMTbn5upaQmPeEy-mdkgEIK5MDGAfjwAPduzBi46gea5A0F-i-3f5weNt4fMVasdh6x50Nz6rsmjhvYJK3sJeoSMPpBQulrfIaOHGyaVEFO5dBNIwNyvSswdpI9qbqVpe7gBckUg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
+<div class="absolute bottom-0 left-6 flex items-end gap-4 translate-y-6">
+<div class="relative">
+<img class="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-xl" data-alt="A portrait of a smiling female pediatrician of Indian descent, wearing a vibrant stethoscope and a white doctor coat, warm lighting and soft-focus pediatric clinic background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTfSxiDLvoFbfOwYhL1CDxZhcQVDI9cgAlGuCnrCeGqP4nQ4KUGEg1Vit3uVmAw3AqBz1t1KOXU6YCsKyzD80DGWibT81GncN7m5TCkaME6-SuZ_JXvAIUEacRdF8O4ksL8LpKJQHPDBGABY4kLJHZtVD9z-ZHuIv51aYBLW7yC6ulzQ57OT05FarzkX-wKOvN5VU4zGJT74sDDGxnZV5_9QcPEAXLmqAtPGvyFlx-UxZ4zpchps3W8eJZsGXkxn1jRSCxERR73RE"/>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px] text-white">check</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-10 px-6 pb-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-xl font-black text-primary">Dr. Ananya Gupta</h4>
+<p class="text-on-surface-variant font-medium">Pediatrics</p>
+</div>
+<div class="bg-outline-variant text-on-surface px-3 py-1 rounded-md flex flex-col items-center">
+<span class="text-[9px] uppercase font-bold tracking-tighter opacity-70">Access</span>
+<span class="text-[10px] font-black">TIER 2</span>
+</div>
+</div>
+<div class="mb-6">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">Utilization</span>
+<span class="text-[10px] font-mono-data text-on-surface">Available (65%)</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-[65%] rounded-full"></div>
+</div>
+</div>
+<div class="bg-slate-50/50 border border-outline-variant p-4 rounded-2xl mb-6">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Stripe</p>
+<p class="font-mono-data text-lg font-bold text-primary">$750.00</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">eSewa</p>
+<p class="font-mono-data text-lg font-bold text-primary">Rs. 15,000</p>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 py-3 border border-outline-variant hover:bg-slate-100 font-bold rounded-xl text-xs transition-colors">Edit Schedule</button>
+<button class="flex-1 py-3 border border-error/20 text-error hover:bg-error/5 font-bold rounded-xl text-xs transition-colors">Revoke Access</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Meta -->
+<div class="mt-12 mb-8 border-t border-outline-variant pt-8 flex justify-between items-center">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+<span class="text-xs text-on-surface-variant font-mono">SYSTEM GATEWAY: ONLINE</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant">lock</span>
+<span class="text-xs text-on-surface-variant font-mono">ENCRYPTION: AES-256</span>
+</div>
+</div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">OmniBook Protocol v4.2.1-Standard</p>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for hover states
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.borderColor = 'rgba(64, 194, 253, 0.4)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.borderColor = 'rgba(226, 232, 240, 0.5)';
+            });
+        });
+    </script>
+</body></html>

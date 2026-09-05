@@ -1,64 +1,89 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+interface Tenant {
+    id: number;
+    subscriptionTier: string;
+}
 
 export default function PlatformRevenueChart() {
     const [timeFilter, setTimeFilter] = useState<'1W' | '1M' | '1Y'>('1M');
-    
-    // Mock Data for the bars (percentage heights)
-    const mockData = {
-        '1W': [40, 35, 55, 45, 65, 75, 85, 80, 60, 50, 70, 90], // 12 bars 
-        '1M': [30, 35, 45, 50, 55, 65, 70, 75, 80, 85, 92, 100],
-        '1Y': [15, 20, 25, 30, 40, 50, 60, 75, 85, 90, 95, 100]
-    };
+    const [chartData, setChartData] = useState<{ [key: string]: number[] }>({
+        '1W': [],
+        '1M': [],
+        '1Y': []
+    });
 
-    const [currentData, setCurrentData] = useState(mockData['1M']);
-    const [donutData, setDonutData] = useState({ total: 42, enterprise: 20, pro: 50, basic: 30 });
+    const [currentData, setCurrentData] = useState<number[]>([]);
+    const [donutData, setDonutData] = useState({ total: 0, enterprise: 0, pro: 0, starter: 0 });
 
-    // Simulate "Real Time" updating
+    // Fetch Real Tenant Data for Donut Chart
     useEffect(() => {
-        const baseData = mockData[timeFilter];
-        setCurrentData([...baseData]);
-        
-        const chartInterval = setInterval(() => {
-            setCurrentData(prev => {
-                const newData = [...prev];
-                const lastIdx = newData.length - 1;
-                // Random fluctuation between -5 and +5
-                const fluctuation = Math.floor(Math.random() * 11) - 5;
-                let newHeight = baseData[lastIdx] + fluctuation;
-                if (newHeight > 100) newHeight = 100;
-                if (newHeight < 10) newHeight = 10;
-                newData[lastIdx] = newHeight;
-                return newData;
-            });
-        }, 2000); // update every 2 seconds for a responsive feel
-
-        const donutInterval = setInterval(() => {
-            setDonutData(prev => {
-                // Randomly shift 1-2 percent between plans
-                const shift = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-                let newEnt = prev.enterprise + shift;
-                let newPro = prev.pro - shift;
+        const fetchTenants = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('http://localhost:8080/api/v1/superadmin/tenants', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 
-                // Add a new clinic occasionally
-                const newTotal = prev.total + (Math.random() > 0.8 ? 1 : 0);
-
-                if (newEnt < 15) newEnt = 15;
-                if (newPro < 30) newPro = 30;
+                const tenants: Tenant[] = res.data || [];
+                const total = tenants.length;
                 
-                return {
-                    total: newTotal,
-                    enterprise: newEnt,
-                    pro: newPro,
-                    basic: 100 - newEnt - newPro
-                };
-            });
-        }, 3500); // update donut slightly slower
+                if (total === 0) {
+                    setDonutData({ total: 0, enterprise: 0, pro: 0, starter: 0 });
+                    return;
+                }
 
-        return () => {
-            clearInterval(chartInterval);
-            clearInterval(donutInterval);
+                let entCount = 0;
+                let proCount = 0;
+                let starterCount = 0;
+
+                tenants.forEach(t => {
+                    const tier = t.subscriptionTier ? t.subscriptionTier.toLowerCase() : '';
+                    if (tier.includes('enterprise')) entCount++;
+                    else if (tier.includes('professional') || tier.includes('pro')) proCount++;
+                    else starterCount++; // Default to starter for basic/starter/empty
+                });
+
+                setDonutData({
+                    total,
+                    enterprise: Math.round((entCount / total) * 100),
+                    pro: Math.round((proCount / total) * 100),
+                    starter: Math.round((starterCount / total) * 100)
+                });
+            } catch (error) {
+                console.error("Failed to fetch tenants for plan distribution", error);
+            }
         };
-    }, [timeFilter]);
+
+        const fetchChartData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axios.get('http://localhost:8080/api/v1/superadmin/dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.data && res.data.revenueChartData) {
+                    setChartData(res.data.revenueChartData);
+                    setCurrentData(res.data.revenueChartData[timeFilter] || []);
+                }
+            } catch (error) {
+                console.error("Failed to fetch revenue chart data", error);
+            }
+        };
+
+        fetchTenants();
+        fetchChartData();
+        const interval = setInterval(() => {
+            fetchTenants();
+            fetchChartData();
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Update displayed chart when timeFilter changes
+    useEffect(() => {
+        setCurrentData(chartData[timeFilter] || []);
+    }, [timeFilter, chartData]);
 
     const getFilterClass = (filter: string) => {
         return timeFilter === filter 
@@ -67,17 +92,29 @@ export default function PlatformRevenueChart() {
     };
 
     const getXAxisLabels = () => {
-        if (timeFilter === '1W') return ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        if (timeFilter === '1W') return ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'YEST', 'TODAY'];
         if (timeFilter === '1M') return ['W1', 'W2', 'W3', 'W4'];
-        return ['JAN', 'MAR', 'MAY', 'JUL', 'SEP', 'NOV'];
+        
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        const currentMonth = new Date().getMonth();
+        const labels = [];
+        for (let i = 11; i >= 0; i--) {
+            labels.push(months[(currentMonth - i + 12) % 12]);
+        }
+        return labels;
     };
 
     // Calculate conic gradient for the donut chart based on live percentages
-    const donutGradient = `conic-gradient(
-        #2563eb 0% ${donutData.enterprise}%, 
-        #60a5fa ${donutData.enterprise}% ${donutData.enterprise + donutData.pro}%, 
-        #bfdbfe ${donutData.enterprise + donutData.pro}% 100%
-    )`;
+    const renderDonutGradient = () => {
+        if (donutData.total === 0) {
+            return `conic-gradient(#e2e8f0 0% 100%)`; // Grey out if no clinics
+        }
+        return `conic-gradient(
+            #2563eb 0% ${donutData.enterprise}%, 
+            #60a5fa ${donutData.enterprise}% ${donutData.enterprise + donutData.pro}%, 
+            #bfdbfe ${donutData.enterprise + donutData.pro}% 100%
+        )`;
+    };
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -101,17 +138,24 @@ export default function PlatformRevenueChart() {
                     </div>
                 </div>
                 <div className="flex-1 relative">
-                    {/* Placeholder for Chart */}
                     <div className="absolute inset-0 flex items-end justify-between px-2">
-                        {currentData.map((height, index) => {
-                            // Calculate a gradient class based on index so the right side is darker blue
-                            const colorClass = `bg-blue-${Math.min(900, 50 + (index * 100))}`;
+                        {currentData.map((val, index) => {
+                            // Find max to calculate relative percentage height
+                            const maxVal = Math.max(...currentData, 1000); // at least 1000 to prevent divide by zero
+                            const heightPct = Math.max(5, (val / maxVal) * 100);
+                            const label = getXAxisLabels()[index] || '';
+                            
                             return (
                                 <div 
                                     key={index} 
-                                    className={`w-[7%] rounded-t-sm transition-all duration-1000 ease-out bg-blue-500`}
-                                    style={{ height: `${height}%`, opacity: 0.4 + (index * 0.05) }}
-                                ></div>
+                                    className={`w-[7%] rounded-t-sm transition-all duration-1000 ease-out bg-blue-500 hover:bg-blue-400 group cursor-pointer relative flex justify-center`}
+                                    style={{ height: `${heightPct}%`, opacity: 0.4 + (index * 0.05) }}
+                                    title={`${label} Revenue: रू ${val.toLocaleString('en-IN')}`}
+                                >
+                                    <div className="opacity-0 group-hover:opacity-100 absolute -top-8 bg-surface-container-highest text-on-surface text-[10px] font-bold px-2 py-1 rounded whitespace-nowrap transition-opacity shadow-sm z-50 pointer-events-none">
+                                        {label}: रू {val.toLocaleString('en-IN')}
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -149,7 +193,7 @@ export default function PlatformRevenueChart() {
                     {/* Real Dynamic Donut */}
                     <div 
                         className="relative w-48 h-48 rounded-full flex items-center justify-center transition-all duration-1000"
-                        style={{ background: donutGradient }}
+                        style={{ background: renderDonutGradient() }}
                     >
                         {/* Inner hollow circle */}
                         <div className="absolute inset-4 bg-surface-container-lowest rounded-full flex flex-col items-center justify-center z-10 shadow-inner">
@@ -165,21 +209,21 @@ export default function PlatformRevenueChart() {
                                 <span className="w-3 h-3 bg-blue-600 rounded-full mr-3 shadow-sm"></span>
                                 <span className="font-medium text-on-surface">Enterprise</span>
                             </div>
-                            <span className="font-mono-data font-bold text-on-surface">{donutData.enterprise}%</span>
+                            <span className="font-mono-data font-bold text-on-surface">{donutData.total > 0 ? donutData.enterprise : 0}%</span>
                         </div>
                         <div className="flex justify-between items-center text-body-md">
                             <div className="flex items-center">
                                 <span className="w-3 h-3 bg-blue-400 rounded-full mr-3 shadow-sm"></span>
-                                <span className="font-medium text-on-surface">Pro</span>
+                                <span className="font-medium text-on-surface">Professional</span>
                             </div>
-                            <span className="font-mono-data font-bold text-on-surface">{donutData.pro}%</span>
+                            <span className="font-mono-data font-bold text-on-surface">{donutData.total > 0 ? donutData.pro : 0}%</span>
                         </div>
                         <div className="flex justify-between items-center text-body-md">
                             <div className="flex items-center">
                                 <span className="w-3 h-3 bg-blue-200 rounded-full mr-3 shadow-sm"></span>
-                                <span className="font-medium text-on-surface">Basic</span>
+                                <span className="font-medium text-on-surface">Starter</span>
                             </div>
-                            <span className="font-mono-data font-bold text-on-surface">{donutData.basic}%</span>
+                            <span className="font-mono-data font-bold text-on-surface">{donutData.total > 0 ? donutData.starter : 0}%</span>
                         </div>
                     </div>
                 </div>

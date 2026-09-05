@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
-import NotificationBell from '../userPage/NotificationBell';
+import ProviderTopNavigation from './components/ProviderTopNavigation';
 
 interface Patient {
   id: string;
@@ -15,28 +15,50 @@ interface Patient {
   avatarUrl: string;
 }
 
-const mockPatients: Patient[] = [
-  { id: '#PT-8472', name: 'Alexander Mitchell', email: 'alex@example.com', phone: '+977 9801234567', lastVisitDate: 'Jul 8, 2026', lastVisitReason: 'General Checkup', bookings: '14', status: 'Active', noshows: '0', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-2931', name: 'Sarah Jenkins', email: 'sarah.j@example.com', phone: '+977 9811223344', lastVisitDate: 'May 22, 2026', lastVisitReason: 'Follow-up Consult', bookings: '3', status: 'Active', noshows: '1', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-1004', name: 'Marcus Chen', email: 'marcus.chen@email.com', phone: '+977 9845566778', lastVisitDate: 'Jan 10, 2026', lastVisitReason: 'Initial Screening', bookings: '1', status: 'Inactive', noshows: '0', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-6632', name: 'Priya Patel', email: 'priya.p@example.com', phone: '+977 9822334455', lastVisitDate: 'Jun 1, 2026', lastVisitReason: 'Vaccination', bookings: '5', status: 'Missed', noshows: '3', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-3412', name: 'Liam Johnson', email: 'liam.j@example.com', phone: '+977 9866554433', lastVisitDate: 'Apr 12, 2026', lastVisitReason: 'Blood Test', bookings: '2', status: 'Active', noshows: '0', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-9021', name: 'Emma Davis', email: 'emma.davis@email.com', phone: '+977 9812345678', lastVisitDate: 'Aug 5, 2025', lastVisitReason: 'Annual Physical', bookings: '1', status: 'Inactive', noshows: '0', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-5544', name: 'Noah Wilson', email: 'n.wilson@example.com', phone: '+977 9841122334', lastVisitDate: 'Jul 2, 2026', lastVisitReason: 'Therapy Session', bookings: '8', status: 'Active', noshows: '2', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-1123', name: 'Sophia Taylor', email: 'staylor99@email.com', phone: '+977 9822114455', lastVisitDate: 'May 10, 2026', lastVisitReason: 'Dental Cleaning', bookings: '4', status: 'Missed', noshows: '1', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' },
-  { id: '#PT-7890', name: 'James Brown', email: 'jamesb@example.com', phone: '+977 9800998877', lastVisitDate: 'Jun 28, 2026', lastVisitReason: 'Eye Exam', bookings: '6', status: 'Active', noshows: '0', avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs' }
-];
+
 
 const PatientsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState<string>('Provider');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive' | 'Missed'>('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const copyBookingLink = () => {
+    // Generate a proper link based on standard user format
+    const providerId = localStorage.getItem('userId') || '1'; // Fallback to 1 if not available
+    const link = `http://localhost:5173/book/${providerId}`;
+    navigator.clipboard.writeText(link);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+
+    useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8080/api/v1/provider/patients', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setPatients(data);
+        }
+      } catch (error) {
+        console.error('Error fetching patients:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,11 +67,6 @@ const PatientsPage: React.FC = () => {
     // Redirect if no token or role is not 'service_provider'
     if (!token || role !== 'service_provider') {
       navigate('/login');
-    } else {
-      const storedName = localStorage.getItem('fullName');
-      if (storedName) {
-        setFullName(storedName);
-      }
     }
   }, [navigate]);
 
@@ -75,7 +92,7 @@ const PatientsPage: React.FC = () => {
     setSelectedPatient(null);
   };
 
-  const filteredPatients = mockPatients.filter(p => {
+  const filteredPatients = patients.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           p.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           p.phone.includes(searchQuery);
@@ -107,38 +124,7 @@ const PatientsPage: React.FC = () => {
 
   return (
     <div className="bg-[#F3F4F6] text-[#151c27] font-sans min-h-screen flex overflow-x-hidden">
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/80 backdrop-blur-md shadow-sm border-b border-[#c3c5d7]/30">
-        <div className="flex justify-between items-center px-4 md:px-10 h-20 w-full">
-          <div className="flex items-center gap-4">
-            <img
-              alt="OmniBook Logo"
-              className="object-contain h-[40px]"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuANVa2DIMhxwJVhPP1FnM5XPZK669t-OaZbij7sEQY2BcRjKXoLi4Xlx3422j-PoJTMmPiR5Xs2jHyWkiOQbHG2PC_dwX1bTvLCKfZJr4xERFe5jC_Eg1nCXbH4JYQNcg8LmT7jvnS2rIU1qOMeCUzpati4NDHk55Jw4yD9q-c3RF-j48vJ6qqLiyYcMo90ZH-HOFSGJv14g2VG5oLaR8SvPRMAYcJZQSHy3gVOym_POA_776_joTMmbnqxiUzecB0QZUzztl5CrHw"
-            />
-            <div className="h-6 w-[1px] bg-[#c3c5d7]/30 mx-2 hidden md:block"></div>
-            <span className="text-[#53606c] font-medium hidden md:block">Operations Center</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            
-            <div className="hidden lg:flex flex-col items-end mr-2">
-              <span className="text-[14px] font-bold text-[#003fb1]">{fullName}</span>
-              <span className="text-[12px] text-[#53606c]">Service Provider</span>
-            </div>
-            
-            <div className="ml-2">
-              <div className="h-10 w-10 rounded-full overflow-hidden border border-[#c3c5d7] shadow-sm">
-                <img
-                  alt="User Profile Avatar"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <ProviderTopNavigation />
 
       {/* SideNavBar */}
       <nav className="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 bg-[#f0f3ff] border-r border-[#c3c5d7]/30 py-6 px-4 flex flex-col gap-2 z-40 hidden md:flex">
@@ -177,7 +163,7 @@ const PatientsPage: React.FC = () => {
         </NavLink>
 
         <div className="mt-auto flex flex-col gap-1">
-          <NavLink to="/profile-settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
+          <NavLink to="/provider/settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
             <span className="material-symbols-outlined text-[18px]">settings</span>
             Settings
           </NavLink>
@@ -192,17 +178,17 @@ const PatientsPage: React.FC = () => {
       <main className="pt-24 pb-8 md:ml-64 px-4 md:px-10 h-screen flex-1 md:w-[calc(100%-256px)] flex flex-col relative overflow-hidden">
         
         {/* Page Header & Controls */}
-        <div className="flex flex-wrap items-center justify-between mb-8 shrink-0 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 shrink-0 gap-4">
           <div>
-            <h1 className="text-[32px] font-bold text-[#151c27] tracking-tight">Patient Directory</h1>
+            <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">Patient Directory</h1>
             <p className="text-sm font-medium text-[#53606c] mt-1">Manage your {filteredPatients.length} registered patients and viewing history.</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={exportCSV} className="px-4 py-2.5 text-sm font-bold text-[#3b4854] bg-white border border-[#c3c5d7] rounded-xl hover:bg-[#f9f9ff] transition flex items-center gap-2 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <button onClick={exportCSV} className="flex-1 sm:flex-initial px-4 py-2.5 text-sm font-bold text-[#3b4854] bg-white border border-[#c3c5d7] rounded-xl hover:bg-[#f9f9ff] transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
               <span className="material-symbols-outlined text-[18px]">download</span> Export CSV
             </button>
-            <button className="bg-[#1a56db] hover:bg-[#123e9e] text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95">
+            <button className="flex-1 sm:flex-initial bg-[#1a56db] hover:bg-[#123e9e] text-white font-bold py-2.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer">
               <span className="material-symbols-outlined text-[20px]">add</span> Add Patient
             </button>
           </div>
@@ -249,8 +235,8 @@ const PatientsPage: React.FC = () => {
 
         {/* Patients Table */}
         <div className="flex-1 bg-white rounded-2xl border border-[#c3c5d7]/50 shadow-sm flex flex-col mb-4 overflow-hidden">
-          <div className="w-full flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar relative">
-            <table className="w-full text-left border-collapse">
+          <div className="w-full flex-1 overflow-y-auto overflow-x-auto custom-scrollbar relative">
+            <table className="w-full min-w-[720px] text-left border-collapse">
               <thead className="bg-[#f9f9ff]/80 sticky top-0 z-10 backdrop-blur-sm">
                 <tr>
                   <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">Patient Info</th>
@@ -319,18 +305,19 @@ const PatientsPage: React.FC = () => {
                           >
                             <span className="material-symbols-outlined text-[16px]">visibility</span> View Details
                           </button>
-                          <button 
+                          <a 
+                            href={`mailto:${patient.email}`}
                             className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#151c27] hover:bg-[#f0f3ff] transition-colors flex items-center gap-2" 
-                            onClick={(e) => { e.stopPropagation(); alert('Edit function coming soon'); setOpenActionMenuId(null); }}
+                            onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
                           >
-                            <span className="material-symbols-outlined text-[16px]">edit</span> Edit Patient
-                          </button>
+                            <span className="material-symbols-outlined text-[16px]">mail</span> Contact Patient
+                          </a>
                           <div className="h-[1px] w-full bg-[#c3c5d7]/30 my-1"></div>
                           <button 
-                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#ba1a1a] hover:bg-[#ffdad6]/30 transition-colors flex items-center gap-2" 
-                            onClick={(e) => { e.stopPropagation(); alert('Delete function coming soon'); setOpenActionMenuId(null); }}
+                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#151c27] hover:bg-[#f0f3ff] transition-colors flex items-center gap-2" 
+                            onClick={(e) => { e.stopPropagation(); navigate(`/master-calendar?patient=${encodeURIComponent(patient.email)}`); setOpenActionMenuId(null); }}
                           >
-                            <span className="material-symbols-outlined text-[16px]">delete</span> Delete
+                            <span className="material-symbols-outlined text-[16px]">history</span> View Medical History
                           </button>
                         </div>
                       )}
@@ -369,7 +356,7 @@ const PatientsPage: React.FC = () => {
             ></div>
             
             {/* Slide-Out Panel */}
-            <div className="absolute top-20 right-0 bottom-0 w-[420px] max-w-full bg-white shadow-2xl z-[40] flex flex-col overflow-hidden animate-[slideInRight_0.3s_ease-out]">
+            <div className="absolute top-20 right-0 bottom-0 w-full sm:w-[420px] max-w-full bg-white shadow-2xl z-[40] flex flex-col overflow-hidden animate-[slideInRight_0.3s_ease-out]">
               
               {/* Panel Header */}
               <div className="px-8 py-6 flex justify-between items-start border-b border-[#c3c5d7]/30 bg-[#f9f9ff]">
@@ -428,8 +415,8 @@ const PatientsPage: React.FC = () => {
                 {/* Quick Actions List */}
                 <h4 className="font-bold text-[#151c27] mb-3">Quick Actions</h4>
                 <div className="space-y-2">
-                  <button className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-[#1a56db] hover:bg-[#1a56db]/5 font-semibold text-[#3b4854] hover:text-[#003fb1] transition flex items-center justify-between group">
-                    <span className="flex items-center gap-3"><span className="material-symbols-outlined text-[#53606c] group-hover:text-[#1a56db] transition">edit_calendar</span> Book New Appointment</span>
+                  <button onClick={copyBookingLink} className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-[#1a56db] hover:bg-[#1a56db]/5 font-semibold text-[#3b4854] hover:text-[#003fb1] transition flex items-center justify-between group">
+                    <span className="flex items-center gap-3"><span className="material-symbols-outlined text-[#53606c] group-hover:text-[#1a56db] transition">content_copy</span> Copy Public Booking Link</span>
                     <span className="material-symbols-outlined text-[18px] text-[#c3c5d7]">chevron_right</span>
                   </button>
                   <button className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-[#1a56db] hover:bg-[#1a56db]/5 font-semibold text-[#3b4854] hover:text-[#003fb1] transition flex items-center justify-between group">
@@ -440,6 +427,12 @@ const PatientsPage: React.FC = () => {
               </div>
             </div>
           </>
+        )}
+              {showToast && (
+          <div className="fixed bottom-6 right-6 bg-[#1a56db] text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-[slideInRight_0.3s_ease-out] z-50">
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+            <span className="font-semibold text-sm">Booking link copied to clipboard!</span>
+          </div>
         )}
       </main>
 
@@ -455,3 +448,4 @@ const PatientsPage: React.FC = () => {
 };
 
 export default PatientsPage;
+

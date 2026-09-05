@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './superAdmin.css';
 import Sidebar from './components/Sidebar';
 import TopNavigation from './components/TopNavigation';
-
-// Helper to generate a random IP
-const getRandomIp = () => `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-
-// Mock event types
-const eventTypes = [
-    { type: 'ADMIN_INVITATION_SENT', color: 'bg-blue-50 text-blue-700', category: 'Security' },
-    { type: 'FAILED_LOGIN_ALERT', color: 'bg-error text-white animate-pulse', category: 'Auth Events' },
-    { type: 'SYSTEM_BACKUP_COMPLETED', color: 'bg-green-50 text-green-700', category: 'Security' },
-    { type: 'PROVIDER_ADDED', color: 'bg-purple-50 text-purple-700', category: 'Tenant Mutated' },
-    { type: 'PERMISSION_CHANGED', color: 'bg-orange-50 text-orange-700', category: 'Security' },
-    { type: 'TENANT_SUSPENDED', color: 'bg-red-100 text-red-800', category: 'Tenant Mutated' }
-];
 
 export default function AuditLog() {
     const [activeTab, setActiveTab] = useState('All Logs');
@@ -25,80 +13,75 @@ export default function AuditLog() {
     const [showNodeDetails, setShowNodeDetails] = useState(false);
     
     // Total logged events metric
-    const [totalEvents, setTotalEvents] = useState(142850);
-    const [criticalAlerts, setCriticalAlerts] = useState(12);
+    const [totalEvents, setTotalEvents] = useState(0);
+    const [criticalAlerts, setCriticalAlerts] = useState(0);
+    const [superadminActions, setSuperadminActions] = useState(0);
+    const [complianceScore, setComplianceScore] = useState(100);
     const [uptime, setUptime] = useState(99.9);
     
     // Log frequency chart state
-    const [chartHeights, setChartHeights] = useState(
-        [50, 33, 66, 75, 100, 80, 66, 50, 25, 20, 50, 75]
-    );
+    const [chartHeights, setChartHeights] = useState<number[]>(Array(12).fill(0));
+
+    // UI States for functionality
+    const [showFilterView, setShowFilterView] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedLog, setSelectedLog] = useState<any | null>(null);
+    const [nodePings, setNodePings] = useState([12, 45, 110]);
 
     useEffect(() => {
-        // Initial 20 logs
-        const initial = Array.from({ length: 20 }, (_, i) => generateRandomLog(i));
-        setLogs(initial);
-        
-        // Interval for new incoming logs
-        const logTicker = setInterval(() => {
-            const newLog = generateRandomLog(Math.random());
-            setLogs(prev => [newLog, ...prev.slice(0, 49)]); // keep last 50
-            setTotalEvents(prev => prev + 1);
-            if (newLog.event.type === 'FAILED_LOGIN_ALERT' || newLog.event.type === 'TENANT_SUSPENDED') {
-                setCriticalAlerts(prev => prev + 1);
+        const fetchDashboardData = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await axios.get('http://localhost:8080/api/v1/superadmin/audit-dashboard', {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    params: { timeFilter }
+                });
+                
+                const data = response.data;
+                setTotalEvents(data.totalEvents || 0);
+                setCriticalAlerts(data.criticalAlerts || 0);
+                setSuperadminActions(data.superadminActions || 0);
+                setComplianceScore(data.complianceScore || 100);
+                setUptime(data.uptime || 99.9);
+                setLogs(data.logs || []);
+                
+                if (data.logFrequency && data.logFrequency.length > 0) {
+                    // Convert frequency counts to percentages for the chart
+                    const maxFreq = Math.max(...data.logFrequency, 1);
+                    const heights = data.logFrequency.map((f: number) => (f / maxFreq) * 100);
+                    // Take last 12 hours for the UI or adapt it
+                    setChartHeights(heights.slice(-12));
+                }
+            } catch (err) {
+                console.error("Failed to fetch audit dashboard data", err);
             }
-        }, 4000); // New log every 4 seconds
+        };
+
+        fetchDashboardData();
+        const interval = setInterval(fetchDashboardData, 5000);
         
-        const chartTicker = setInterval(() => {
-            setChartHeights(prev => {
-                const newHeights = [...prev];
-                const last = newHeights.pop()!;
-                newHeights.unshift(last); // shift them over
-                return newHeights;
-            });
-            
-            // Randomly fluctuate uptime between 99.8 and 100.0
-            setUptime(99.8 + (Math.random() * 0.2));
-        }, 2500);
+        // Simulate real-time pings for node details
+        const pingInterval = setInterval(() => {
+            setNodePings([
+                Math.floor(Math.random() * 10) + 10,  // 10-20ms
+                Math.floor(Math.random() * 20) + 35,  // 35-55ms
+                Math.floor(Math.random() * 30) + 95,  // 95-125ms
+            ]);
+        }, 2000);
 
         return () => {
-            clearInterval(logTicker);
-            clearInterval(chartTicker);
+            clearInterval(interval);
+            clearInterval(pingInterval);
         };
-    }, []);
-
-    const generateRandomLog = (id: number | string) => {
-        const event = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-        const isCritical = event.type === 'FAILED_LOGIN_ALERT' || event.type === 'TENANT_SUSPENDED';
-        
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const now = new Date();
-        const timestamp = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        
-        return {
-            id,
-            timestamp,
-            isCritical,
-            actor: {
-                initials: isCritical ? 'SYS' : 'JD',
-                email: isCritical ? 'sys.daemon@auth.service' : 'j.doe@omnibook.io',
-                bg: isCritical ? 'bg-error' : 'bg-primary-container',
-                text: isCritical ? 'text-white' : 'text-white'
-            },
-            event,
-            tenant: isCritical ? 'Global Platform' : 'Acme Corp',
-            ip: isCritical ? '45.12.89.201' : getRandomIp(),
-        };
-    };
+    }, [timeFilter]);
 
     const handleExport = () => {
         if (exportStatus !== 'idle') return;
         setExportStatus('exporting');
         
-        // Simulate a 1.5 second generation delay
         setTimeout(() => {
             const csvContent = "Timestamp,Actor,Action Type,Target Tenant,IP Address\n" + 
-                logs.map(log => `"${log.timestamp}","${log.actor.email}","${log.event.type}","${log.tenant}","${log.ip}"`).join("\n");
+                logs.map(log => `"${log.timestamp}","${log.actorEmail}","${log.eventType}","${log.tenantName}","${log.ipAddress}"`).join("\n");
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -115,10 +98,23 @@ export default function AuditLog() {
         }, 1500);
     };
 
-    // Filter logic based on tab
+    // Filter logic based on tab and search
     const filteredLogs = logs.filter(log => {
-        if (activeTab === 'All Logs') return true;
-        return log.event.category === activeTab;
+        let tabMatch = true;
+        if (activeTab !== 'All Logs') {
+            tabMatch = log.eventCategory === activeTab;
+        }
+        
+        let searchMatch = true;
+        if (searchQuery.trim() !== '') {
+            const q = searchQuery.toLowerCase();
+            searchMatch = 
+                (log.actorEmail && log.actorEmail.toLowerCase().includes(q)) ||
+                (log.eventType && log.eventType.toLowerCase().includes(q)) ||
+                (log.ipAddress && log.ipAddress.toLowerCase().includes(q));
+        }
+
+        return tabMatch && searchMatch;
     });
 
     // Pagination logic
@@ -148,15 +144,12 @@ export default function AuditLog() {
                         </h2>
                         <p className="font-body-md text-body-md text-on-surface-variant mt-1">Immutable cryptographic trail of all platform-wide administrative actions.</p>
                     </div>
-                    <div className="flex gap-3">
-                        <div className="relative">
+                    <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-initial">
                             <select 
                                 value={timeFilter}
                                 onChange={(e) => {
                                     setTimeFilter(e.target.value);
-                                    // Optionally recalculate some random numbers
-                                    setTotalEvents(Math.floor(Math.random() * 500000) + 10000);
-                                    setCriticalAlerts(Math.floor(Math.random() * 50));
                                 }}
                                 className="appearance-none bg-white border border-outline-variant rounded-lg pl-4 pr-10 py-2 font-body-md text-primary focus:ring-2 focus:ring-primary-container cursor-pointer transition-colors hover:border-primary"
                             >
@@ -224,7 +217,7 @@ export default function AuditLog() {
                         </div>
                         <div>
                             <p className="font-label-md text-label-md text-on-surface-variant uppercase tracking-tighter">Superadmin Actions</p>
-                            <h3 className="font-headline-lg text-headline-lg mt-1">342</h3>
+                            <h3 className="font-headline-lg text-headline-lg mt-1">{superadminActions.toLocaleString()}</h3>
                         </div>
                     </div>
                     <div className="bg-primary-container p-6 rounded-xl border border-primary-container shadow-sm flex items-start gap-4 text-white group">
@@ -233,7 +226,7 @@ export default function AuditLog() {
                         </div>
                         <div>
                             <p className="font-label-md text-label-md text-on-primary-container uppercase tracking-tighter">Compliance Score (SOC2)</p>
-                            <h3 className="font-headline-lg text-headline-lg mt-1 text-secondary-container">100%</h3>
+                            <h3 className="font-headline-lg text-headline-lg mt-1 text-secondary-container">{complianceScore}%</h3>
                         </div>
                     </div>
                 </div>
@@ -243,26 +236,59 @@ export default function AuditLog() {
                     <div className="px-6 pt-6 pb-2 border-b border-surface-container">
                         <div className="flex items-center justify-between mb-4">
                             <h4 className="font-headline-md text-headline-md text-primary">Global Audit Trail</h4>
-                            <button className="text-secondary font-label-md flex items-center gap-1 hover:underline">
-                                <span className="material-symbols-outlined text-[18px]">filter_list</span> Filter View
+                            <button 
+                                onClick={() => setShowFilterView(!showFilterView)}
+                                className={`font-label-md flex items-center gap-1 hover:underline transition-colors ${showFilterView ? 'text-primary' : 'text-secondary'}`}>
+                                <span className="material-symbols-outlined text-[18px]">filter_list</span> 
+                                {showFilterView ? 'Hide Filters' : 'Filter View'}
                             </button>
                         </div>
                         {/* Tabs */}
-                        <div className="flex gap-8">
+                        <div className="flex gap-4 sm:gap-8 overflow-x-auto no-scrollbar">
                             {['All Logs', 'Security', 'Tenant Mutated', 'Auth Events'].map(tab => (
                                 <button 
                                     key={tab}
-                                    onClick={() => setActiveTab(tab)}
+                                    onClick={() => {
+                                        setActiveTab(tab);
+                                        setCurrentPage(1);
+                                    }}
                                     className={`pb-4 border-b-2 font-label-md transition-colors ${activeTab === tab ? 'border-secondary text-secondary' : 'border-transparent text-on-surface-variant hover:text-primary'}`}
                                 >
                                     {tab}
                                 </button>
                             ))}
                         </div>
+                        
+                        {/* Filter Bar */}
+                        {showFilterView && (
+                            <div className="py-4 border-t border-surface-container flex gap-4 animate-in slide-in-from-top-2 duration-200">
+                                <div className="flex-1 relative">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search by Actor Email, IP Address, or Event Type..."
+                                        value={searchQuery}
+                                        onChange={(e) => {
+                                            setSearchQuery(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg pl-10 pr-4 py-2 font-body-md text-on-surface focus:outline-none focus:border-secondary transition-colors"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={() => {
+                                        setSearchQuery('');
+                                    }}
+                                    className="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg text-on-surface font-label-md hover:bg-surface-container-high transition-colors"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="overflow-x-auto min-h-[400px]">
-                        <table className="w-full text-left">
+                        <table className="w-full min-w-[800px] text-left">
                             <thead className="bg-surface-container-low">
                                 <tr>
                                     <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase">Timestamp</th>
@@ -279,22 +305,22 @@ export default function AuditLog() {
                                         <td className={`px-6 py-4 font-mono-data text-mono-data ${log.isCritical ? 'text-error font-bold' : 'text-on-surface-variant'}`}>{log.timestamp}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${log.actor.bg} ${log.actor.text}`}>
-                                                    {log.isCritical ? <span className="material-symbols-outlined text-[16px]">lock_reset</span> : log.actor.initials}
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold ${log.actorBg} ${log.actorText}`}>
+                                                    {log.isCritical ? <span className="material-symbols-outlined text-[16px]">lock_reset</span> : log.actorInitials}
                                                 </div>
-                                                <span className={`font-body-md text-body-md ${log.isCritical ? 'text-error font-semibold' : ''}`}>{log.actor.email}</span>
+                                                <span className={`font-body-md text-body-md ${log.isCritical ? 'text-error font-semibold' : ''}`}>{log.actorEmail}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded font-mono-data text-mono-data ${log.event.color}`}>{log.event.type}</span>
+                                            <span className={`px-3 py-1 rounded font-mono-data text-mono-data ${log.eventColor}`}>{log.eventType}</span>
                                         </td>
-                                        <td className="px-6 py-4 font-body-md text-body-md">{log.tenant}</td>
-                                        <td className={`px-6 py-4 font-mono-data text-mono-data ${log.isCritical ? 'font-bold' : ''}`}>{log.ip}</td>
+                                        <td className="px-6 py-4 font-body-md text-body-md">{log.tenantName}</td>
+                                        <td className={`px-6 py-4 font-mono-data text-mono-data ${log.isCritical ? 'font-bold' : ''}`}>{log.ipAddress}</td>
                                         <td className="px-6 py-4 text-right">
                                             {log.isCritical ? (
-                                                <button className="bg-error text-white px-3 py-1 rounded text-[10px] uppercase font-bold hover:scale-105 transition-transform shadow-sm">Investigate</button>
+                                                <button onClick={() => setSelectedLog(log)} className="bg-error text-white px-3 py-1 rounded text-[10px] uppercase font-bold hover:scale-105 transition-transform shadow-sm">Investigate</button>
                                             ) : (
-                                                <button className="p-2 hover:bg-surface-container rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => setSelectedLog(log)} className="p-2 hover:bg-surface-container rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="material-symbols-outlined">more_vert</span>
                                                 </button>
                                             )}
@@ -415,9 +441,9 @@ export default function AuditLog() {
                         <div className="p-6 bg-surface-container-lowest">
                             <div className="space-y-4">
                                 {[
-                                    { name: 'us-east-primary', status: 'Healthy', latency: '12ms', type: 'Primary' },
-                                    { name: 'eu-west-replica', status: 'Healthy', latency: '45ms', type: 'Replica' },
-                                    { name: 'ap-south-replica', status: 'Healthy', latency: '110ms', type: 'Replica' },
+                                    { name: 'us-east-primary', status: 'Healthy', latency: `${nodePings[0]}ms`, type: 'Primary' },
+                                    { name: 'eu-west-replica', status: 'Healthy', latency: `${nodePings[1]}ms`, type: 'Replica' },
+                                    { name: 'ap-south-replica', status: 'Healthy', latency: `${nodePings[2]}ms`, type: 'Replica' },
                                     { name: 'archive-cold-storage', status: 'Syncing', latency: '---', type: 'Backup' }
                                 ].map(node => (
                                     <div key={node.name} className="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:border-secondary transition-colors group">
@@ -439,6 +465,77 @@ export default function AuditLog() {
                         <div className="px-6 py-4 border-t border-surface-container bg-surface-container-low flex justify-end">
                             <button 
                                 onClick={() => setShowNodeDetails(false)}
+                                className="bg-primary-container text-white px-6 py-2 rounded-lg font-label-md hover:bg-primary-fixed-dim transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Action / Log Details Modal */}
+            {selectedLog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-tertiary-container/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-surface-container-lowest rounded-xl shadow-2xl max-w-2xl w-full border border-surface-container overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="px-6 py-4 border-b border-surface-container flex justify-between items-center bg-surface">
+                            <h3 className="font-headline-md text-headline-md flex items-center gap-2">
+                                <span className={`material-symbols-outlined ${selectedLog.isCritical ? 'text-error' : 'text-primary'}`}>
+                                    {selectedLog.isCritical ? 'warning' : 'receipt_long'}
+                                </span>
+                                Audit Log Details
+                            </h3>
+                            <button 
+                                onClick={() => setSelectedLog(null)}
+                                className="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full hover:bg-surface-container-lowest"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 bg-surface-container-lowest">
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Event ID</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.id}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Timestamp</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.timestamp}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Action Type</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.eventType}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Category</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.eventCategory}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">Actor Email</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.actorEmail}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-label-sm text-on-surface-variant uppercase tracking-wide">IP Address</p>
+                                        <p className="font-mono-data mt-1">{selectedLog.ipAddress}</p>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-surface-container rounded-lg">
+                                    <p className="text-label-sm text-on-surface-variant uppercase tracking-wide mb-2">Raw JSON payload</p>
+                                    <pre className="text-[12px] font-mono-data text-on-surface overflow-x-auto">
+                                        {JSON.stringify(selectedLog, null, 2)}
+                                    </pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-surface-container bg-surface-container-low flex justify-between">
+                            {selectedLog.isCritical ? (
+                                <button className="bg-error text-white px-6 py-2 rounded-lg font-label-md hover:bg-red-700 transition-colors">
+                                    Block IP Address
+                                </button>
+                            ) : <div></div>}
+                            <button 
+                                onClick={() => setSelectedLog(null)}
                                 className="bg-primary-container text-white px-6 py-2 rounded-lg font-label-md hover:bg-primary-fixed-dim transition-colors"
                             >
                                 Close

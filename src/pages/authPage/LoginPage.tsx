@@ -17,6 +17,11 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // 2FA states
+  const [is2FA, setIs2FA] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [authEmail, setAuthEmail] = useState('');
+
   useEffect(() => {
     // Lightweight entrance animation
     const formContainer = document.getElementById('login-form-container');
@@ -54,6 +59,13 @@ const LoginPage: React.FC = () => {
         password
       });
 
+      if (response.data.success && response.data.requires2fa) {
+        setIs2FA(true);
+        setAuthEmail(response.data.email);
+        setIsLoading(false);
+        return;
+      }
+
       if (response.data.success && response.data.token) {
         // Persist token in local storage
         localStorage.setItem('token', response.data.token);
@@ -76,6 +88,8 @@ const LoginPage: React.FC = () => {
           navigate('/provider-dashboard');
         } else if (response.data.role === 'super_admin') {
           navigate('/superadmin/dashboard');
+        } else if (response.data.role === 'admin') {
+          navigate('/admin/dashboard');
         } else {
           navigate('/dashboard');
         }
@@ -94,6 +108,57 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleVerify2FA = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setServerError('');
+    
+    if (!otpCode.trim()) {
+      setErrors({ otp: 'Code is required' });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post('http://localhost:8080/api/auth/verify-2fa', {
+        email: authEmail,
+        code: otpCode
+      });
+
+      if (response.data.success && response.data.token) {
+        // Persist token in local storage
+        localStorage.setItem('token', response.data.token);
+        if (response.data.role) {
+          localStorage.setItem('role', response.data.role);
+        }
+        if (response.data.fullName) {
+          localStorage.setItem('fullName', response.data.fullName);
+        }
+
+        // Redirect based on role
+        if (response.data.role === 'service_provider') {
+          navigate('/provider-dashboard');
+        } else if (response.data.role === 'super_admin') {
+          navigate('/superadmin/dashboard');
+        } else if (response.data.role === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+      } else {
+        setServerError(response.data.message || 'Verification failed');
+      }
+    } catch (err: any) {
+      if (err.response?.data && typeof err.response.data === 'object') {
+        const errorData = err.response.data;
+        setServerError(errorData.message || 'Invalid code. Please try again.');
+      } else {
+        setServerError('An error occurred during verification. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleOAuthSuccess = (data: any) => {
     if (data.success && data.token) {
       localStorage.setItem('token', data.token);
@@ -103,6 +168,8 @@ const LoginPage: React.FC = () => {
         navigate('/provider-dashboard');
       } else if (data.role === 'super_admin') {
         navigate('/superadmin/dashboard');
+      } else if (data.role === 'admin') {
+        navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
       }
@@ -179,88 +246,137 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <form className="space-y-5" onSubmit={handleLogin}>
-              <div className="space-y-1.5">
-                <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="identity">Email Address or Phone Number</label>
-                <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
-                    mail
-                  </span>
-                  <input
-                    className={`w-full pl-12 pr-4 py-3 bg-[#f0f3ff] border ${errors.identity ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
-                    id="identity"
-                    placeholder="name@example.com or phone"
-                    type="text"
-                    value={identity}
-                    onChange={(e) => setIdentity(e.target.value)}
-                  />
-                </div>
-                {errors.identity && <p className="text-red-500 text-xs">{errors.identity}</p>}
-              </div>
+            {!is2FA ? (
+              <>
+                <form className="space-y-5" onSubmit={handleLogin}>
+                  <div className="space-y-1.5">
+                    <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="identity">Email Address or Phone Number</label>
+                    <div className="relative group">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
+                        mail
+                      </span>
+                      <input
+                        className={`w-full pl-12 pr-4 py-3 bg-[#f0f3ff] border ${errors.identity ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
+                        id="identity"
+                        placeholder="name@example.com or phone"
+                        type="text"
+                        value={identity}
+                        onChange={(e) => setIdentity(e.target.value)}
+                      />
+                    </div>
+                    {errors.identity && <p className="text-red-500 text-xs">{errors.identity}</p>}
+                  </div>
 
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="password">Password</label>
-                  <a className="text-[#1853d9] text-[12px] font-medium hover:underline" href="#">Forgot password?</a>
-                </div>
-                <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
-                    lock
-                  </span>
-                  <input
-                    className={`w-full pl-12 pr-12 py-3 bg-[#f0f3ff] border ${errors.password ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
-                    id="password"
-                    placeholder="••••••••"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <button 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#151c27]" 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="password">Password</label>
+                      <a className="text-[#1853d9] text-[12px] font-medium hover:underline" href="#">Forgot password?</a>
+                    </div>
+                    <div className="relative group">
+                      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
+                        lock
+                      </span>
+                      <input
+                        className={`w-full pl-12 pr-12 py-3 bg-[#f0f3ff] border ${errors.password ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
+                        id="password"
+                        placeholder="••••••••"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button 
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#737686] hover:text-[#151c27]" 
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        <span className="material-symbols-outlined">
+                          {showPassword ? "visibility_off" : "visibility"}
+                        </span>
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
+                  </div>
+
+                  <div className="flex items-center">
+                    <input
+                      className="w-4 h-4 text-[#1853d9] border-[#c3c5d7] rounded focus:ring-[#b5c4ff]"
+                      id="remember"
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                    />
+                    <label className="ml-2 text-[14px] text-[#434654]" htmlFor="remember">Keep me signed in</label>
+                  </div>
+
+                  <button
+                    disabled={isLoading}
+                    className="w-full py-3.5 bg-[#10B981] hover:bg-[#0EA271] disabled:bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
+                    type="submit"
                   >
-                    <span className="material-symbols-outlined">
-                      {showPassword ? "visibility_off" : "visibility"}
+                    <span>{isLoading ? 'Processing...' : 'Login'}</span>
+                    {!isLoading && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
+                  </button>
+                </form>
+
+                <SocialLogin 
+                  role="user" 
+                  onSuccess={handleOAuthSuccess} 
+                  onError={() => setServerError('OAuth login failed')} 
+                />
+
+                <p className="mt-8 text-center text-[14px] text-[#434654]">
+                  Don't have an account?{' '}
+                  <NavLink to="/register" className="text-[#1853d9] font-bold hover:underline">
+                    Sign up
+                  </NavLink>
+                </p>
+              </>
+            ) : (
+              <form className="space-y-5" onSubmit={handleVerify2FA}>
+                <div className="mb-4">
+                  <p className="text-body-md text-on-surface-variant">We've sent a 6-digit verification code to your email. Please enter it below to continue.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="otpCode">Verification Code</label>
+                  <div className="relative group">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
+                      password
                     </span>
+                    <input
+                      className={`w-full pl-12 pr-4 py-3 bg-[#f0f3ff] border ${errors.otp ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] font-mono tracking-widest focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
+                      id="otpCode"
+                      placeholder="123456"
+                      type="text"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                    />
+                  </div>
+                  {errors.otp && <p className="text-red-500 text-xs">{errors.otp}</p>}
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    disabled={isLoading}
+                    className="flex-1 py-3.5 bg-surface-container hover:bg-surface-container-high disabled:bg-gray-200 text-on-surface font-semibold rounded-xl transition-all"
+                    type="button"
+                    onClick={() => {
+                        setIs2FA(false);
+                        setOtpCode('');
+                    }}
+                  >
+                    Back
+                  </button>
+                  <button
+                    disabled={isLoading}
+                    className="flex-[2] py-3.5 bg-[#10B981] hover:bg-[#0EA271] disabled:bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
+                    type="submit"
+                  >
+                    <span>{isLoading ? 'Verifying...' : 'Verify & Login'}</span>
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  className="w-4 h-4 text-[#1853d9] border-[#c3c5d7] rounded focus:ring-[#b5c4ff]"
-                  id="remember"
-                  type="checkbox"
-                  checked={remember}
-                  onChange={(e) => setRemember(e.target.checked)}
-                />
-                <label className="ml-2 text-[14px] text-[#434654]" htmlFor="remember">Keep me signed in</label>
-              </div>
-
-              <button
-                disabled={isLoading}
-                className="w-full py-3.5 bg-[#10B981] hover:bg-[#0EA271] disabled:bg-gray-400 text-white font-semibold rounded-xl shadow-md transition-all flex justify-center items-center gap-2"
-                type="submit"
-              >
-                <span>{isLoading ? 'Processing...' : 'Login'}</span>
-                {!isLoading && <span className="material-symbols-outlined text-[20px]">arrow_forward</span>}
-              </button>
-            </form>
-
-            <SocialLogin 
-              role="user" 
-              onSuccess={handleOAuthSuccess} 
-              onError={() => setServerError('OAuth login failed')} 
-            />
-
-            <p className="mt-8 text-center text-[14px] text-[#434654]">
-              Don't have an account?{' '}
-              <NavLink to="/register" className="text-[#1853d9] font-bold hover:underline">
-                Sign up
-              </NavLink>
-            </p>
+              </form>
+            )}
           </div>
         </section>
       </main>
