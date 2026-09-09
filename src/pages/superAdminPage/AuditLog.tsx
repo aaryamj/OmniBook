@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './superAdmin.css';
 import Sidebar from './components/Sidebar';
 import TopNavigation from './components/TopNavigation';
 
 export default function AuditLog() {
+    const [searchParams] = useSearchParams();
     const [activeTab, setActiveTab] = useState('All Logs');
     const [currentPage, setCurrentPage] = useState(1);
     const [logs, setLogs] = useState<any[]>([]);
@@ -23,10 +25,18 @@ export default function AuditLog() {
     const [chartHeights, setChartHeights] = useState<number[]>(Array(12).fill(0));
 
     // UI States for functionality
-    const [showFilterView, setShowFilterView] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [showFilterView, setShowFilterView] = useState(() => !!searchParams.get('search'));
+    const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
     const [selectedLog, setSelectedLog] = useState<any | null>(null);
     const [nodePings, setNodePings] = useState([12, 45, 110]);
+
+    useEffect(() => {
+        const queryFromUrl = searchParams.get('search');
+        if (queryFromUrl !== null) {
+            setSearchQuery(queryFromUrl);
+            if (queryFromUrl) setShowFilterView(true);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchDashboardData = async () => {

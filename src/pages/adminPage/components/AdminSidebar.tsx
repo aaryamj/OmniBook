@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 export default function AdminSidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const terms = useOrganizationTerms();
 
     // Helper function to determine if a path is active
     const isActive = (path: string) => location.pathname === path;
@@ -51,13 +53,16 @@ export default function AdminSidebar() {
                             />
                         </div>
                         <div>
-                            <p className="font-label-md text-label-md text-on-primary-container opacity-70">Admin Console</p>
+                            <p className="font-label-md text-label-md text-on-primary-container opacity-80">{localStorage.getItem('organizationName') ? `${localStorage.getItem('organizationName')} Console` : 'Admin Console'}</p>
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                                {terms.facilityLabel}
+                            </span>
                         </div>
                     </div>
                     {/* Mobile Close Button */}
                     <button 
                         onClick={() => setIsMobileOpen(false)}
-                        className="lg:hidden p-1.5 rounded-lg text-on-primary-container hover:bg-white/10 transition-colors"
+                        className="lg:hidden p-1.5 rounded-lg text-on-primary-container hover:bg-white/10 transition-colors cursor-pointer"
                         aria-label="Close sidebar"
                     >
                         <span className="material-symbols-outlined text-[20px]">close</span>
@@ -84,8 +89,8 @@ export default function AdminSidebar() {
                         }`}
                         onClick={() => navigate('/admin/appointments')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/appointments') ? "'FILL' 1" : "" }}>calendar_month</span>
-                        <span className="font-body-md">All Appointments</span>
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/appointments') ? "'FILL' 1" : "" }}>{terms.appointmentsNavIcon}</span>
+                        <span className="font-body-md">{terms.appointmentsNavLabel}</span>
                     </a>
                     <a 
                         className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
@@ -95,8 +100,8 @@ export default function AdminSidebar() {
                         }`}
                         onClick={() => navigate('/admin/providers')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/providers') ? "'FILL' 1" : "" }}>medical_services</span>
-                        <span className="font-body-md">Providers</span>
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/providers') ? "'FILL' 1" : "" }}>{terms.providersNavIcon}</span>
+                        <span className="font-body-md">{terms.providersNavLabel}</span>
                     </a>
                     <a 
                         className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
@@ -106,8 +111,8 @@ export default function AdminSidebar() {
                         }`}
                         onClick={() => navigate('/admin/crm')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/crm') ? "'FILL' 1" : "" }}>groups</span>
-                        <span className="font-body-md">CRM</span>
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/crm') ? "'FILL' 1" : "" }}>{terms.customersNavIcon}</span>
+                        <span className="font-body-md">{terms.customerPlural} CRM</span>
                     </a>
                     <a 
                         className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${

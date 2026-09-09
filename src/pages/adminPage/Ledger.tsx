@@ -4,8 +4,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import axios from 'axios';
 import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
+import { useOrganizationTerms } from '../../utils/organizationTerms';
 
 export default function Ledger() {
+    const terms = useOrganizationTerms();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
@@ -73,7 +75,7 @@ export default function Ledger() {
     });
 
     const handleExportCSV = () => {
-        const headers = ['TXN ID', 'Date', 'Time', 'Patient', 'Service', 'Gateway', 'Amount', 'Account', 'Status'];
+        const headers = ['TXN ID', 'Date', 'Time', terms.customerSingular, terms.serviceSingular, 'Gateway', 'Amount', 'Account', 'Status'];
         const csvRows = [headers.join(',')];
         filteredTransactions.forEach(txn => {
             const row = [
@@ -122,12 +124,12 @@ export default function Ledger() {
     };
 
     return (
-        <div className="superadmin-theme">
+        <div className="tenant-theme">
             <div className="bg-background text-on-surface font-sans min-h-screen relative">
                 <AdminSidebar />
                 <TopNavigation />
 
-                <main className="ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
+                <main className="lg:ml-[280px] ml-0 ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
                     <div className="max-w-container-max mx-auto w-full flex-1 flex flex-col animate-fade-in space-y-8 pb-20">
                         {/* BREADCRUMB & HEADER */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 gap-4">
@@ -139,7 +141,7 @@ export default function Ledger() {
                                     <span className="material-symbols-outlined text-sm">chevron_right</span>
                                     <span className="font-label-md text-label-md uppercase tracking-widest text-secondary font-bold">Reconciliation</span>
                                 </nav>
-                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary">Financial Reconciliation</h2>
+                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-bold text-primary">Financial Reconciliation</h2>
                             </div>
                             <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
                                 <button 
@@ -298,7 +300,7 @@ export default function Ledger() {
                                         <tr className="bg-surface-container-low text-left">
                                             <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">TXN ID</th>
                                             <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">DATE</th>
-                                            <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">PATIENT & SERVICE</th>
+                                            <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">{terms.customerSingular} & {terms.serviceSingular}</th>
                                             <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant text-center">GATEWAY</th>
                                             <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant text-right">GROSS AMOUNT</th>
                                             <th className="px-6 py-4 font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">STATUS</th>
@@ -322,9 +324,20 @@ export default function Ledger() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${txn.patientColor}`}>
-                                                            {txn.patientInitials}
-                                                        </div>
+                                                        {txn.patientProfilePicture ? (
+                                                            <img 
+                                                                src={txn.patientProfilePicture} 
+                                                                alt={txn.patientName} 
+                                                                className="w-8 h-8 rounded-full object-cover border border-outline-variant flex-shrink-0"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${txn.patientColor} flex-shrink-0`}>
+                                                                {txn.patientInitials}
+                                                            </div>
+                                                        )}
                                                         <div>
                                                             <p className="text-body-md font-bold text-primary">{txn.patientName}</p>
                                                             <p className="text-label-md text-on-surface-variant">{txn.service}</p>
@@ -426,16 +439,27 @@ export default function Ledger() {
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-label-md text-on-surface-variant uppercase mb-1">Patient</p>
+                                    <p className="text-label-md text-on-surface-variant uppercase mb-1">{terms.customerSingular}</p>
                                     <div className="flex items-center gap-2">
-                                        <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedTransaction.patientColor}`}>
-                                            {selectedTransaction.patientInitials}
-                                        </div>
+                                        {selectedTransaction.patientProfilePicture ? (
+                                            <img 
+                                                src={selectedTransaction.patientProfilePicture} 
+                                                alt={selectedTransaction.patientName} 
+                                                className="w-7 h-7 rounded-full object-cover border border-outline-variant flex-shrink-0"
+                                                onError={(e) => {
+                                                    (e.target as HTMLElement).style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${selectedTransaction.patientColor} flex-shrink-0`}>
+                                                {selectedTransaction.patientInitials}
+                                            </div>
+                                        )}
                                         <p className="text-body-md font-bold text-primary">{selectedTransaction.patientName}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-label-md text-on-surface-variant uppercase mb-1">Service</p>
+                                    <p className="text-label-md text-on-surface-variant uppercase mb-1">{terms.serviceSingular}</p>
                                     <p className="text-body-md text-primary">{selectedTransaction.service}</p>
                                 </div>
                                 <div>

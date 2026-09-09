@@ -66,7 +66,7 @@ export default function PlatformOverviewCards({ timeFilter }: { timeFilter: stri
                         +{metrics.newClinicsThisWeek} new this week
                     </span>
                 </div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Active Clinic Subscriptions</h3>
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Active Organizations</h3>
                 <p className="font-headline-lg text-headline-lg text-on-surface tracking-tighter">{metrics.activeClinics}</p>
             </div>
             
@@ -75,7 +75,7 @@ export default function PlatformOverviewCards({ timeFilter }: { timeFilter: stri
                 <div className="flex justify-between items-start mb-4">
                     <span className="material-symbols-outlined p-2 bg-orange-50 text-orange-600 rounded-lg">groups</span>
                 </div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Patient Footfall</h3>
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Clients Footfall</h3>
                 <p className="font-headline-lg text-headline-lg text-on-surface tracking-tighter">{metrics.totalPatientFootfall.toLocaleString()}</p>
             </div>
             

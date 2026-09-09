@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
+import AdminAppointmentDetailModal from './AdminAppointmentDetailModal';
 
 interface LivePatientFlowDTO {
     id: number;
@@ -18,6 +20,7 @@ interface LivePatientFlowTrackerProps {
 }
 
 export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePatientFlowTrackerProps) {
+    const terms = useOrganizationTerms();
     const [openDropdown, setOpenDropdown] = useState<number | null>(null);
     const [detailsModal, setDetailsModal] = useState<LivePatientFlowDTO | null>(null);
     const [statusModal, setStatusModal] = useState<LivePatientFlowDTO | null>(null);
@@ -97,7 +100,7 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
             <div className="p-6 border-b border-surface-container-high flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-primary">dynamic_feed</span>
-                    <h2 className="font-headline-md text-headline-md">Live Patient Flow Tracker</h2>
+                    <h2 className="font-headline-md text-headline-md">Live {terms.customerSingular} Flow Tracker</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-green-500"></span>
@@ -109,9 +112,9 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
                     <thead className="bg-surface-container-low text-label-md text-on-surface-variant uppercase tracking-widest">
                         <tr>
                             <th className="px-6 py-4 font-semibold">Time</th>
-                            <th className="px-6 py-4 font-semibold">Patient Name</th>
-                            <th className="px-6 py-4 font-semibold">Service</th>
-                            <th className="px-6 py-4 font-semibold">Assigned Provider</th>
+                            <th className="px-6 py-4 font-semibold">{terms.customerSingular} Name</th>
+                            <th className="px-6 py-4 font-semibold">{terms.serviceSingular}</th>
+                            <th className="px-6 py-4 font-semibold">Assigned {terms.providerSingular}</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold">Billing/Verification</th>
                             <th className="px-6 py-4 font-semibold">Action</th>
@@ -121,7 +124,7 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
                         {flows.length === 0 ? (
                             <tr>
                                 <td colSpan={7} className="px-6 py-8 text-center text-on-surface-variant">
-                                    No patients for today.
+                                    No {terms.customerPlural.toLowerCase()} for today.
                                 </td>
                             </tr>
                         ) : flows.map((flow, idx) => (
@@ -189,7 +192,7 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
                                                     }}
                                                 >
                                                     <span className="material-symbols-outlined text-[18px]">cancel</span>
-                                                    Cancel Appointment
+                                                    Cancel {terms.appointmentSingular}
                                                 </button>
                                             </div>
                                         </>
@@ -203,24 +206,10 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
 
             {/* Details Modal */}
             {detailsModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-surface p-6 rounded-xl w-96 shadow-lg border border-surface-container-high">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-headline-sm text-on-surface">Appointment Details</h3>
-                            <button onClick={() => setDetailsModal(null)} className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors">close</button>
-                        </div>
-                        <div className="space-y-3 text-sm text-on-surface">
-                            <p><span className="font-bold text-on-surface-variant">Patient Name:</span> {detailsModal.patientName}</p>
-                            <p><span className="font-bold text-on-surface-variant">Patient ID:</span> {detailsModal.patientId}</p>
-                            <p><span className="font-bold text-on-surface-variant">Time:</span> {detailsModal.time}</p>
-                            <p><span className="font-bold text-on-surface-variant">Service:</span> {detailsModal.service}</p>
-                            <p><span className="font-bold text-on-surface-variant">Provider:</span> {detailsModal.providerName}</p>
-                            <p><span className="font-bold text-on-surface-variant">Status:</span> {detailsModal.status}</p>
-                            <p><span className="font-bold text-on-surface-variant">Billing:</span> {detailsModal.billingStatus}</p>
-                        </div>
-                        <button onClick={() => setDetailsModal(null)} className="mt-6 w-full py-2 bg-primary text-on-primary rounded font-bold hover:bg-primary/90 transition-colors">Close</button>
-                    </div>
-                </div>
+                <AdminAppointmentDetailModal 
+                    appointmentId={detailsModal.id}
+                    onClose={() => setDetailsModal(null)}
+                />
             )}
 
             {/* Status Update Modal */}
@@ -231,7 +220,7 @@ export default function LivePatientFlowTracker({ flows = [], onRefresh }: LivePa
                             <h3 className="font-headline-sm text-on-surface">Update Status</h3>
                             <button onClick={() => setStatusModal(null)} className="material-symbols-outlined text-on-surface-variant hover:text-error transition-colors">close</button>
                         </div>
-                        <p className="text-sm text-on-surface-variant mb-4">Select new status for <span className="font-bold text-on-surface">{statusModal.patientName}</span>'s appointment.</p>
+                        <p className="text-sm text-on-surface-variant mb-4">Select new status for <span className="font-bold text-on-surface">{statusModal.patientName}</span>'s {terms.appointmentSingular.toLowerCase()}.</p>
                         <select 
                             value={newStatus}
                             onChange={(e) => setNewStatus(e.target.value)}

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import NotificationBell from '../../userPage/NotificationBell';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
+import { useAuth } from '../../../context/AuthContext';
 
 const ProviderTopNavigation: React.FC = () => {
+    const terms = useOrganizationTerms();
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAuth();
     const [fullName, setFullName] = useState<string>('Provider');
     const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -16,9 +20,10 @@ const ProviderTopNavigation: React.FC = () => {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const role = localStorage.getItem('role');
+        const role = (localStorage.getItem('role') || '').toLowerCase();
+        const isProvider = role === 'service_provider' || role === 'provider' || role === 'role_provider';
 
-        if (token && role === 'service_provider') {
+        if (token && isProvider) {
             const fetchProfile = async () => {
                 try {
                     const res = await axios.get('http://localhost:8080/api/v1/provider/settings/profile', {
@@ -38,11 +43,16 @@ const ProviderTopNavigation: React.FC = () => {
                 }
             };
             fetchProfile();
+
+            window.addEventListener('userProfileUpdated', fetchProfile);
+            return () => {
+                window.removeEventListener('userProfileUpdated', fetchProfile);
+            };
         }
     }, []);
 
-    const handleLogout = () => {
-        localStorage.clear();
+    const handleLogout = async () => {
+        await logout();
         navigate('/login');
     };
 
@@ -70,15 +80,17 @@ const ProviderTopNavigation: React.FC = () => {
                             />
                         </NavLink>
                         <div className="h-6 w-[1px] bg-[#c3c5d7]/30 mx-2 hidden md:block"></div>
-                        <span className="text-[#53606c] font-medium hidden md:block">Operations Center</span>
+                        <span className="text-on-surface-variant font-medium hidden md:block">
+                            {localStorage.getItem('organizationName') ? `${localStorage.getItem('organizationName')} Console` : 'Operations Center'}
+                        </span>
                     </div>
                     
                     <div className="flex items-center gap-3 sm:gap-4">
                         <NotificationBell />
 
                         <div className="hidden lg:flex flex-col items-end mr-2">
-                            <span className="text-[14px] font-bold text-[#003fb1]">{fullName}</span>
-                            <span className="text-[12px] text-[#53606c]">Service Provider</span>
+                            <span className="text-[14px] font-bold text-primary">{fullName}</span>
+                            <span className="text-[12px] text-on-surface-variant">Service Provider</span>
                         </div>
 
                         <div className="ml-1 sm:ml-2">
@@ -115,15 +127,15 @@ const ProviderTopNavigation: React.FC = () => {
                                 to="/patients" 
                                 className={({ isActive }) => `flex items-center gap-3 px-4 py-3 text-[14px] font-semibold rounded-xl transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-gray-100'}`}
                             >
-                                <span className="material-symbols-outlined text-[20px]">group</span>
-                                Patients / Clients
+                                <span className="material-symbols-outlined text-[20px]">{terms.customersNavIcon}</span>
+                                {terms.customersNavLabel}
                             </NavLink>
                             <NavLink 
                                 to="/services" 
                                 className={({ isActive }) => `flex items-center gap-3 px-4 py-3 text-[14px] font-semibold rounded-xl transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-gray-100'}`}
                             >
-                                <span className="material-symbols-outlined text-[20px]">medical_services</span>
-                                Services Manager
+                                <span className="material-symbols-outlined text-[20px]">{terms.servicesNavIcon}</span>
+                                {terms.servicesNavLabel}
                             </NavLink>
                             <NavLink 
                                 to="/analytics" 

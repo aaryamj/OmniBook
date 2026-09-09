@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import axios from 'axios';
+import { applyTheme } from '../../utils/themeUtils';
+import { useOrganizationTerms, setAndBroadcastOrgType } from '../../utils/organizationTerms';
 
 export default function AcceptInvite() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const token = searchParams.get('token');
+    const terms = useOrganizationTerms();
 
     const [formData, setFormData] = useState({
         email: '',
         fullName: '',
+        phoneCode: '+1',
         phone: '',
         organizationName: '',
+        organizationType: 'Clinic',
         password: '',
         confirmPassword: ''
     });
@@ -27,20 +32,55 @@ export default function AcceptInvite() {
     const [cardTransform, setCardTransform] = useState('perspective(1000px) rotateX(10deg) rotateY(-15deg) rotateZ(5deg)');
 
     const [tier, setTier] = useState('Enterprise');
+    const [inviteRole, setInviteRole] = useState('service_provider');
 
     useEffect(() => {
         const fetchInviteInfo = async () => {
-            if (!token) return;
+            if (!token) {
+                setServerError('Missing invitation token.');
+                return;
+            }
             try {
                 const response = await axios.get(`http://localhost:8080/api/auth/invite?token=${token}`);
                 if (response.data.success) {
+                    let parsedCode = '+1';
+                    let parsedPhone = '';
+
+                    if (response.data.phone) {
+                        const rawPhone = response.data.phone.trim();
+                        const parts = rawPhone.split(' ');
+                        if (parts.length === 2 && parts[0].startsWith('+')) {
+                            parsedCode = parts[0];
+                            parsedPhone = parts[1];
+                        } else {
+                            parsedPhone = rawPhone.replace(/\D/g, '');
+                        }
+                    }
+
+                    const fetchedOrgType = response.data.organizationType || 'Clinic';
+                    if (response.data.role) {
+                        setInviteRole(response.data.role);
+                    }
                     setFormData(prev => ({ 
                         ...prev, 
                         email: response.data.message,
                         fullName: response.data.fullName || '',
-                        phone: response.data.phone || '',
-                        organizationName: response.data.organizationName || ''
+                        phoneCode: parsedCode,
+                        phone: parsedPhone,
+                        organizationName: response.data.organizationName || '',
+                        organizationType: fetchedOrgType
                     }));
+                    if (response.data.organizationType) {
+                        localStorage.setItem('organizationType', response.data.organizationType);
+                        setAndBroadcastOrgType(response.data.organizationType);
+                    }
+                    if (response.data.organizationName) {
+                        localStorage.setItem('organizationName', response.data.organizationName);
+                    }
+                    if (response.data.primaryAccentColor) {
+                        localStorage.setItem('primaryAccentColor', response.data.primaryAccentColor);
+                        applyTheme(response.data.primaryAccentColor);
+                    }
                     if (response.data.subscriptionTier) {
                         setTier(response.data.subscriptionTier);
                     }
@@ -72,7 +112,7 @@ export default function AcceptInvite() {
         const newErrors: Record<string, string> = {};
         if (!formData.email.trim()) newErrors.email = 'Email is required';
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Valid email is required';
-        if (!formData.organizationName.trim()) newErrors.organizationName = 'Clinic name is required';
+        if (!formData.organizationName.trim()) newErrors.organizationName = `${terms.facilityLabel} name is required`;
         if (!formData.fullName.trim()) newErrors.fullName = 'Name is required';
         if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = 'Phone number must be exactly 10 digits';
         if (!/^(?=.*\d)(?=.*[^a-zA-Z0-9])[A-Z].{5,}$/.test(formData.password)) {
@@ -99,11 +139,12 @@ export default function AcceptInvite() {
         setIsLoading(true);
 
         try {
+            const fullPhone = `${formData.phoneCode} ${formData.phone}`.trim();
             const response = await axios.post('http://localhost:8080/api/auth/accept-invite', {
                 token: token,
                 password: formData.password,
                 fullName: formData.fullName,
-                phone: formData.phone,
+                phone: fullPhone,
                 organizationName: formData.organizationName,
                 email: formData.email
             });
@@ -113,7 +154,33 @@ export default function AcceptInvite() {
                 localStorage.setItem('token', response.data.token);
                 const role = response.data.role || '';
                 if (role) localStorage.setItem('role', role);
-                if (response.data.fullName) localStorage.setItem('fullName', response.data.fullName);
+                if (response.data.fullName) {
+                    if (role.toLowerCase() === 'service_provider' || role.toLowerCase() === 'provider') {
+                        localStorage.setItem('fullName', response.data.fullName);
+                        localStorage.setItem('providerFullName', response.data.fullName);
+                        localStorage.removeItem('adminFullName');
+                    } else {
+                        localStorage.setItem('fullName', response.data.fullName);
+                        localStorage.setItem('adminFullName', response.data.fullName);
+                    }
+                }
+                if (formData.organizationName || response.data.organizationName) {
+                    localStorage.setItem('organizationName', response.data.organizationName || formData.organizationName);
+                }
+                const finalOrgType = response.data.organizationType || formData.organizationType || 'Clinic';
+                localStorage.setItem('organizationType', finalOrgType);
+                setAndBroadcastOrgType(finalOrgType);
+
+                if (response.data.profilePicture) {
+                    localStorage.setItem('profilePicture', response.data.profilePicture);
+                } else if (role.toLowerCase() === 'service_provider' || role.toLowerCase() === 'provider') {
+                    localStorage.removeItem('profilePicture');
+                }
+
+                if (response.data.primaryAccentColor) {
+                    localStorage.setItem('primaryAccentColor', response.data.primaryAccentColor);
+                    applyTheme(response.data.primaryAccentColor);
+                }
 
                 // Redirect based on role
                 if (role.toLowerCase() === 'service_provider') {
@@ -158,7 +225,7 @@ export default function AcceptInvite() {
                             <h1 className="font-sans text-xl sm:text-2xl font-bold tracking-tight text-on-secondary-fixed mb-1">Welcome to your Dedicated Tenant Environment</h1>
                             <p className="font-sans text-sm sm:text-base text-on-secondary-fixed-variant">
                                 Workspace: <span className="font-mono text-xs tracking-tight">Secure {tier} Instance</span><br/>
-                                Provisioned for: <span className="font-bold">Clinic Activation</span>
+                                Provisioned for: <span className="font-bold">{terms.facilityLabel} Activation</span>
                             </p>
                         </div>
 
@@ -171,12 +238,20 @@ export default function AcceptInvite() {
                             <div className="h-px w-4 sm:w-8 bg-outline-variant shrink-0"></div>
                             <div className="flex items-center space-x-2 opacity-50 shrink-0">
                                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold text-xs">2</div>
-                                <span className="font-sans text-xs sm:text-sm font-semibold text-on-surface-variant">Progressive Profiling</span>
+                                <span className="font-sans text-xs sm:text-sm font-semibold text-on-surface-variant">
+                                    {inviteRole === 'service_provider' || inviteRole === 'provider' 
+                                        ? `${terms.providerSingular} Profiling` 
+                                        : 'Progressive Profiling'}
+                                </span>
                             </div>
                             <div className="h-px w-4 sm:w-8 bg-outline-variant shrink-0"></div>
                             <div className="flex items-center space-x-2 opacity-50 shrink-0">
                                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant font-bold text-xs">3</div>
-                                <span className="font-sans text-xs sm:text-sm font-semibold text-on-surface-variant">Financial Activation</span>
+                                <span className="font-sans text-xs sm:text-sm font-semibold text-on-surface-variant">
+                                    {inviteRole === 'service_provider' || inviteRole === 'provider' 
+                                        ? `${terms.serviceSingular} Setup` 
+                                        : 'Financial Activation'}
+                                </span>
                             </div>
                         </div>
 
@@ -188,7 +263,11 @@ export default function AcceptInvite() {
                         )}
                         <form className="space-y-5" onSubmit={handleSubmit}>
                             <div className="space-y-1.5">
-                                <label className="block text-[14px] font-medium text-[#151c27]">Administrator Email</label>
+                                <label className="block text-[14px] font-medium text-[#151c27]">
+                                    {inviteRole === 'service_provider' || inviteRole === 'provider' 
+                                        ? `${terms.providerSingular} Email` 
+                                        : 'Administrator Email'}
+                                </label>
                                 <div className="relative group">
                                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
                                         mail
@@ -204,14 +283,14 @@ export default function AcceptInvite() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="block text-[14px] font-medium text-[#151c27]">Clinic / Hospital Name</label>
+                                <label className="block text-[14px] font-medium text-[#151c27]">{terms.facilityLabel} Name</label>
                                 <div className="relative group">
                                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
-                                        local_hospital
+                                        {terms.facilityLabel === 'College' ? 'school' : terms.facilityLabel === 'Saloon' ? 'content_cut' : 'local_hospital'}
                                     </span>
                                     <input 
                                         className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.organizationName ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
-                                        placeholder="e.g., Mediciti Core" 
+                                        placeholder={`e.g., ${formData.organizationName || `Mediciti ${terms.facilityLabel}`}`} 
                                         type="text" 
                                         value={formData.organizationName}
                                         onChange={(e) => setFormData({...formData, organizationName: e.target.value})}
@@ -222,14 +301,18 @@ export default function AcceptInvite() {
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="block text-[14px] font-medium text-[#151c27]">Administrator Full Name</label>
+                                <label className="block text-[14px] font-medium text-[#151c27]">
+                                    {inviteRole === 'service_provider' || inviteRole === 'provider' 
+                                        ? `${terms.providerSingular} Full Name` 
+                                        : 'Administrator Full Name'}
+                                </label>
                                 <div className="relative group">
                                     <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
                                         person
                                     </span>
                                     <input 
                                         className={`w-full pl-12 pr-4 py-3 bg-white border ${errors.fullName ? 'border-red-500' : 'border-[#c3c5d7]'} rounded-xl text-[16px] placeholder:text-[#737686]/50 hover:bg-[#f0f3ff] focus:bg-white focus:ring-2 focus:ring-[#b5c4ff] focus:border-[#1853d9] outline-none transition-all`}
-                                        placeholder="e.g., Dr. Jane Smith" 
+                                        placeholder={terms.facilityLabel === 'College' ? 'e.g., Prof. Jane Doe' : terms.facilityLabel === 'Saloon' ? 'e.g., Jane Smith' : 'e.g., Dr. Jane Smith'} 
                                         type="text" 
                                         value={formData.fullName}
                                         onChange={(e) => setFormData({...formData, fullName: e.target.value})}
@@ -243,7 +326,11 @@ export default function AcceptInvite() {
                                 <label className="block text-[14px] font-medium text-[#151c27]">Administrator Phone</label>
                                 <div className="relative group">
                                     <div className="absolute left-[1px] top-[1px] bottom-[1px] flex items-center border-r border-[#c3c5d7] pr-2 pl-3 bg-[#f9f9ff] rounded-l-[11px] pointer-events-auto">
-                                        <select className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}}>
+                                        <select 
+                                            value={formData.phoneCode}
+                                            onChange={(e) => setFormData({...formData, phoneCode: e.target.value})}
+                                            className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}}
+                                        >
                                             <option value="+1">🇺🇸 +1</option>
                                             <option value="+44">🇬🇧 +44</option>
                                             <option value="+91">🇮🇳 +91</option>

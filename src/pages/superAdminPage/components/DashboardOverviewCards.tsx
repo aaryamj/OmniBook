@@ -7,7 +7,7 @@ interface Tenant {
     createdAt: string;
 }
 
-export default function DashboardOverviewCards() {
+export default function DashboardOverviewCards({ timeFilter = 'All Time' }: { timeFilter?: string }) {
     const [activeCount, setActiveCount] = useState(0);
     const [newThisWeek, setNewThisWeek] = useState(0);
     const [mrr, setMrr] = useState(0);
@@ -20,7 +20,7 @@ export default function DashboardOverviewCards() {
                 const token = localStorage.getItem('token');
                 const res = await axios.get('http://localhost:8080/api/v1/superadmin/dashboard', {
                     headers: { 'Authorization': `Bearer ${token}` },
-                    params: { timeFilter: 'All Time' }
+                    params: { timeFilter: timeFilter }
                 });
                 
                 const data = res.data;
@@ -38,7 +38,7 @@ export default function DashboardOverviewCards() {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [timeFilter]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -60,7 +60,7 @@ export default function DashboardOverviewCards() {
                         +{newThisWeek} new this week
                     </span>
                 </div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Active Clinic Subscriptions</h3>
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Active Organizations</h3>
                 <p className="font-headline-lg text-headline-lg text-on-surface tracking-tighter">{activeCount}</p>
             </div>
             
@@ -69,7 +69,7 @@ export default function DashboardOverviewCards() {
                 <div className="flex justify-between items-start mb-4">
                     <span className="material-symbols-outlined p-2 bg-orange-50 text-orange-600 rounded-lg">groups</span>
                 </div>
-                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Patient Footfall</h3>
+                <h3 className="font-label-md text-label-md text-on-surface-variant mb-1 uppercase tracking-wider">Total Clients Footfall</h3>
                 <p className="font-headline-lg text-headline-lg text-on-surface tracking-tighter">{totalPatientFootfall.toLocaleString('en-US')}</p>
             </div>
             

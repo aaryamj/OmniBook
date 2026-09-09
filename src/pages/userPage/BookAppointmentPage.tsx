@@ -6,7 +6,9 @@ import UserTopNavigation from './components/UserTopNavigation';
 interface Clinic {
   id: number;
   organizationName: string;
+  organizationType?: string;
   address: string;
+  logoUrl?: string;
 }
 
 interface Provider {
@@ -43,9 +45,36 @@ const BookAppointmentPage: React.FC = () => {
   const [isClosed, setIsClosed] = useState<boolean>(false);
   const [closedMessage, setClosedMessage] = useState<string>('');
 
+  // User active appointments capacity state
+  const [userActiveApptsCount, setUserActiveApptsCount] = useState<number>(0);
+  const [userRemainingCapacity, setUserRemainingCapacity] = useState<number>(3);
+  const [userLimitReached, setUserLimitReached] = useState<boolean>(false);
+
+  // Floating Toast Notification state
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'warning' | 'error' | 'success' | 'info';
+  }>({
+    show: false,
+    message: '',
+    type: 'warning'
+  });
+
+  const showNotification = (message: string, type: 'warning' | 'error' | 'success' | 'info' = 'warning') => {
+    setNotification({ show: true, message, type });
+    if ((showNotification as any).timeoutId) {
+      window.clearTimeout((showNotification as any).timeoutId);
+    }
+    (showNotification as any).timeoutId = window.setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 4500);
+  };
+
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [patientDetails, setPatientDetails] = useState(() => {
     const name = localStorage.getItem('fullName') || '';
+    const phone = localStorage.getItem('phone') || '';
     let email = '';
     const token = localStorage.getItem('token');
     if (token) {
@@ -54,8 +83,65 @@ const BookAppointmentPage: React.FC = () => {
             email = payload.sub || '';
         } catch (e) {}
     }
-    return { name, phone: '', email, reason: '' };
+    return { name, phone, email, reason: '' };
   });
+
+  // Fetch current user details (including phone number) if logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.get('http://localhost:8080/api/v1/user/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => {
+        if (res.data) {
+          if (res.data.phone) {
+            localStorage.setItem('phone', res.data.phone);
+          }
+          if (res.data.fullName) {
+            localStorage.setItem('fullName', res.data.fullName);
+          }
+          setPatientDetails(prev => ({
+            ...prev,
+            name: prev.name || res.data.fullName || '',
+            phone: prev.phone || res.data.phone || '',
+            email: prev.email || res.data.email || ''
+          }));
+        }
+      })
+      .catch(err => {
+        console.warn('Could not fetch user profile details for booking:', err);
+      });
+    }
+  }, []);
+
+  // Fetch dynamic booking limit based on active upcoming appointments
+  const fetchUserLimit = () => {
+    const email = patientDetails.email?.trim() || '';
+    const userId = localStorage.getItem('userId') || '';
+    if (!email && !userId) {
+      setUserActiveApptsCount(0);
+      setUserRemainingCapacity(3);
+      setUserLimitReached(false);
+      return;
+    }
+    axios.get('http://localhost:8080/api/v1/public/booking/user-limit', {
+      params: { userEmail: email || undefined, userId: userId || undefined }
+    }).then(res => {
+      if (res.data && res.data.success) {
+        setUserActiveApptsCount(res.data.activeAppointmentsCount ?? 0);
+        setUserRemainingCapacity(res.data.remainingCapacity ?? 3);
+        setUserLimitReached(Boolean(res.data.isLimitReached));
+      }
+    }).catch(err => {
+      console.warn('Failed to fetch user appointment limit:', err);
+    });
+  };
+
+  useEffect(() => {
+    fetchUserLimit();
+  }, [patientDetails.email]);
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'ESEWA' | 'STRIPE' | 'KHALTI'>('STRIPE');
 
   // AI Chat State
@@ -63,8 +149,8 @@ const BookAppointmentPage: React.FC = () => {
   const [conversationId, setConversationId] = useState<string>(() => {
     return localStorage.getItem('omni_ai_conversation_id') || '';
   });
-  const [chatMessages, setChatMessages] = useState<{sender: 'user' | 'ai', text: string, slotId?: string}[]>([
-      { sender: 'ai', text: "Hello! I'm your AI Booking Assistant powered by Gemini 3.5 Flash-Lite. How can I help you schedule an appointment today?" }
+  const [chatMessages, setChatMessages] = useState<{sender: 'user' | 'ai', text: string, slotId?: string, actionType?: string}[]>([
+      { sender: 'ai', text: "Hello! I'm your AI Appointment Assistant powered by Gemini 3.5 Flash-Lite. How can I assist you with scheduling, checking, or managing your appointment today?" }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -126,12 +212,20 @@ const BookAppointmentPage: React.FC = () => {
 
           if (res.data.recommendedSlots && res.data.recommendedSlots.length > 0) {
               setSmartAiSlots(res.data.recommendedSlots);
+              const firstSlot = res.data.recommendedSlots[0];
+              if (firstSlot && firstSlot.organizationName) {
+                  const match = clinics.find(c => c.organizationName.toLowerCase() === firstSlot.organizationName.toLowerCase());
+                  if (match && match.id.toString() !== selectedClinic) {
+                      setSelectedClinic(match.id.toString());
+                  }
+              }
           }
 
           setChatMessages([...newMessages, { 
               sender: 'ai', 
               text: res.data.responseText, 
-              slotId: res.data.actionSlotId 
+              slotId: res.data.actionSlotId,
+              actionType: res.data.actionType 
           }]);
       } catch (err) {
           setChatMessages([...newMessages, { sender: 'ai', text: "Sorry, I'm having trouble connecting to my servers right now." }]);
@@ -141,10 +235,26 @@ const BookAppointmentPage: React.FC = () => {
   };
 
 
+  const handleOpenPatientModal = () => {
+    const storedPhone = localStorage.getItem('phone') || '';
+    const storedName = localStorage.getItem('fullName') || '';
+    if ((!patientDetails.phone && storedPhone) || (!patientDetails.name && storedName)) {
+      setPatientDetails(prev => ({
+        ...prev,
+        phone: prev.phone || storedPhone,
+        name: prev.name || storedName
+      }));
+    }
+    setShowPatientModal(true);
+  };
+
   const handlePaymentInitiate = async () => {
     if (!patientDetails.name || !patientDetails.phone) {
-      alert("Please fill in your Name and Phone number");
+      showNotification("Please fill in your Name and Phone number", "warning");
       return;
+    }
+    if (patientDetails.phone) {
+      localStorage.setItem('phone', patientDetails.phone);
     }
 
     const slotsArray = activeTab === 'classic' ? dynamicSlots : [
@@ -187,6 +297,18 @@ const BookAppointmentPage: React.FC = () => {
         return id;
       });
 
+      const selectedClinicObj = clinics.find(c => c.id.toString() === (selectedClinic || '9'));
+      if (selectedClinicObj) {
+        localStorage.setItem('last_booked_org', JSON.stringify({
+          id: selectedClinicObj.id,
+          name: selectedClinicObj.organizationName,
+          type: selectedClinicObj.organizationType || 'Clinic',
+          address: selectedClinicObj.address,
+          serviceName: selectedService,
+          providerId: selectedProvider
+        }));
+      }
+
       const res = await axios.post('http://localhost:8080/api/v1/public/booking/initiate', {
         tenantId: selectedClinic || '9', // Fallback to 9 if empty
         providerId: selectedProvider || '68',
@@ -198,7 +320,8 @@ const BookAppointmentPage: React.FC = () => {
         appointmentType: (selectedService || '').toLowerCase().includes('telemedicine') || (selectedService || '').toLowerCase().includes('virtual') || (selectedService || '').toLowerCase().includes('video') ? 'VIRTUAL' : 'IN_PERSON',
         selectedSlots: translatedSlots,
         totalAmount: total,
-        paymentMethod: selectedPaymentMethod
+        paymentMethod: selectedPaymentMethod,
+        userId: localStorage.getItem('userId') || undefined
       });
       
       if (res.data.success) {
@@ -225,9 +348,10 @@ const BookAppointmentPage: React.FC = () => {
           window.location.href = gatewayUrl;
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment initiation failed", error);
-      alert("Failed to initiate payment. Ensure the backend is running and reachable.");
+      const errorMsg = error.response?.data?.message || error.message || "Failed to initiate payment. Ensure the backend is running and reachable.";
+      showNotification(errorMsg, "error");
     }
   };
 
@@ -240,17 +364,31 @@ const BookAppointmentPage: React.FC = () => {
       axios.get(`http://localhost:8080/api/v1/public/booking/providers/${selectedProvider}/slots`, {
         params: {
           date: dateStr,
-          serviceName: selectedService
+          serviceName: selectedService,
+          userEmail: patientDetails.email || undefined,
+          userId: localStorage.getItem('userId') || undefined
         }
       }).then(res => {
         if (res.data.success) {
           setDynamicSlots(res.data.slots);
           setIsClosed(res.data.isClosed || false);
           setClosedMessage(res.data.closedMessage || '');
-          // Initialize inventory for new slots
+          if (res.data.activeAppointmentsCount !== undefined) {
+            setUserActiveApptsCount(res.data.activeAppointmentsCount);
+            setUserRemainingCapacity(res.data.remainingCapacity ?? Math.max(0, 3 - res.data.activeAppointmentsCount));
+            setUserLimitReached(Boolean(res.data.isLimitReached));
+          }
+          // Initialize inventory for new slots based on available capacity
           const newInv: Record<string, number> = {};
           res.data.slots.forEach((s: any) => {
-            if (!s.isBreak) newInv[s.id] = 1; // Assuming 1 available slot per time
+            const isFinished = s.isCompleted || s.slotStatus === 'COMPLETED';
+            const isFull = s.isFull || s.isBooked || (s.availableSeats !== undefined && s.availableSeats <= 0);
+            const isSelfBooked = s.alreadyBookedByUser;
+            if (!s.isBreak && !isFull && !isFinished && !isSelfBooked) {
+              newInv[s.id] = s.availableSeats !== undefined ? s.availableSeats : 1; // Available slot capacity
+            } else {
+              newInv[s.id] = 0; // Booked/Full, self booked, completed, or break
+            }
           });
           setInventory(newInv);
         }
@@ -265,13 +403,41 @@ const BookAppointmentPage: React.FC = () => {
       setIsClosed(false);
       setClosedMessage('');
     }
-  }, [selectedProvider, selectedDate, selectedService]);
+  }, [selectedProvider, selectedDate, selectedService, patientDetails.email]);
 
   // Prevent orphaned slots when context changes
   useEffect(() => {
     setSelectedSlots([]);
     setStagingSlots([]);
   }, [selectedClinic, selectedService, selectedProvider, selectedDate]);
+
+  const isSlotPast = (date: Date, timeStr: string): boolean => {
+    if (!date || !timeStr) return false;
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (targetDate < today) return true;
+    if (targetDate > today) return false;
+    
+    // Same day: compare hour and minute
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if (!match) return false;
+    
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const meridian = match[3]?.toUpperCase();
+    
+    if (meridian === 'PM' && hours < 12) hours += 12;
+    if (meridian === 'AM' && hours === 12) hours = 0;
+    
+    const slotDate = new Date();
+    slotDate.setHours(hours, minutes, 0, 0);
+    
+    return slotDate <= new Date();
+  };
 
   const slots = [...smartAiSlots, ...dynamicSlots];
   
@@ -287,6 +453,27 @@ const BookAppointmentPage: React.FC = () => {
     const targetSlot = slots.find(s => s.id === id || s.id === stringId);
     if (!targetSlot) return;
 
+    if (targetSlot.isCompleted || targetSlot.slotStatus === 'COMPLETED') {
+      showNotification('This appointment has already been completed and cannot be booked again.', 'info');
+      return;
+    }
+
+    if (targetSlot.alreadyBookedByUser) {
+      showNotification('You already have an appointment booked for this date and time.', 'warning');
+      return;
+    }
+
+    const isSlotCapacityFull = targetSlot.isFull || targetSlot.isBooked || (inventory[stringId] !== undefined && inventory[stringId] <= 0) || (targetSlot.availableSeats !== undefined && targetSlot.availableSeats <= 0);
+    if (isSlotCapacityFull && !selectedSlots.includes(stringId)) {
+      showNotification('This time slot is fully booked.', 'warning');
+      return;
+    }
+
+    if (targetSlot.isBreak || targetSlot.isPast || isSlotPast(selectedDate, targetSlot.time)) {
+      showNotification('This time slot is in the past or unavailable.', 'info');
+      return;
+    }
+
     setSelectedSlots(prev => {
       if (prev.includes(stringId)) {
         setInventory(inv => {
@@ -295,8 +482,13 @@ const BookAppointmentPage: React.FC = () => {
         });
         return prev.filter(slotId => slotId !== stringId);
       } else {
-        if (prev.length >= 3) {
-          alert('You can select a maximum of 3 appointments at a time.');
+        if (userLimitReached || userRemainingCapacity <= 0) {
+          showNotification('You have reached the maximum limit of 3 active appointments.', 'warning');
+          return prev;
+        }
+
+        if (prev.length >= userRemainingCapacity) {
+          showNotification(`You can select at most ${userRemainingCapacity} additional appointment${userRemainingCapacity === 1 ? '' : 's'}. You currently have ${userActiveApptsCount} active appointment${userActiveApptsCount === 1 ? '' : 's'}.`, 'warning');
           return prev;
         }
 
@@ -306,12 +498,12 @@ const BookAppointmentPage: React.FC = () => {
           return existingSlot && existingSlot.date === targetSlot.date && existingSlot.time === targetSlot.time;
         });
         if (hasTimeCollision) {
-          alert('You already have an appointment at that time.');
+          showNotification('You already have an appointment at that time.', 'warning');
           return prev;
         }
 
         if (inventory[stringId] !== undefined && inventory[stringId] <= 0) {
-          alert('This slot is fully booked.');
+          showNotification('This slot is fully booked.', 'warning');
           return prev;
         }
         setInventory(inv => {
@@ -329,12 +521,38 @@ const BookAppointmentPage: React.FC = () => {
     const targetSlot = slots.find(s => s.id === id || s.id === stringId);
     if (!targetSlot) return;
 
+    if (targetSlot.isCompleted || targetSlot.slotStatus === 'COMPLETED') {
+      showNotification('This appointment has already been completed and cannot be booked again.', 'info');
+      return;
+    }
+
+    if (targetSlot.alreadyBookedByUser) {
+      showNotification('You already have an appointment booked for this date and time.', 'warning');
+      return;
+    }
+
+    const isSlotCapacityFull = targetSlot.isFull || targetSlot.isBooked || (inventory[stringId] !== undefined && inventory[stringId] <= 0) || (targetSlot.availableSeats !== undefined && targetSlot.availableSeats <= 0);
+    if (isSlotCapacityFull && !stagingSlots.includes(stringId)) {
+      showNotification('This time slot is fully booked.', 'warning');
+      return;
+    }
+
+    if (targetSlot.isBreak || targetSlot.isPast || isSlotPast(selectedDate, targetSlot.time)) {
+      showNotification('This time slot is in the past or unavailable.', 'info');
+      return;
+    }
+
     setStagingSlots(prev => {
       if (prev.includes(stringId)) {
         return prev.filter(slotId => slotId !== stringId);
       } else {
-        if (selectedSlots.length + prev.length >= 3) {
-          alert('You can select a maximum of 3 appointments at a time.');
+        if (userLimitReached || userRemainingCapacity <= 0) {
+          showNotification('You have reached the maximum limit of 3 active appointments.', 'warning');
+          return prev;
+        }
+
+        if (selectedSlots.length + prev.length >= userRemainingCapacity) {
+          showNotification(`You can select at most ${userRemainingCapacity} additional appointment${userRemainingCapacity === 1 ? '' : 's'}. You currently have ${userActiveApptsCount} active appointment${userActiveApptsCount === 1 ? '' : 's'}.`, 'warning');
           return prev;
         }
 
@@ -344,12 +562,12 @@ const BookAppointmentPage: React.FC = () => {
           return existingSlot && existingSlot.date === targetSlot.date && existingSlot.time === targetSlot.time;
         });
         if (hasTimeCollision) {
-          alert('You already have an appointment at that time.');
+          showNotification('You already have an appointment at that time.', 'warning');
           return prev;
         }
 
-        if (inventory[id] !== undefined && inventory[id] <= 0) {
-          alert('This slot is fully booked.');
+        if (inventory[stringId] !== undefined && inventory[stringId] <= 0) {
+          showNotification('This slot is fully booked.', 'warning');
           return prev;
         }
         return [...prev, stringId];
@@ -359,6 +577,25 @@ const BookAppointmentPage: React.FC = () => {
 
   const commitStagingToCart = () => {
     if (stagingSlots.length === 0) return;
+
+    if (userLimitReached || userRemainingCapacity <= 0) {
+      showNotification('You have reached the maximum limit of 3 active appointments.', 'warning');
+      return;
+    }
+
+    if (selectedSlots.length + stagingSlots.length > userRemainingCapacity) {
+      showNotification(`You can select at most ${userRemainingCapacity} additional appointment${userRemainingCapacity === 1 ? '' : 's'}. You currently have ${userActiveApptsCount} active appointment${userActiveApptsCount === 1 ? '' : 's'}.`, 'warning');
+      return;
+    }
+
+    const invalidSlot = stagingSlots.some(id => {
+      const s = slots.find(item => item.id === id || item.id.toString() === id);
+      return s && (s.isCompleted || s.slotStatus === 'COMPLETED' || s.isBooked || s.isFull || s.alreadyBookedByUser || (inventory[id] !== undefined && inventory[id] <= 0));
+    });
+    if (invalidSlot) {
+      showNotification('One or more selected slots are already fully booked, already booked by you, or completed.', 'warning');
+      return;
+    }
     setInventory(inv => {
       const next = { ...inv };
       stagingSlots.forEach(id => {
@@ -453,6 +690,48 @@ const BookAppointmentPage: React.FC = () => {
       {/* TopNavBar */}
       <UserTopNavigation />
 
+      {/* Floating Horizontal Toast Notification */}
+      {notification.show && (
+        <div 
+          role="alert"
+          aria-live="assertive"
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] max-w-xl w-[92vw] sm:w-auto shadow-[0_12px_40px_rgba(0,0,0,0.18)] rounded-2xl border px-5 py-3.5 flex items-center gap-3.5 transition-all duration-300 animate-in fade-in slide-in-from-top-4 backdrop-blur-md"
+          style={{
+            backgroundColor: notification.type === 'error' ? '#fff1f2' : notification.type === 'success' ? '#f0fdf4' : notification.type === 'info' ? '#eff6ff' : '#fffbeb',
+            borderColor: notification.type === 'error' ? '#fecdd3' : notification.type === 'success' ? '#bbf7d0' : notification.type === 'info' ? '#bfdbfe' : '#fde68a',
+            color: notification.type === 'error' ? '#9f1239' : notification.type === 'success' ? '#166534' : notification.type === 'info' ? '#1e40af' : '#92400e',
+          }}
+        >
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+            notification.type === 'error' 
+              ? 'bg-rose-500 text-white shadow-sm' 
+              : notification.type === 'success'
+              ? 'bg-emerald-500 text-white shadow-sm'
+              : notification.type === 'info'
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-amber-500 text-white shadow-sm'
+          }`}>
+            <span className="material-symbols-outlined text-[20px]">
+              {notification.type === 'error' ? 'error' : notification.type === 'success' ? 'check_circle' : notification.type === 'info' ? 'info' : 'warning'}
+            </span>
+          </div>
+
+          <div className="flex-1 min-w-0 pr-1">
+            <p className="font-semibold text-xs sm:text-[14px] leading-snug break-words">
+              {notification.message}
+            </p>
+          </div>
+
+          <button 
+            onClick={() => setNotification(prev => ({ ...prev, show: false }))} 
+            className="p-1 rounded-lg hover:bg-black/5 transition-colors shrink-0 text-current opacity-70 hover:opacity-100 cursor-pointer flex items-center justify-center"
+            aria-label="Dismiss notification"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      )}
+
       <main className="mt-20 flex-1">
         {/* Location Context */}
         <header className="pt-6 sm:pt-8 bg-white pb-6 sm:pb-8 shadow-sm">
@@ -479,7 +758,16 @@ const BookAppointmentPage: React.FC = () => {
                 </div>
                 
                 <div className="relative w-full sm:w-auto sm:min-w-[240px] flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686]">local_hospital</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686]">
+                    {(() => {
+                      const cur = clinics.find(c => c.id.toString() === selectedClinic);
+                      const norm = (cur?.organizationType || '').toLowerCase();
+                      if (norm.includes('college') || norm.includes('acad') || norm.includes('school')) return 'school';
+                      if (norm.includes('saloon') || norm.includes('salon') || norm.includes('spa')) return 'spa';
+                      if (norm.includes('clinic') || norm.includes('hosp') || norm.includes('med')) return 'local_hospital';
+                      return 'domain';
+                    })()}
+                  </span>
                   <select 
                     value={selectedClinic}
                     onChange={(e) => {
@@ -489,9 +777,11 @@ const BookAppointmentPage: React.FC = () => {
                     }}
                     className="w-full pl-10 pr-8 py-3 bg-[#f9f9ff] border border-[#c3c5d7] rounded-xl focus:ring-2 focus:ring-[#003fb1] focus:border-transparent appearance-none font-medium text-xs sm:text-[14px] cursor-pointer"
                   >
-                    <option value="">Select Clinic/Organization</option>
+                    <option value="">Select Organization / Institution</option>
                     {clinics.map(clinic => (
-                      <option key={clinic.id} value={clinic.id.toString()}>{clinic.organizationName}</option>
+                      <option key={clinic.id} value={clinic.id.toString()}>
+                        {clinic.organizationName} {clinic.organizationType ? `(${clinic.organizationType})` : ''}
+                      </option>
                     ))}
                   </select>
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686] pointer-events-none">expand_more</span>
@@ -523,6 +813,72 @@ const BookAppointmentPage: React.FC = () => {
               Classic Calendar
             </button>
           </div>
+        </section>
+
+        {/* Active Appointments Capacity Status Bar */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 mb-6">
+          {userLimitReached || userRemainingCapacity <= 0 ? (
+            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 sm:p-5 flex items-start sm:items-center gap-3.5 text-amber-900 shadow-sm">
+              <span className="material-symbols-outlined text-amber-600 text-[28px] shrink-0 mt-0.5 sm:mt-0">
+                warning
+              </span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h4 className="font-bold text-[15px] sm:text-[16px] text-amber-950">
+                    Maximum Active Booking Limit Reached (3 / 3)
+                  </h4>
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">
+                    Limit Reached
+                  </span>
+                </div>
+                <p className="text-xs sm:text-[14px] text-amber-800 mt-1">
+                  You have reached the maximum limit of 3 active appointments. You must complete, cancel, or reschedule an existing appointment to unlock new bookings.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white border border-[#e2e8f0] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#003fb1] flex items-center justify-center font-bold">
+                  <span className="material-symbols-outlined text-[22px]">event_available</span>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm sm:text-[15px] text-[#1e293b]">
+                    Your Booking Capacity
+                  </h4>
+                  <p className="text-xs sm:text-[13px] text-[#64748b]">
+                    You have <strong className="text-[#0f172a] font-bold">{userActiveApptsCount}</strong> active appointment{userActiveApptsCount === 1 ? '' : 's'} • You can select up to <strong className="text-[#1a56db] font-bold">{userRemainingCapacity}</strong> more (max 3)
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3].map(slotIdx => {
+                    const isOccupied = slotIdx <= userActiveApptsCount;
+                    const isSelected = !isOccupied && (slotIdx <= userActiveApptsCount + selectedSlots.length + stagingSlots.length);
+                    return (
+                      <div
+                        key={slotIdx}
+                        title={isOccupied ? "Active appointment" : isSelected ? "Selected in cart" : "Available slot"}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+                          isOccupied
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : isSelected
+                            ? 'bg-emerald-500 text-white ring-2 ring-emerald-300'
+                            : 'bg-slate-100 text-slate-400 border border-slate-200'
+                        }`}
+                      >
+                        {isOccupied ? '✓' : slotIdx}
+                      </div>
+                    );
+                  })}
+                </div>
+                <span className="text-xs font-medium text-[#64748b] ml-1">
+                  {Math.max(0, 3 - (userActiveApptsCount + selectedSlots.length + stagingSlots.length))} slots remaining
+                </span>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Main Arena */}
@@ -572,18 +928,61 @@ const BookAppointmentPage: React.FC = () => {
                         <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.time}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>payments</span>
-                      <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.price}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>payments</span>
+                        <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.price}</span>
+                      </div>
+                      {slot.maxCapacity !== undefined && (
+                        <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
+                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        }`}>
+                          <span className="material-symbols-outlined text-[13px]">event_seat</span>
+                          <span>
+                            {slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
+                              ? 'FULL'
+                              : `${slot.availableSeats ?? 1} / ${slot.maxCapacity} Left`}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3 mb-6">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedSlots.includes(slot.id) ? 'bg-[#005438]/10 text-[#005438]' : 'bg-[#d6e4f3] text-[#53606c]'}`}>
-                      <span className="material-symbols-outlined">medical_services</span>
+                      {(() => {
+                        const orgType = (slot.organizationType || '').toLowerCase();
+                        if (orgType.includes('college') || orgType.includes('school') || orgType.includes('acad')) {
+                          return <span className="material-symbols-outlined">school</span>;
+                        }
+                        if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa') || orgType.includes('beauty')) {
+                          return <span className="material-symbols-outlined">spa</span>;
+                        }
+                        if (orgType.includes('fitness') || orgType.includes('gym')) {
+                          return <span className="material-symbols-outlined">fitness_center</span>;
+                        }
+                        if (orgType.includes('clinic') || orgType.includes('hosp') || orgType.includes('medic')) {
+                          return <span className="material-symbols-outlined">medical_services</span>;
+                        }
+                        if (orgType.includes('consult') || orgType.includes('law')) {
+                          return <span className="material-symbols-outlined">business</span>;
+                        }
+                        return <span className="material-symbols-outlined">event_seat</span>;
+                      })()}
                     </div>
                     <div>
-                      <p className="text-[#53606c] text-[12px] font-medium">Provider:</p>
+                      {(() => {
+                        const orgType = (slot.organizationType || '').toLowerCase();
+                        let label = "Provider / Staff:";
+                        if (orgType.includes('college') || orgType.includes('school')) label = "Instructor / Faculty:";
+                        else if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa')) label = "Stylist / Specialist:";
+                        else if (orgType.includes('fitness') || orgType.includes('gym')) label = "Trainer / Coach:";
+                        else if (orgType.includes('clinic') || orgType.includes('hosp')) label = "Doctor / Specialist:";
+                        else if (orgType.includes('consult') || orgType.includes('law')) label = "Consultant / Advisor:";
+                        return <p className="text-[#53606c] text-[12px] font-medium">{label}</p>;
+                      })()}
                       <p className="text-[16px] font-medium">{slot.provider}</p>
                     </div>
                   </div>
@@ -597,16 +996,27 @@ const BookAppointmentPage: React.FC = () => {
                         Cancel
                       </button>
                     )}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); if (!selectedSlots.includes(slot.id)) toggleSlot(slot.id); }}
-                      className={`flex-1 py-3 rounded-xl font-bold transition-all active:scale-95 ${
-                        selectedSlots.includes(slot.id) 
-                          ? 'bg-[#005438] text-white shadow-md' 
-                          : 'bg-[#dbe1ff] text-[#1a56db] hover:bg-[#1a56db] hover:text-white'
-                      }`}
-                    >
-                      {selectedSlots.includes(slot.id) ? 'Added to Booking' : 'Select Slot'}
-                    </button>
+                    {slot.alreadyBookedByUser ? (
+                      <div className="flex-1 py-3 rounded-xl font-bold text-center bg-indigo-50 text-indigo-700 border border-indigo-200 cursor-not-allowed text-[14px] flex items-center justify-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px]">person_check</span>
+                        Booked by You
+                      </div>
+                    ) : slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0) ? (
+                      <div className="flex-1 py-3 rounded-xl font-bold text-center bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed text-[14px]">
+                        Slot Full
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); if (!selectedSlots.includes(slot.id)) toggleSlot(slot.id); }}
+                        className={`flex-1 py-3 rounded-xl font-bold transition-all active:scale-95 ${
+                          selectedSlots.includes(slot.id) 
+                            ? 'bg-[#005438] text-white shadow-md' 
+                            : 'bg-[#dbe1ff] text-[#1a56db] hover:bg-[#1a56db] hover:text-white'
+                        }`}
+                      >
+                        {selectedSlots.includes(slot.id) ? 'Added to Booking' : 'Select Slot'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -616,9 +1026,9 @@ const BookAppointmentPage: React.FC = () => {
           {/* Right: Integrated AI Assistant (40%) */}
           <div className="lg:col-span-4 flex flex-col h-[600px] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-[#c3c5d7]/20 overflow-hidden">
             {/* AI Header */}
-            <div className="p-6 bg-[#1a56db] text-[#d4dcff] flex items-center justify-between">
+            <div className="bg-[#003fb1] p-4 flex items-center justify-between shadow-md">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#1a56db] shadow-sm">
+                <div className="w-10 h-10 rounded-full bg-[#1a56db] flex items-center justify-center text-white shadow-inner">
                   <span className="material-symbols-outlined">smart_toy</span>
                 </div>
                 <div>
@@ -644,23 +1054,51 @@ const BookAppointmentPage: React.FC = () => {
                   </div>
                   <div className={`p-4 rounded-2xl max-w-[80%] shadow-sm ${msg.sender === 'user' ? 'bg-[#e2e8f8] rounded-tr-none' : 'bg-[#003fb1] text-white rounded-tl-none shadow-lg'}`}>
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                    {msg.slotId && (
-                      <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between">
-                        <button 
-                          onClick={(e) => { e.preventDefault(); toggleSlot(msg.slotId!); }}
-                          className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 ${
-                            selectedSlots.includes(msg.slotId)
-                              ? 'bg-[#10b981] text-white'
-                              : 'bg-white text-[#003fb1] hover:bg-[#6ffbbe] hover:text-[#002113]'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-[14px]">
-                            {selectedSlots.includes(msg.slotId) ? 'check_circle' : 'calendar_add_on'}
-                          </span>
-                          {selectedSlots.includes(msg.slotId) ? 'Selected in Booking' : 'Select & Book Slot'}
-                        </button>
+                    {msg.actionType === 'CANCEL_APPOINTMENT' && (
+                      <div className="mt-3 pt-2 border-t border-white/20 flex items-center gap-1.5 text-xs font-semibold text-rose-200">
+                        <span className="material-symbols-outlined text-[15px]">event_busy</span>
+                        <span>Cancellation Processed</span>
                       </div>
                     )}
+                    {msg.slotId && (() => {
+                      const aiSlot = smartAiSlots.find(s => s.id === msg.slotId);
+                      const isSlotFull = aiSlot && (aiSlot.isFull || (aiSlot.availableSeats !== undefined && aiSlot.availableSeats <= 0));
+                      const isSelfBooked = aiSlot && aiSlot.alreadyBookedByUser;
+                      return (
+                        <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between gap-2">
+                          {isSelfBooked ? (
+                            <span className="px-3 py-1 bg-indigo-100/90 text-indigo-900 text-xs font-bold rounded-lg flex items-center gap-1 border border-indigo-300">
+                              <span className="material-symbols-outlined text-[14px]">person_check</span>
+                              Booked by You
+                            </span>
+                          ) : isSlotFull ? (
+                            <span className="px-3 py-1 bg-rose-100/90 text-rose-900 text-xs font-bold rounded-lg flex items-center gap-1 border border-rose-300">
+                              <span className="material-symbols-outlined text-[14px]">group_off</span>
+                              Slot Full (0 seats)
+                            </span>
+                          ) : (
+                            <button 
+                              onClick={(e) => { e.preventDefault(); toggleSlot(msg.slotId!); }}
+                              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95 ${
+                                selectedSlots.includes(msg.slotId)
+                                  ? 'bg-[#10b981] text-white'
+                                  : 'bg-white text-[#003fb1] hover:bg-[#6ffbbe] hover:text-[#002113]'
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                {selectedSlots.includes(msg.slotId) ? 'check_circle' : 'calendar_add_on'}
+                              </span>
+                              {selectedSlots.includes(msg.slotId) ? 'Selected in Booking' : 'Select & Book Slot'}
+                            </button>
+                          )}
+                          {aiSlot && aiSlot.availableSeats !== undefined && (
+                            <span className="text-[11px] text-white/90 font-medium">
+                              {aiSlot.availableSeats} / {aiSlot.maxCapacity || 1} seats left
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
@@ -707,7 +1145,17 @@ const BookAppointmentPage: React.FC = () => {
               <div className="flex flex-col gap-2">
                 <label className="text-[14px] font-bold text-[#151c27]">Select Service</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686]">medical_services</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#737686]">
+                    {(() => {
+                      const cur = clinics.find(c => c.id.toString() === selectedClinic);
+                      const norm = (cur?.organizationType || '').toLowerCase();
+                      if (norm.includes('college') || norm.includes('acad') || norm.includes('school')) return 'school';
+                      if (norm.includes('saloon') || norm.includes('salon') || norm.includes('spa')) return 'spa';
+                      if (norm.includes('fitness') || norm.includes('gym')) return 'fitness_center';
+                      if (norm.includes('clinic') || norm.includes('hosp') || norm.includes('med')) return 'medical_services';
+                      return 'work';
+                    })()}
+                  </span>
                   <select 
                     value={selectedService}
                     onChange={(e) => {
@@ -756,20 +1204,32 @@ const BookAppointmentPage: React.FC = () => {
                   <h3 className="text-[20px] font-bold text-[#151c27]">
                     {selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                   </h3>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-                      className="p-2 hover:bg-[#e7eefe] rounded-full transition-colors active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[#53606c]">chevron_left</span>
-                    </button>
-                    <button 
-                      onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-                      className="p-2 hover:bg-[#e7eefe] rounded-full transition-colors active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[#53606c]">chevron_right</span>
-                    </button>
-                  </div>
+                  {(() => {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    const currentMonth = now.getMonth();
+                    const isCurrentOrPastMonth = selectedDate.getFullYear() < currentYear || 
+                      (selectedDate.getFullYear() === currentYear && selectedDate.getMonth() <= currentMonth);
+                    return (
+                      <div className="flex gap-2">
+                        <button 
+                          disabled={isCurrentOrPastMonth}
+                          onClick={() => !isCurrentOrPastMonth && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
+                          className={`p-2 rounded-full transition-colors ${isCurrentOrPastMonth ? 'opacity-30 cursor-not-allowed text-[#c3c5d7]' : 'hover:bg-[#e7eefe] text-[#53606c] active:scale-95'}`}
+                          title={isCurrentOrPastMonth ? "Cannot view past months" : "Previous month"}
+                        >
+                          <span className="material-symbols-outlined text-[#53606c]">chevron_left</span>
+                        </button>
+                        <button 
+                          onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
+                          className="p-2 hover:bg-[#e7eefe] rounded-full transition-colors active:scale-95"
+                          title="Next month"
+                        >
+                          <span className="material-symbols-outlined text-[#53606c]">chevron_right</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="grid grid-cols-7 gap-y-4 text-center">
                   <div className="text-[14px] font-medium text-[#737686] pb-2">Su</div>
@@ -786,23 +1246,42 @@ const BookAppointmentPage: React.FC = () => {
                     const firstDay = new Date(year, month, 1).getDay();
                     const daysInMonth = new Date(year, month + 1, 0).getDate();
                     
+                    const todayMidnight = new Date();
+                    todayMidnight.setHours(0, 0, 0, 0);
+
                     const days = [];
                     for (let i = 0; i < firstDay; i++) {
                       days.push(<div key={`empty-${i}`} className="py-2 text-[14px] text-[#c3c5d7] font-medium"></div>);
                     }
                     for (let i = 1; i <= daysInMonth; i++) {
-                      const isSelected = selectedDate.getDate() === i;
-                      days.push(
-                        <div 
-                          key={`day-${i}`} 
-                          onClick={() => setSelectedDate(new Date(year, month, i))}
-                          className="py-2 relative group cursor-pointer transition-all"
-                        >
-                          {isSelected && <div className="absolute inset-0 bg-[#1a56db] rounded-xl shadow-md scale-95 z-0"></div>}
-                          <span className={`relative z-10 text-[14px] ${isSelected ? 'text-white font-bold' : 'font-medium text-[#151c27]'}`}>{i}</span>
-                          {!isSelected && <div className="absolute inset-0 bg-[#f0f3ff] opacity-0 group-hover:opacity-100 rounded-xl transition-opacity"></div>}
-                        </div>
-                      );
+                      const cellDate = new Date(year, month, i);
+                      cellDate.setHours(0, 0, 0, 0);
+                      const isPastDay = cellDate < todayMidnight;
+                      const isSelected = !isPastDay && selectedDate.getDate() === i && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
+
+                      if (isPastDay) {
+                        days.push(
+                          <div 
+                            key={`day-${i}`} 
+                            className="py-2 relative select-none cursor-not-allowed opacity-35"
+                            title="Past date cannot be selected"
+                          >
+                            <span className="text-[14px] text-[#737686] line-through font-normal">{i}</span>
+                          </div>
+                        );
+                      } else {
+                        days.push(
+                          <div 
+                            key={`day-${i}`} 
+                            onClick={() => setSelectedDate(new Date(year, month, i))}
+                            className="py-2 relative group cursor-pointer transition-all"
+                          >
+                            {isSelected && <div className="absolute inset-0 bg-[#1a56db] rounded-xl shadow-md scale-95 z-0"></div>}
+                            <span className={`relative z-10 text-[14px] ${isSelected ? 'text-white font-bold' : 'font-medium text-[#151c27]'}`}>{i}</span>
+                            {!isSelected && <div className="absolute inset-0 bg-[#f0f3ff] opacity-0 group-hover:opacity-100 rounded-xl transition-opacity"></div>}
+                          </div>
+                        );
+                      }
                     }
                     return days;
                   })()}
@@ -841,55 +1320,147 @@ const BookAppointmentPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-4">
+                    {(() => {
+                      const allUnavailable = displayedClassicSlots.length > 0 && displayedClassicSlots.every(s => 
+                        s.isBreak || s.isPast || s.isCompleted || s.slotStatus === 'COMPLETED' || s.isBooked || s.isFull || s.alreadyBookedByUser || (inventory[s.id] !== undefined && inventory[s.id] <= 0) || (s.availableSeats !== undefined && s.availableSeats <= 0) || isSlotPast(selectedDate, s.time)
+                      );
+                      if (allUnavailable) {
+                        return (
+                          <div className="flex items-center gap-3 p-4 bg-[#fff8f6] border border-[#ffe0d3] rounded-xl text-[#ba1a1a]">
+                            <span className="material-symbols-outlined text-[24px]">event_busy</span>
+                            <div className="text-[13px] leading-relaxed">
+                              <strong className="block text-[14px]">All appointments for this date have concluded or are booked</strong>
+                              No remaining open slots are available on this date. Please select another date on the calendar.
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
                       {displayedClassicSlots.map((slot, index) => {
-                    const isBreak = slot.isBreak;
-                    const isSoldOut = !isBreak && (inventory[slot.id] !== undefined && inventory[slot.id] <= 0); 
-                    const isStaged = stagingSlots.includes(slot.id);
-                    const isInCart = selectedSlots.includes(slot.id);
-                    
-                    if (isBreak) {
-                      return (
-                        <div key={`break-${slot.id}`} className="relative p-4 bg-[#f0f3ff] border border-[#c3c5d7]/30 rounded-xl flex flex-col items-center justify-center gap-1 opacity-70 cursor-not-allowed">
-                          <span className="text-[14px] text-[#53606c] font-medium line-through">{slot.time}</span>
-                          <span className="text-[10px] font-bold text-[#003fb1] uppercase tracking-wider flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[12px]">local_cafe</span>Break
-                          </span>
-                        </div>
-                      );
-                    }
+                        const isCompleted = slot.isCompleted || slot.slotStatus === 'COMPLETED';
+                        const isBreak = slot.isBreak;
+                        const isSelfBooked = slot.alreadyBookedByUser;
+                        const isFull = !isCompleted && !isBreak && !isSelfBooked && (slot.isFull || slot.isBooked || (inventory[slot.id] !== undefined && inventory[slot.id] <= 0) || (slot.availableSeats !== undefined && slot.availableSeats <= 0));
+                        const isPast = !isCompleted && !isBreak && !isSelfBooked && !isFull && (slot.isPast || isSlotPast(selectedDate, slot.time));
+                        const isStaged = stagingSlots.includes(slot.id);
+                        const isInCart = selectedSlots.includes(slot.id);
+                        
+                        if (isCompleted) {
+                          return (
+                            <div 
+                              key={`completed-${slot.id}`} 
+                              className="relative p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl flex flex-col items-center justify-center gap-1 opacity-90 cursor-not-allowed select-none shadow-sm transition-all"
+                              title="This scheduled session has already been completed."
+                            >
+                              <span className="text-[14px] text-emerald-900 line-through font-semibold">{slot.time}</span>
+                              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                                <span className="material-symbols-outlined text-[13px]">task_alt</span>Completed
+                              </span>
+                            </div>
+                          );
+                        }
 
-                    if (isSoldOut) {
-                      return (
-                        <div key={`soldout-${slot.id}`} className="relative p-4 bg-[#f9f9ff] border border-transparent rounded-xl flex flex-col items-center justify-center gap-1 opacity-60 cursor-not-allowed">
-                          <span className="text-[14px] text-[#53606c] line-through font-medium">{slot.time}</span>
-                          <span className="text-[10px] font-bold text-[#53606c] uppercase tracking-wider">Sold Out</span>
-                        </div>
-                      );
-                    }
-                    
-                    return (
-                      <div 
-                        key={`classic-${slot.id}`} 
-                        onClick={() => isInCart ? null : toggleStagingSlot(slot.id)}
-                        className={`relative p-4 rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
-                          isInCart 
-                            ? 'bg-[#005438]/10 border-2 border-[#005438] shadow-sm transform scale-105 z-10 cursor-not-allowed'
-                            : isStaged
-                              ? 'bg-[#e7eefe] border-2 border-[#1a56db] shadow-sm transform scale-105 z-10 cursor-pointer active:scale-95'
-                              : 'bg-white border border-[#c3c5d7]/50 hover:border-[#1a56db]/50 hover:bg-[#f9f9ff] cursor-pointer active:scale-95'
-                        }`}
-                      >
-                        {slot.topMatch && inventory[slot.id] !== undefined && inventory[slot.id] > 0 && (
-                          <div className="absolute -top-2.5 -right-2.5 bg-[#ffdad6] text-[#ba1a1a] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10 border border-white">
-                            🔥 {inventory[slot.id]} Left
+                        if (isBreak) {
+                          return (
+                            <div key={`break-${slot.id}`} className="relative p-4 bg-[#f0f3ff] border border-[#c3c5d7]/30 rounded-xl flex flex-col items-center justify-center gap-1 opacity-70 cursor-not-allowed select-none">
+                              <span className="text-[14px] text-[#53606c] font-medium line-through">{slot.time}</span>
+                              <span className="text-[10px] font-bold text-[#003fb1] uppercase tracking-wider flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[12px]">local_cafe</span>Break
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        if (isSelfBooked) {
+                          return (
+                            <div 
+                              key={`self-booked-${slot.id}`} 
+                              className="relative p-3.5 bg-indigo-50/90 border-2 border-indigo-300 rounded-xl flex flex-col items-center justify-center gap-1.5 opacity-90 cursor-not-allowed select-none shadow-sm transition-all"
+                              title="You already have an appointment booked for this date and time."
+                            >
+                              <span className="text-[14px] text-indigo-950 font-semibold">{slot.time}</span>
+                              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1 bg-indigo-100 px-2.5 py-0.5 rounded-full border border-indigo-300">
+                                <span className="material-symbols-outlined text-[13px]">person_check</span>Booked by You
+                              </span>
+                              <span className="text-[10px] text-indigo-600 font-medium">Already Scheduled</span>
+                            </div>
+                          );
+                        }
+
+                        if (isFull) {
+                          const totalSeats = slot.maxCapacity || 1;
+                          const bookedCount = slot.currentBookings || totalSeats;
+                          return (
+                            <div 
+                              key={`full-${slot.id}`} 
+                              className="relative p-3.5 bg-rose-50/80 border border-rose-200 rounded-xl flex flex-col items-center justify-center gap-1.5 opacity-90 cursor-not-allowed select-none shadow-sm transition-all"
+                              title={`This schedule slot has reached maximum capacity (${bookedCount}/${totalSeats} seats booked). No more bookings can be accepted.`}
+                            >
+                              <span className="text-[14px] text-rose-900 line-through font-semibold">{slot.time}</span>
+                              <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider flex items-center gap-1 bg-rose-100 px-2.5 py-0.5 rounded-full border border-rose-300">
+                                <span className="material-symbols-outlined text-[13px]">group_off</span>FULL
+                              </span>
+                              <span className="text-[11px] text-rose-600 font-medium">0 / {totalSeats} Seats Left</span>
+                            </div>
+                          );
+                        }
+
+                        if (isPast) {
+                          return (
+                            <div 
+                              key={`past-${slot.id}`} 
+                              className="relative p-4 bg-[#f9f9ff] border border-dashed border-[#c3c5d7]/50 rounded-xl flex flex-col items-center justify-center gap-1 opacity-50 cursor-not-allowed select-none"
+                              title="This time slot has already passed"
+                            >
+                              <span className="text-[14px] text-[#737686] line-through font-medium">{slot.time}</span>
+                              <span className="text-[10px] font-bold text-[#737686] uppercase tracking-wider flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[12px]">history</span>Passed
+                              </span>
+                            </div>
+                          );
+                        }
+                        
+                        const seatsAvailable = inventory[slot.id] !== undefined ? inventory[slot.id] : (slot.availableSeats ?? 1);
+                        const totalSeats = slot.maxCapacity || 1;
+                        return (
+                          <div 
+                            key={`classic-${slot.id}`} 
+                            onClick={() => isInCart || isPast || isFull || isSelfBooked || isCompleted ? null : toggleStagingSlot(slot.id)}
+                            className={`relative p-3.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1.5 ${
+                              isInCart 
+                                ? 'bg-[#005438]/10 border-2 border-[#005438] shadow-sm transform scale-105 z-10 cursor-not-allowed'
+                                : isStaged
+                                  ? 'bg-[#e7eefe] border-2 border-[#1a56db] shadow-sm transform scale-105 z-10 cursor-pointer active:scale-95'
+                                  : 'bg-white border border-[#c3c5d7]/50 hover:border-[#1a56db]/50 hover:bg-[#f9f9ff] cursor-pointer active:scale-95'
+                            }`}
+                          >
+                            {slot.topMatch && seatsAvailable > 0 && (
+                              <div className="absolute -top-2.5 -right-2.5 bg-[#ffdad6] text-[#ba1a1a] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm z-10 border border-white">
+                                🔥 Top Pick
+                              </div>
+                            )}
+                            <span className={`text-[14px] font-medium ${isStaged ? 'text-[#1a56db] font-bold' : isInCart ? 'text-[#005438] font-bold' : 'text-[#151c27]'}`}>{slot.time}</span>
+                            
+                            {/* Capacity Pill */}
+                            <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                              isInCart 
+                                ? 'bg-[#005438]/15 text-[#005438]'
+                                : isStaged
+                                  ? 'bg-blue-100 text-[#1a56db]'
+                                  : seatsAvailable <= 1 && totalSeats > 1
+                                    ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            }`}>
+                              <span className="material-symbols-outlined text-[13px]">event_seat</span>
+                              <span>{seatsAvailable} / {totalSeats} Seats Left</span>
+                            </div>
+
+                            <span className={`text-[12px] ${isStaged ? 'text-[#1a56db]/80 font-medium' : isInCart ? 'text-[#005438]/80 font-medium' : 'text-[#53606c]'}`}>{isInCart ? 'In Booking' : slot.price}</span>
                           </div>
-                        )}
-                        <span className={`text-[14px] font-medium ${isStaged ? 'text-[#1a56db] font-bold' : isInCart ? 'text-[#005438] font-bold' : 'text-[#151c27]'}`}>{slot.time}</span>
-                        <span className={`text-[12px] ${isStaged ? 'text-[#1a56db]/80' : isInCart ? 'text-[#005438]/80' : 'text-[#53606c]'}`}>{isInCart ? 'In Booking' : slot.price}</span>
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1045,7 +1616,7 @@ const BookAppointmentPage: React.FC = () => {
               </p>
             </div>
             <button 
-              onClick={() => setShowPatientModal(true)}
+              onClick={handleOpenPatientModal}
               disabled={selectedSlots.length === 0}
               className={`w-full md:w-auto px-8 py-3 rounded-xl font-bold text-[16px] transition-all flex items-center justify-center gap-2 ${
                 selectedSlots.length === 0 

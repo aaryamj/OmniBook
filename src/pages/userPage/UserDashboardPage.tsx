@@ -1,31 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserTopNavigation from './components/UserTopNavigation';
+import UserFooter from './components/UserFooter';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../../context/AuthContext';
+import VideoConsultationModal from '../../components/VideoConsultationModal';
+import { getOrganizationTerms } from '../../utils/organizationTerms';
 
 const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState<string>('');
+  const { user, token, isLoading: authLoading } = useAuth();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [activeVideoAppt, setActiveVideoAppt] = useState<any | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
-    
+    if (authLoading) return;
+
     // Redirect if no token or role is not 'user'
-    if (!token || role !== 'user') {
+    const currentRole = user?.role || localStorage.getItem('role');
+    if (!token || (currentRole && currentRole !== 'user')) {
       navigate('/login');
       return;
     } 
-    
-    const storedName = localStorage.getItem('fullName');
-    if (storedName) {
-      setFullName(storedName);
-    }
 
-    fetchAppointments(token);
-  }, [navigate]);
+    if (token) {
+      fetchAppointments(token);
+    }
+  }, [authLoading, token, user, navigate]);
 
   const fetchAppointments = async (token: string) => {
     try {
@@ -56,7 +58,7 @@ const UserDashboardPage: React.FC = () => {
         <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 sm:mb-12 gap-4">
           <div>
             <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">
-              Welcome to OmniBook, {fullName ? fullName : 'User'}!
+              Welcome to OmniBook, {user?.fullName || 'User'}!
             </h1>
             <p className="text-[#434654] text-sm sm:text-[16px] mt-1 opacity-70">
               Manage your time and services effortlessly from one place.
@@ -113,6 +115,17 @@ const UserDashboardPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between items-start mb-4">
                       <div>
+                        {appointment.organizationName && (
+                          <div className="flex items-center gap-1.5 mb-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 w-fit">
+                            {appointment.organizationLogo ? (
+                              <img src={appointment.organizationLogo} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />
+                            ) : (
+                              <span className="material-symbols-outlined text-[13px]">apartment</span>
+                            )}
+                            <span>{appointment.organizationName}</span>
+                            <span className="text-[10px] text-purple-500 font-medium">• {appointment.organizationType || 'Facility'}</span>
+                          </div>
+                        )}
                         <h3 className="text-xl font-bold text-[#151c27] mb-1">{appointment.serviceName}</h3>
                         <div className="flex items-center gap-3 mt-3">
                           <div className="w-10 h-10 rounded-full overflow-hidden border border-[#e2e8f0] bg-gray-100 flex-shrink-0 flex items-center justify-center">
@@ -157,22 +170,39 @@ const UserDashboardPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {appointment.appointmentStatus === 'SCHEDULED' && appointment.appointmentType === 'VIRTUAL' && appointment.meetingLink && (
-                    <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex flex-col items-center">
-                      <a href={appointment.meetingLink} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 bg-[#1a56db] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#123e9e] transition-colors shadow-md">
-                        <span className="material-symbols-outlined">video_camera_front</span>
-                        Join Virtual Meeting
-                      </a>
-                    </div>
-                  )}
-                  {appointment.appointmentStatus === 'SCHEDULED' && appointment.appointmentType !== 'VIRTUAL' && (
-                    <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex flex-col items-center">
-                      <p className="text-xs font-semibold text-[#53606c] mb-3 text-center uppercase tracking-wider">Scan to Check-in</p>
-                      <div className="bg-white p-2 rounded-xl shadow-sm border border-[#e2e8f0]">
-                        <QRCodeSVG value={appointment.transactionId || "unknown"} size={120} fgColor="#151c27" />
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => navigate(`/my-history?view=${appointment.id}`)}
+                      className="w-full py-2 bg-[#f0f3ff] text-[#003fb1] hover:bg-[#e0e8ff] font-bold text-xs rounded-xl border border-[#d6e4f3] transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">visibility</span>
+                      View Details
+                    </button>
+
+                    {(appointment.videoCallEnabled || appointment.appointmentType === 'VIRTUAL') && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'CANCELLED' && (
+                      <div className="pt-2 border-t border-[#e2e8f0] flex flex-col items-center">
+                        <div className="w-full mb-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center justify-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Virtual {getOrganizationTerms(appointment.organizationType).appointmentSingular} Ready
+                        </div>
+                        <button 
+                          onClick={() => setActiveVideoAppt(appointment)}
+                          className="w-full flex items-center justify-center gap-2 bg-[#1a56db] hover:bg-[#123e9e] text-white px-4 py-3 rounded-xl font-bold transition-all shadow-md active:scale-[0.98]"
+                        >
+                          <span className="material-symbols-outlined animate-pulse">video_camera_front</span>
+                          Join Virtual {getOrganizationTerms(appointment.organizationType).appointmentSingular}
+                        </button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                    {appointment.appointmentStatus === 'SCHEDULED' && appointment.appointmentType !== 'VIRTUAL' && (
+                      <div className="pt-2 border-t border-[#e2e8f0] flex flex-col items-center">
+                        <p className="text-xs font-semibold text-[#53606c] mb-3 text-center uppercase tracking-wider">Scan to Check-in</p>
+                        <div className="bg-white p-2 rounded-xl shadow-sm border border-[#e2e8f0]">
+                          <QRCodeSVG value={appointment.transactionId || `APPT-${appointment.id}`} size={120} fgColor="#151c27" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -214,8 +244,14 @@ const UserDashboardPage: React.FC = () => {
                       )}
                     </div>
                     <div>
+                      {appointment.organizationName && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200 mb-1">
+                          <span className="material-symbols-outlined text-[12px]">apartment</span>
+                          {appointment.organizationName}
+                        </span>
+                      )}
                       <h4 className="text-[16px] font-bold text-[#151c27]">{appointment.serviceName}</h4>
-                      <p className="text-[14px] text-[#53606c]">Dr. {appointment.doctorName || 'Unknown'} • {appointment.doctorSpecialty || 'Specialist'}</p>
+                      <p className="text-[14px] text-[#53606c]">{appointment.doctorName || 'Unknown'} • {appointment.doctorSpecialty || 'Specialist'}</p>
                       <div className="flex items-center gap-3 mt-1 text-[12px] text-[#8c9bab] font-medium">
                          <span>{new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                          <span className="w-1 h-1 rounded-full bg-[#c3c5d7]"></span>
@@ -235,8 +271,13 @@ const UserDashboardPage: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2">
-                      <button className="p-2 border border-[#c3c5d7] text-[#53606c] hover:bg-[#f0f3ff] hover:text-[#003fb1] hover:border-[#003fb1] rounded-lg transition-colors flex items-center justify-center" title="View Receipt">
-                        <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                      <button 
+                        onClick={() => navigate(`/my-history?view=${appointment.id}`)}
+                        className="px-3 py-2 border border-[#c3c5d7] text-[#53606c] hover:bg-[#f0f3ff] hover:text-[#003fb1] hover:border-[#003fb1] rounded-lg transition-colors flex items-center justify-center text-xs font-semibold gap-1" 
+                        title="View Details"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">visibility</span>
+                        <span>Details</span>
                       </button>
                       <button 
                         onClick={() => navigate('/book-appointment')}
@@ -253,58 +294,16 @@ const UserDashboardPage: React.FC = () => {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#e7eefe] w-full border-t border-[#c3c5d7]/10 mt-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-10 py-12 max-w-7xl mx-auto">
-          <div className="flex flex-col gap-4">
-            <span className="text-[20px] font-bold text-[#003fb1]">OmniBook</span>
-            <p className="text-[#434654] text-[14px] font-medium max-w-xs opacity-70">
-              Enterprise-grade scheduling simplified for your personal and professional needs.
-            </p>
-            <p className="text-[14px] font-medium text-[#434654] mt-6">
-              © 2024 OmniBook Enterprise. All rights reserved.
-            </p>
-          </div>
-          <div className="flex flex-col gap-4">
-            <span className="text-[14px] font-bold text-[#151c27]">Quick Links</span>
-            <div className="grid grid-cols-2 gap-2">
-              <a className="text-[#434654] text-[14px] font-medium hover:underline hover:text-[#003fb1] transition-all" href="#">
-                Resources
-              </a>
-              <a className="text-[#434654] text-[14px] font-medium hover:underline hover:text-[#003fb1] transition-all" href="#">
-                Support
-              </a>
-              <a className="text-[#434654] text-[14px] font-medium hover:underline hover:text-[#003fb1] transition-all" href="#">
-                Newsletter
-              </a>
-              <a className="text-[#434654] text-[14px] font-medium hover:underline hover:text-[#003fb1] transition-all" href="#">
-                Privacy Policy
-              </a>
-            </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <span className="text-[14px] font-bold text-[#151c27]">Stay Updated</span>
-            <div className="flex gap-2">
-              <input
-                className="bg-white border border-[#c3c5d7] rounded-lg px-6 py-2 w-full text-[14px] font-medium focus:ring-2 focus:ring-[#1a56db]/20 focus:outline-none"
-                placeholder="Enter email"
-                type="email"
-              />
-              <button className="bg-[#1a56db] text-white px-6 py-2 rounded-lg text-[14px] font-medium active:scale-95 transition-transform">
-                Join
-              </button>
-            </div>
-            <div className="flex gap-6 mt-4">
-              <span className="material-symbols-outlined text-[#3b4854] cursor-pointer hover:text-[#003fb1] transition-colors">
-                public
-              </span>
-              <span className="material-symbols-outlined text-[#3b4854] cursor-pointer hover:text-[#003fb1] transition-colors">
-                mail
-              </span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      {/* Video Consultation Modal */}
+      <VideoConsultationModal
+        isOpen={!!activeVideoAppt}
+        onClose={() => setActiveVideoAppt(null)}
+        appointment={activeVideoAppt}
+        isProvider={false}
+      />
+
+      {/* Dynamic & Functional User Footer */}
+      <UserFooter />
     </div>
   );
 };

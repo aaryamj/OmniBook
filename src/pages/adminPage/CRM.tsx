@@ -1,7 +1,27 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
+import { useOrganizationTerms } from '../../utils/organizationTerms';
+
+export interface CRMAppointmentItem {
+    id: number;
+    serviceName: string;
+    appointmentDate: string;
+    appointmentTime: string;
+    appointmentStatus: string;
+    providerName: string;
+    notes: string;
+    price: number;
+}
+
+export interface PatientDocument {
+    id: string;
+    name: string;
+    size: string;
+    uploadDate: string;
+    type: string;
+}
 
 export interface Patient {
     id: string;
@@ -9,6 +29,7 @@ export interface Patient {
     bgColor: string;
     textColor: string;
     name: string;
+    profilePicture?: string;
     phone: string;
     phoneType: string;
     lastVisit: string;
@@ -27,16 +48,78 @@ export interface Patient {
     lifetimeBilledUSD: string;
     lifetimeBilledNPR: string;
     outstandingBalance: string;
+    timeline?: CRMAppointmentItem[];
 }
 
 export default function CRM() {
+    const terms = useOrganizationTerms();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
     const [demoFilter, setDemoFilter] = useState('All Demographics');
     const [financialFilter, setFinancialFilter] = useState('Financial Status: All');
+
+    useEffect(() => {
+        const s = searchParams.get('search');
+        if (s !== null) {
+            setSearchTerm(s);
+        }
+    }, [searchParams]);
+
+    // Document Management & Feedback
+    const [patientDocs, setPatientDocs] = useState<{ [patientId: string]: PatientDocument[] }>(() => {
+        try {
+            const saved = localStorage.getItem('crm_patient_documents');
+            return saved ? JSON.parse(saved) : {};
+        } catch {
+            return {};
+        }
+    });
+    const [showToast, setShowToast] = useState(false);
+    const [toastMsg, setToastMsg] = useState('');
+
+    const orgType = (localStorage.getItem('organizationType') || '').toLowerCase();
+    const isHealthcare = orgType.includes('health') || orgType.includes('clinic') || orgType.includes('hospital') || orgType.includes('medical');
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!selectedPatient || !e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        const sizeFormatted = file.size > 1048576 
+            ? `${(file.size / 1048576).toFixed(1)} MB` 
+            : `${(file.size / 1024).toFixed(0)} KB`;
+        const newDoc: PatientDocument = {
+            id: 'doc-' + Date.now(),
+            name: file.name,
+            size: sizeFormatted,
+            uploadDate: new Date().toISOString().split('T')[0],
+            type: file.type.includes('image') ? 'image' : 'pdf'
+        };
+        const currentList = patientDocs[selectedPatient.id] || [];
+        const updated = { ...patientDocs, [selectedPatient.id]: [newDoc, ...currentList] };
+        setPatientDocs(updated);
+        localStorage.setItem('crm_patient_documents', JSON.stringify(updated));
+        setToastMsg(`Document "${file.name}" uploaded successfully!`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        e.target.value = '';
+    };
+
+    const handleBookFollowUp = () => {
+        if (!selectedPatient) return;
+        navigate(`/admin/appointments?new=true&patientName=${encodeURIComponent(selectedPatient.name)}&patientEmail=${encodeURIComponent(selectedPatient.email)}`);
+    };
+
+    const handleGenerateInvoice = () => {
+        if (!selectedPatient) return;
+        const invoiceLink = `${window.location.origin}/admin/ledger?patient=${encodeURIComponent(selectedPatient.email)}&invoice=${selectedPatient.id}`;
+        navigator.clipboard.writeText(invoiceLink);
+        setToastMsg(`Invoice payment link copied for ${selectedPatient.name}!`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+    };
 
     React.useEffect(() => {
         const fetchPatients = async () => {
@@ -60,7 +143,11 @@ export default function CRM() {
 
     const filteredPatients = patients.filter(p => {
         const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = p.name.toLowerCase().includes(searchLower) || p.phone.toLowerCase().includes(searchLower) || p.id.toLowerCase().includes(searchLower);
+        const matchesSearch = !searchTerm || 
+            p.name.toLowerCase().includes(searchLower) || 
+            (p.phone && p.phone.toLowerCase().includes(searchLower)) || 
+            (p.email && p.email.toLowerCase().includes(searchLower)) ||
+            p.id.toLowerCase().includes(searchLower);
         
         let matchesDemo = true;
         if (demoFilter === 'Pediatric') matchesDemo = p.age !== null && p.age < 18;
@@ -87,7 +174,7 @@ export default function CRM() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.setAttribute('href', url);
-        a.setAttribute('download', 'patient_directory.csv');
+        a.setAttribute('download', `${terms.customerPlural.toLowerCase()}_directory.csv`);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -95,11 +182,11 @@ export default function CRM() {
 
     if (selectedPatient) {
         return (
-            <div className="superadmin-theme">
+            <div className="tenant-theme">
                 <div className="bg-background text-on-surface font-sans min-h-screen relative">
                     <AdminSidebar />
                     <TopNavigation />
-                    <main className="ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
+                    <main className="lg:ml-[280px] ml-0 ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
                         <div className="max-w-container-max mx-auto w-full flex-1 flex flex-col animate-fade-in space-y-8 pb-20">
                         {/* BREADCRUMB & HEADER */}
                         <section>
@@ -108,7 +195,7 @@ export default function CRM() {
                                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                                 <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => setSelectedPatientId(null)}>CRM</span>
                                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                                <span className="text-primary font-semibold">Patient Directory</span>
+                                <span className="text-primary font-semibold">{terms.customerSingular} Directory</span>
                             </nav>
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                                 <div className="flex items-baseline gap-4">
@@ -124,17 +211,13 @@ export default function CRM() {
                                         type="file" 
                                         ref={fileInputRef} 
                                         className="hidden" 
-                                        onChange={(e) => {
-                                            if (e.target.files && e.target.files.length > 0) {
-                                                alert(`Document "${e.target.files[0].name}" uploaded successfully!`);
-                                            }
-                                        }}
+                                        onChange={handleFileUpload}
                                     />
-                                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-5 py-2.5 border border-outline rounded-lg font-body-md text-body-md hover:bg-surface-container-low transition-colors">
+                                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-5 py-2.5 border border-outline rounded-lg font-body-md text-body-md hover:bg-surface-container-low transition-colors cursor-pointer">
                                         <span className="material-symbols-outlined text-[20px]">upload_file</span>
                                         Upload Document
                                     </button>
-                                    <button className="flex items-center gap-2 px-5 py-2.5 bg-secondary-container text-on-secondary-fixed font-bold rounded-lg font-body-md text-body-md hover:brightness-110 transition-all shadow-sm">
+                                    <button onClick={handleBookFollowUp} className="flex items-center gap-2 px-5 py-2.5 bg-secondary-container text-on-secondary-fixed font-bold rounded-lg font-body-md text-body-md hover:brightness-110 transition-all shadow-sm cursor-pointer">
                                         <span className="material-symbols-outlined text-[20px]">add_circle</span>
                                         Book Follow-Up
                                     </button>
@@ -149,24 +232,37 @@ export default function CRM() {
                                 {/* Profile Card */}
                                 <div className="bg-surface-container-lowest border border-outline p-6 rounded-xl space-y-6">
                                     <div className="flex flex-col items-center text-center">
-                                        <div className="w-32 h-32 rounded-full ring-4 ring-surface-container-low p-1 mb-4 flex items-center justify-center bg-primary-container text-white text-3xl font-bold">
-                                            {selectedPatient.initials}
+                                        <div className="w-32 h-32 rounded-full ring-4 ring-surface-container-low p-1 mb-4 overflow-hidden flex items-center justify-center bg-primary-container text-white text-3xl font-bold">
+                                            {selectedPatient.profilePicture ? (
+                                                <img 
+                                                    src={selectedPatient.profilePicture} 
+                                                    alt={selectedPatient.name} 
+                                                    className="w-full h-full object-cover rounded-full"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLElement).style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                selectedPatient.initials
+                                            )}
                                         </div>
                                         <h3 className="font-headline-md text-headline-md">{selectedPatient.name}</h3>
-                                        <p className="text-on-surface-variant font-body-md">Patient since {selectedPatient.patientSince}</p>
+                                        <p className="text-on-surface-variant font-body-md">{terms.customerSingular} since {selectedPatient.patientSince}</p>
+                                        
                                         <div className="mt-4 flex gap-2 flex-wrap justify-center">
-                                            <div className="flex gap-2">
-                                                {selectedPatient.age !== null ? (
-                                                    <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">{selectedPatient.age} y/o</span>
-                                                ) : (
-                                                    <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">N/A</span>
-                                                )}
-                                                <span className="px-2 py-0.5 rounded-full bg-surface-container-high text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Blood {selectedPatient.bloodGroup}</span>
-                                            </div>
+                                            <span className="px-2.5 py-0.5 rounded-full bg-green-100 text-[11px] font-bold text-green-800 uppercase tracking-wider">
+                                                {selectedPatient.status || 'Active'}
+                                            </span>
+                                            {isHealthcare && selectedPatient.age !== null && (
+                                                <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">{selectedPatient.age} y/o</span>
+                                            )}
+                                            {isHealthcare && selectedPatient.bloodGroup && selectedPatient.bloodGroup !== 'Unknown' && (
+                                                <span className="px-2.5 py-0.5 rounded-full bg-surface-container-high text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Blood {selectedPatient.bloodGroup}</span>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {selectedPatient.allergies !== 'None' && (
+                                    {isHealthcare && selectedPatient.allergies && selectedPatient.allergies !== 'None' && (
                                         <div className="p-4 bg-error-container rounded-lg border border-error/20">
                                             <div className="flex items-center gap-2 text-error mb-1">
                                                 <span className="material-symbols-outlined text-[18px]">warning</span>
@@ -179,108 +275,145 @@ export default function CRM() {
                                     <div className="space-y-4 pt-4 border-t border-outline">
                                         <div className="flex items-center gap-3">
                                             <span className="material-symbols-outlined text-on-surface-variant">mail</span>
-                                            <span className="font-body-md text-body-md">{selectedPatient.email}</span>
+                                            <span className="font-body-md text-body-md truncate">{selectedPatient.email}</span>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <span className="material-symbols-outlined text-on-surface-variant">call</span>
                                             <span className="font-body-md text-body-md">{selectedPatient.phone}</span>
                                         </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined text-on-surface-variant">calendar_month</span>
+                                            <span className="font-body-md text-body-md text-on-surface-variant">Last: {selectedPatient.lastVisit || 'N/A'}</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Metrics Card */}
+                                {/* Metrics Card (Healthcare vitals or Academic/Customer Stats) */}
                                 <div className="bg-surface-container-lowest border border-outline p-6 rounded-xl">
-                                    <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant mb-6">Recent Metrics</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-4 bg-surface-container-low rounded-lg">
-                                            <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Heart Rate</p>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="font-headline-md text-headline-md text-on-background">{selectedPatient.heartRate}</span>
-                                                <span className="text-[11px] text-on-surface-variant">BPM</span>
+                                    <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant mb-6">
+                                        {isHealthcare ? 'Recent Vitals' : `${terms.customerSingular} Activity`}
+                                    </h4>
+                                    {isHealthcare ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-4 bg-surface-container-low rounded-lg">
+                                                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Heart Rate</p>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="font-headline-md text-headline-md text-on-background">{selectedPatient.heartRate || '72'}</span>
+                                                    <span className="text-[11px] text-on-surface-variant">BPM</span>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 bg-surface-container-low rounded-lg">
+                                                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Weight</p>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="font-headline-md text-headline-md text-on-background">{selectedPatient.weight || '60'}</span>
+                                                    <span className="text-[11px] text-on-surface-variant">KG</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-surface-container-low rounded-lg">
-                                            <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Weight</p>
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="font-headline-md text-headline-md text-on-background">{selectedPatient.weight}</span>
-                                                <span className="text-[11px] text-on-surface-variant">LBS</span>
+                                    ) : (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-4 bg-surface-container-low rounded-lg">
+                                                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Total {terms.servicePlural}</p>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="font-headline-md text-headline-md text-primary">
+                                                        {selectedPatient.timeline?.length || 1}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 bg-surface-container-low rounded-lg">
+                                                <p className="text-[10px] uppercase font-bold text-on-surface-variant mb-1">Status</p>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-sm font-bold text-green-700">Good Standing</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* COLUMN 2: CLINICAL TIMELINE */}
+                            {/* COLUMN 2: ACTIVITY TIMELINE */}
                             <div className="col-span-12 lg:col-span-5 space-y-gutter">
                                 <div className="bg-surface-container-lowest border border-outline rounded-xl overflow-hidden">
                                     <div className="px-6 py-4 border-b border-outline flex justify-between items-center">
-                                        <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">Clinical Timeline</h4>
+                                        <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">
+                                            {terms.serviceSingular} Activity Timeline
+                                        </h4>
                                         <span className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">history</span>
                                     </div>
                                     <div className="p-6 space-y-8 relative">
                                         {/* Timeline Line */}
                                         <div className="absolute left-[39px] top-8 bottom-8 w-[1px] bg-outline-variant"></div>
 
-                                        {/* Entry 1 */}
-                                        <div className="relative pl-12">
-                                            <div className="absolute left-[-5px] top-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center ring-4 ring-white">
-                                                <span className="material-symbols-outlined text-[14px] text-on-secondary-fixed">stethoscope</span>
-                                            </div>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <h5 className="font-headline-md text-[16px] leading-tight">Routine Checkup & Consultation</h5>
-                                                    <p className="text-on-surface-variant text-body-md">Primary Physician: <span className="font-semibold text-on-background">{selectedPatient.provider}</span></p>
-                                                </div>
-                                                <span className="font-mono-data text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1 rounded uppercase">{selectedPatient.lastVisit}</span>
-                                            </div>
+                                        {/* Dynamic Timeline Entries */}
+                                        {selectedPatient.timeline && selectedPatient.timeline.length > 0 ? (
+                                            selectedPatient.timeline.map((app, idx) => (
+                                                <div key={app.id || idx} className="relative pl-12">
+                                                    <div className="absolute left-[-5px] top-1 w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center ring-4 ring-white">
+                                                        <span className="material-symbols-outlined text-[14px] text-on-secondary-fixed">
+                                                            {isHealthcare ? 'stethoscope' : 'event_available'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <h5 className="font-headline-md text-[16px] leading-tight font-bold text-on-background">
+                                                                {app.serviceName}
+                                                            </h5>
+                                                            <p className="text-on-surface-variant text-body-md mt-0.5">
+                                                                {terms.providerSingular}: <span className="font-semibold text-on-background">{app.providerName || selectedPatient.provider}</span>
+                                                            </p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="font-mono-data text-[11px] text-on-surface-variant bg-surface-container-low px-2 py-1 rounded uppercase">
+                                                                {app.appointmentDate}
+                                                            </span>
+                                                            {app.appointmentTime && (
+                                                                <p className="text-[10px] text-on-surface-variant font-mono mt-1">{app.appointmentTime}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
 
-                                            {/* Locked Note */}
-                                            <div className="relative bg-surface-container-low rounded-lg p-6 border border-outline border-dashed group overflow-hidden mt-4">
-                                                <div className="filter blur-[4px] opacity-40 font-body-md leading-relaxed select-none">
-                                                    The patient presents with mild hypertension and reports intermittent headaches... further testing required for cardiovascular baseline. Prescription issued for...
+                                                    {/* Session Note */}
+                                                    <div className="bg-surface-container-low rounded-lg p-3 border border-outline border-dashed text-xs text-on-surface-variant mt-2 leading-relaxed">
+                                                        {app.notes ? app.notes : `Routine ${terms.serviceSingular.toLowerCase()} session recorded. Status: ${app.appointmentStatus}`}
+                                                    </div>
                                                 </div>
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-container-low/60 backdrop-blur-[2px] transition-all group-hover:backdrop-blur-none">
-                                                    <span className="material-symbols-outlined text-on-surface-variant mb-2">lock</span>
-                                                    <p className="text-on-surface-variant font-label-md uppercase tracking-wider text-[11px]">Unlock Clinical Notes</p>
-                                                    <p className="text-[10px] text-on-surface-variant/70 mt-1">Doctor Access Required</p>
-                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="relative pl-12 text-on-surface-variant text-sm py-4">
+                                                No past {terms.servicePlural.toLowerCase()} recorded yet for this {terms.customerSingular.toLowerCase()}.
                                             </div>
+                                        )}
 
-                                            {/* Attachments */}
-                                            <div className="flex gap-3 mt-4">
-                                                <div className="flex items-center gap-3 p-2 border border-outline rounded-lg bg-surface hover:border-secondary-fixed cursor-pointer transition-colors group w-1/2">
-                                                    <div className="w-10 h-10 rounded bg-red-50 flex items-center justify-center text-red-600">
-                                                        <span className="material-symbols-outlined">picture_as_pdf</span>
-                                                    </div>
-                                                    <div className="overflow-hidden">
-                                                        <p className="text-body-md font-semibold truncate">Lab_Results.pdf</p>
-                                                        <p className="text-[10px] text-on-surface-variant">2.4 MB • Complete</p>
-                                                    </div>
+                                        {/* Real Attached Documents */}
+                                        <div className="pt-4 border-t border-outline">
+                                            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">
+                                                Attached Documents ({patientDocs[selectedPatient.id]?.length || 0})
+                                            </p>
+                                            {patientDocs[selectedPatient.id] && patientDocs[selectedPatient.id].length > 0 ? (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {patientDocs[selectedPatient.id].map(doc => (
+                                                        <div key={doc.id} className="flex items-center gap-3 p-2.5 border border-outline rounded-lg bg-surface hover:border-primary transition-colors group">
+                                                            <div className="w-9 h-9 rounded bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                                <span className="material-symbols-outlined text-[20px]">
+                                                                    {doc.type === 'image' ? 'image' : 'description'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="overflow-hidden flex-1 min-w-0">
+                                                                <p className="text-xs font-semibold truncate text-on-background">{doc.name}</p>
+                                                                <p className="text-[10px] text-on-surface-variant">{doc.size} • {doc.uploadDate}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div className="flex items-center gap-3 p-2 border border-outline rounded-lg bg-surface hover:border-secondary-fixed cursor-pointer transition-colors group w-1/2">
-                                                    <div className="w-10 h-10 rounded bg-blue-50 flex items-center justify-center text-blue-600">
-                                                        <span className="material-symbols-outlined">image</span>
-                                                    </div>
-                                                    <div className="overflow-hidden">
-                                                        <p className="text-body-md font-semibold truncate">Dental_XRay.jpg</p>
-                                                        <p className="text-[10px] text-on-surface-variant">4.1 MB • Raw</p>
-                                                    </div>
+                                            ) : (
+                                                <div 
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="p-4 border border-dashed border-outline rounded-lg bg-surface-container-low/50 text-center cursor-pointer hover:bg-surface-container-low transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined text-2xl text-on-surface-variant opacity-60 mb-1">upload_file</span>
+                                                    <p className="text-xs text-on-surface-variant">No documents attached yet. Click to upload files.</p>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Entry 2 (Small) */}
-                                        <div className="relative pl-12 opacity-60">
-                                            <div className="absolute left-[-5px] top-1 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center ring-4 ring-white">
-                                                <span className="material-symbols-outlined text-[14px] text-on-surface-variant">vaccines</span>
-                                            </div>
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <h5 className="font-headline-md text-[16px] leading-tight">Annual Flu Vaccination</h5>
-                                                    <p className="text-on-surface-variant text-body-md">Nurse: <span className="font-semibold">Sarah Jenkins</span></p>
-                                                </div>
-                                                <span className="font-mono-data text-[11px] text-on-surface-variant">SEP 12, 2025</span>
-                                            </div>
+                                            )}
                                         </div>
 
                                     </div>
@@ -291,7 +424,7 @@ export default function CRM() {
                             <div className="col-span-12 lg:col-span-4 space-y-gutter">
                                 <div className="bg-primary-container text-white rounded-xl p-6 shadow-xl relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed opacity-10 blur-3xl -mr-16 -mt-16"></div>
-                                    <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-tertiary-container mb-6">Patient Financials</h4>
+                                    <h4 className="font-label-md text-label-md uppercase tracking-widest text-on-tertiary-container mb-6">{terms.customerSingular} Financials</h4>
                                     
                                     <div className="space-y-6">
                                         <div>
@@ -307,10 +440,9 @@ export default function CRM() {
                                             <p className="text-[11px] font-bold text-secondary-fixed uppercase tracking-tighter mb-1">Outstanding Balance</p>
                                             <div className="flex items-center justify-between">
                                                 <span className="font-headline-md text-headline-md text-white">{selectedPatient.outstandingBalance}</span>
-                                                {selectedPatient.outstandingBalance !== '$0.00' && selectedPatient.outstandingBalance !== 'Rs. 0' && (
+                                                {selectedPatient.outstandingBalance !== '$0.00' && selectedPatient.outstandingBalance !== 'Rs. 0' ? (
                                                     <span className="bg-on-tertiary-fixed-variant text-secondary-fixed px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest">Pending</span>
-                                                )}
-                                                {(selectedPatient.outstandingBalance === '$0.00' || selectedPatient.outstandingBalance === 'Rs. 0') && (
+                                                ) : (
                                                     <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest">Cleared</span>
                                                 )}
                                             </div>
@@ -319,8 +451,8 @@ export default function CRM() {
                                     
                                     <div className="mt-8 space-y-3">
                                         <button 
-                                            onClick={() => alert(`Invoice link generated for ${selectedPatient.name}`)}
-                                            className="w-full py-3 bg-secondary-fixed text-primary-container font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2"
+                                            onClick={handleGenerateInvoice}
+                                            className="w-full py-3 bg-secondary-fixed text-primary-container font-bold rounded-lg hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                                         >
                                             <span className="material-symbols-outlined">payments</span>
                                             Generate Invoice Link
@@ -355,26 +487,37 @@ export default function CRM() {
                                             ))
                                         )}
                                     </div>
-                                    <a href="#" className="block w-full py-3 text-center text-label-md text-on-surface-variant bg-surface-container-low hover:text-primary transition-colors border-t border-outline">
+                                    <button 
+                                        onClick={() => navigate('/admin/ledger')} 
+                                        className="w-full py-3 text-center text-label-md text-on-surface-variant bg-surface-container-low hover:text-primary transition-colors border-t border-outline cursor-pointer"
+                                    >
                                         View Full Ledger Details
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         </div>
                     </main>
+
+                    {/* Toast Notification */}
+                    {showToast && (
+                        <div className="fixed bottom-6 right-6 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in z-50">
+                            <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                            <span className="font-semibold text-sm">{toastMsg}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="superadmin-theme">
+        <div className="tenant-theme">
             <div className="bg-background text-on-surface font-sans min-h-screen relative">
                 <AdminSidebar />
                 <TopNavigation />
 
-                <main className="ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
+                <main className="lg:ml-[280px] ml-0 ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
                     {/* Inner Area Canvas */}
                     <div className="flex flex-col gap-6 max-w-container-max mx-auto w-full animate-fade-in">
                     {/* Workspace Header */}
@@ -385,16 +528,16 @@ export default function CRM() {
                                 <span className="material-symbols-outlined text-[14px]">chevron_right</span>
                                 <span className="text-primary font-semibold">CRM</span>
                             </nav>
-                            <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary tracking-tight">Patient Directory</h2>
+                            <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-bold text-primary tracking-tight">{terms.crmTitle}</h2>
                         </div>
                         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                             <button onClick={handleExportCSV} className="flex-1 sm:flex-initial justify-center px-4 py-2 border border-outline-variant rounded bg-white text-on-surface font-semibold text-sm hover:bg-surface-container-low transition-all flex items-center gap-2 cursor-pointer">
                                 <span className="material-symbols-outlined text-sm">download</span>
                                 Export CSV
                             </button>
-                            <button className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-[#0F172A] text-white rounded font-semibold text-sm hover:bg-[#1E293B] transition-all flex items-center gap-2 cursor-pointer">
+                            <button className="flex-1 sm:flex-initial justify-center px-4 py-2 bg-primary text-on-primary rounded font-semibold text-sm hover:brightness-110 active:scale-95 transition-all shadow-md shadow-primary/20 flex items-center gap-2 cursor-pointer">
                                 <span className="material-symbols-outlined text-sm">add</span>
-                                Add New Patient
+                                Add New {terms.customerSingular}
                             </button>
                         </div>
                     </div>
@@ -405,7 +548,7 @@ export default function CRM() {
                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
                             <input 
                                 type="text" 
-                                placeholder="Search by Patient Name, Phone, or ID..." 
+                                placeholder={`Search by ${terms.customerSingular} Name, Phone, or ID...`} 
                                 className="w-full border-none bg-surface-container-lowest pl-10 pr-4 py-2 focus:ring-0 text-body-md text-on-surface outline-none" 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -443,9 +586,9 @@ export default function CRM() {
                         <table className="w-full min-w-[800px] text-left border-collapse">
                             <thead>
                                 <tr className="bg-surface-container-low border-b border-outline-variant">
-                                    <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">Patient Details</th>
+                                    <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">{terms.customerSingular} Details</th>
                                     <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">Contact Info</th>
-                                    <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">Last Visit & Provider</th>
+                                    <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">Last Visit & {terms.providerSingular}</th>
                                     <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider text-right">Outstanding Balance</th>
                                     <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider">Status</th>
                                     <th className="px-6 py-4 font-label-md text-label-md uppercase text-on-surface-variant tracking-wider text-center">Action</th>
@@ -455,7 +598,7 @@ export default function CRM() {
                                 {filteredPatients.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant">
-                                            No patients found matching the current filters.
+                                            No {terms.customerPlural.toLowerCase()} found matching the current filters.
                                         </td>
                                     </tr>
                                 ) : (
@@ -463,15 +606,30 @@ export default function CRM() {
                                         <tr key={patient.id} className="hover:bg-surface-bright transition-colors group">
                                             <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-9 h-9 rounded ${patient.bgColor} flex items-center justify-center ${patient.textColor} font-bold text-xs`}>
-                                                    {patient.initials}
-                                                </div>
+                                                 {patient.profilePicture ? (
+                                                     <img 
+                                                         src={patient.profilePicture} 
+                                                         alt={patient.name} 
+                                                         className="w-9 h-9 rounded-full object-cover border border-outline-variant flex-shrink-0"
+                                                         onError={(e) => {
+                                                             (e.target as HTMLElement).style.display = 'none';
+                                                         }}
+                                                     />
+                                                 ) : (
+                                                     <div className={`w-9 h-9 rounded ${patient.bgColor} flex items-center justify-center ${patient.textColor} font-bold text-xs flex-shrink-0`}>
+                                                         {patient.initials}
+                                                     </div>
+                                                 )}
                                                 <div>
                                                     <p className="font-bold text-primary">{patient.name}</p>
-                                                    {patient.age !== null ? (
-                                                        <p className="text-on-surface text-[15px] font-medium">{patient.age} yrs • {patient.bloodGroup}</p>
+                                                    {isHealthcare ? (
+                                                        <p className="text-on-surface text-[14px] font-medium">
+                                                            {patient.age !== null ? `${patient.age} yrs` : 'N/A'} • Blood {patient.bloodGroup}
+                                                        </p>
                                                     ) : (
-                                                        <p className="text-on-surface text-[15px] font-medium">N/A • {patient.bloodGroup}</p>
+                                                        <p className="text-on-surface-variant text-[13px] font-mono">
+                                                            ID: {patient.id}
+                                                        </p>
                                                     )}
                                                 </div>
                                             </div>

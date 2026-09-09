@@ -4,10 +4,163 @@ import UserTopNavigation from './components/UserTopNavigation';
 import { useGoogleLogin } from '@react-oauth/google';
 import FacebookLoginModule from 'react-facebook-login/dist/facebook-login-render-props';
 const FacebookLogin = (FacebookLoginModule as any).default || FacebookLoginModule;
+import { useAuth } from '../../context/AuthContext';
+
+import { useOrganizationTerms } from '../../utils/organizationTerms';
 
 const DEFAULT_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCZHbfckUTer_B0V4UGQdj6hbBl570n8rDL9W4JkPDf3H1CS3X7zEPuMZEEMHqM4QcREe0vvmFj7eFDF40sCwDFpdcxptvdOXqb-wY6Vk0D46L2Cv6SkL3JWi9kyovrUX3dFYoFQ_QF1dmI5QjkoGXvKRDN3bwzJS49lRpz2iqUkbbNup2jWzngG9hdKWIq82Xv6BhIOBFN9w53rg1vieG_xUV2ddTnNei-WAoOZ2HvmXZgJjBlcNZocp6nVRwlDN7zCqnL9GFlLAc';
 
+interface CountryConfig {
+  name: string;
+  flag: string;
+  code: string;
+  format: (phone: string) => string;
+}
+
+const COUNTRY_CONFIGS: Record<string, CountryConfig> = {
+  '+977': {
+    name: 'Nepal',
+    flag: '🇳🇵',
+    code: '+977',
+    format: (p: string) => {
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+      }
+      return clean;
+    }
+  },
+  '+91': {
+    name: 'India',
+    flag: '🇮🇳',
+    code: '+91',
+    format: (p: string) => {
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.replace(/(\d{5})(\d{5})/, '$1 $2');
+      }
+      return clean;
+    }
+  },
+  '+1': {
+    name: 'United States',
+    flag: '🇺🇸',
+    code: '+1',
+    format: (p: string) => {
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+      }
+      return clean;
+    }
+  },
+  '+44': {
+    name: 'United Kingdom',
+    flag: '🇬🇧',
+    code: '+44',
+    format: (p: string) => {
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.replace(/(\d{4})(\d{6})/, '$1 $2');
+      }
+      return clean;
+    }
+  },
+  '+61': {
+    name: 'Australia',
+    flag: '🇦🇺',
+    code: '+61',
+    format: (p: string) => {
+      const clean = p.replace(/\D/g, '');
+      if (clean.length === 10) {
+        return clean.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+      }
+      return clean;
+    }
+  },
+  '+81': {
+    name: 'Japan',
+    flag: '🇯🇵',
+    code: '+81',
+    format: (p: string) => p
+  },
+  '+49': {
+    name: 'Germany',
+    flag: '🇩🇪',
+    code: '+49',
+    format: (p: string) => p
+  },
+  '+33': {
+    name: 'France',
+    flag: '🇫🇷',
+    code: '+33',
+    format: (p: string) => p
+  },
+  '+971': {
+    name: 'United Arab Emirates',
+    flag: '🇦🇪',
+    code: '+971',
+    format: (p: string) => p
+  },
+  '+880': {
+    name: 'Bangladesh',
+    flag: '🇧🇩',
+    code: '+880',
+    format: (p: string) => p
+  },
+  '+975': {
+    name: 'Bhutan',
+    flag: '🇧🇹',
+    code: '+975',
+    format: (p: string) => p
+  }
+};
+
+const resolveDynamicCountry = (phone?: string, serverCountry?: string): string => {
+  const cleanPhone = (phone || '').replace(/\D/g, '');
+
+  // 1. If phone has clear Nepali mobile format (10 digits starting with 98 or 97)
+  if (cleanPhone.length === 10 && (cleanPhone.startsWith('98') || cleanPhone.startsWith('97'))) {
+    return '+977';
+  }
+  if (cleanPhone.startsWith('977')) return '+977';
+
+  // 2. If server provided a valid, non-default country, accept it
+  if (serverCountry && serverCountry !== '+1' && COUNTRY_CONFIGS[serverCountry]) {
+    return serverCountry;
+  }
+
+  // 3. Detect via browser timezone
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === 'Asia/Kathmandu') return '+977';
+    if (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') return '+91';
+    if (tz.includes('London')) return '+44';
+    if (tz.includes('Sydney') || tz.includes('Melbourne')) return '+61';
+    if (tz.includes('New_York') || tz.includes('Los_Angeles') || tz.includes('Chicago')) return '+1';
+  } catch (e) {}
+
+  return serverCountry && COUNTRY_CONFIGS[serverCountry] ? serverCountry : '+977';
+};
+
+const formatDisplayPhone = (rawPhone: string, countryCode: string): string => {
+  if (!rawPhone) return 'Not Set';
+  const cfg = COUNTRY_CONFIGS[countryCode];
+  const formatted = cfg ? cfg.format(rawPhone) : rawPhone;
+  return `${countryCode} ${formatted}`;
+};
+
+const getCountryDisplayName = (countryCode: string): string => {
+  const cfg = COUNTRY_CONFIGS[countryCode];
+  if (cfg) {
+    return `${cfg.flag} ${cfg.name}`;
+  }
+  return countryCode || 'Nepal';
+};
+
 const ProfileSettingPage: React.FC = () => {
+  const { refreshUser } = useAuth();
+  const terms = useOrganizationTerms();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'personal-info' | 'security' | 'notifications' | 'public-profile'>('personal-info');
@@ -23,7 +176,7 @@ const ProfileSettingPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [country, setCountry] = useState<string>('+1');
+  const [country, setCountry] = useState<string>(() => resolveDynamicCountry());
   const [phoneError, setPhoneError] = useState<string>('');
   
   // Patient Profile Fields
@@ -32,6 +185,10 @@ const ProfileSettingPage: React.FC = () => {
   const [allergies, setAllergies] = useState<string>('');
   const [weight, setWeight] = useState<string>('');
   const [heartRate, setHeartRate] = useState<string>('');
+  const [successfulBookingsCount, setSuccessfulBookingsCount] = useState<number>(0);
+
+  const orgType = (localStorage.getItem('organizationType') || '').toLowerCase();
+  const isHealthcare = orgType.includes('health') || orgType.includes('clinic') || orgType.includes('hospital') || orgType.includes('medical');
   
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleEmail, setGoogleEmail] = useState('');
@@ -52,8 +209,24 @@ const ProfileSettingPage: React.FC = () => {
   const [newsletter, setNewsletter] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
-  const [avatarUrl, setAvatarUrl] = useState<string>(DEFAULT_AVATAR);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [organizationName, setOrganizationName] = useState<string>('');
+  const [organizationLogo, setOrganizationLogo] = useState<string>('');
+  const [tenantAdminName, setTenantAdminName] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string>('');
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState<string>('');
+  const [profileErrorMsg, setProfileErrorMsg] = useState<string>('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const getInitials = (name: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -76,7 +249,11 @@ const ProfileSettingPage: React.FC = () => {
         setFullName(data.fullName || '');
         setEmail(data.email || '');
         setPhone(data.phone || '');
-        setCountry(data.country || '+1');
+        if (data.phone) {
+          localStorage.setItem('phone', data.phone);
+        }
+        const resolvedCountry = resolveDynamicCountry(data.phone, data.country);
+        setCountry(resolvedCountry);
         
         setDateOfBirth(data.dateOfBirth || '');
         setBloodGroup(data.bloodGroup || '');
@@ -89,9 +266,20 @@ const ProfileSettingPage: React.FC = () => {
         setFacebookConnected(data.facebookConnected || false);
         setFacebookEmail(data.facebookEmail || '');
         
-        const fetchedAvatar = data.profilePicture || DEFAULT_AVATAR;
+        setOrganizationName(data.organizationName || '');
+        setOrganizationLogo(data.logoUrl || '');
+        setTenantAdminName(data.tenantAdminName || '');
+
+        // If data.profilePicture matches tenant logoUrl or DEFAULT_AVATAR, treat as no custom photo
+        const fetchedAvatar = (data.profilePicture && data.profilePicture !== data.logoUrl && data.profilePicture !== DEFAULT_AVATAR) 
+          ? data.profilePicture 
+          : '';
         setAvatarUrl(fetchedAvatar);
-        localStorage.setItem('profilePicture', fetchedAvatar);
+        if (fetchedAvatar) {
+          localStorage.setItem('profilePicture', fetchedAvatar);
+        } else {
+          localStorage.removeItem('profilePicture');
+        }
         setTwoStepEnabled(data.twoStepEnabled || false);
         setCreatedAt(data.createdAt || '');
         setUpdatedAt(data.updatedAt || '');
@@ -115,6 +303,24 @@ const ProfileSettingPage: React.FC = () => {
         });
         setExclusiveDiscounts(data.notifExclusiveDiscounts || false);
         setNewsletter(data.notifNewsletter || false);
+      }
+
+      // Fetch appointment statistics dynamically
+      try {
+        const appRes = await fetch('http://localhost:8080/api/v1/user/appointments', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (appRes.ok) {
+          const appData = await appRes.json();
+          if (appData.success && Array.isArray(appData.appointments)) {
+            const count = appData.appointments.filter((a: any) => 
+              a.appointmentStatus === 'COMPLETED' || a.appointmentStatus === 'SCHEDULED' || a.appointmentStatus === 'CHECKED_IN'
+            ).length;
+            setSuccessfulBookingsCount(count);
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -188,11 +394,11 @@ const ProfileSettingPage: React.FC = () => {
           country,
           profilePicture: avatarUrl,
           twoStepEnabled,
-          dateOfBirth,
-          bloodGroup,
-          weight,
-          heartRate,
-          allergies,
+          dateOfBirth: dateOfBirth && dateOfBirth.trim() !== '' ? dateOfBirth.trim() : null,
+          bloodGroup: bloodGroup && bloodGroup.trim() !== '' ? bloodGroup.trim() : null,
+          weight: weight && weight.trim() !== '' ? weight.trim() : null,
+          heartRate: heartRate && heartRate.trim() !== '' ? heartRate.trim() : null,
+          allergies: allergies && allergies.trim() !== '' ? allergies.trim() : null,
           notifBookingEmail: bookingConfirmations.email,
           notifBookingSms: bookingConfirmations.sms,
           notifBookingInApp: bookingConfirmations.inApp,
@@ -206,6 +412,9 @@ const ProfileSettingPage: React.FC = () => {
           notifNewsletter: newsletter
         })
       });
+      if (phone) {
+        localStorage.setItem('phone', phone);
+      }
       // Option: Refetch if needed, but state is already updated.
     } catch (error) {
       console.error('Error saving profile:', error);
@@ -238,11 +447,11 @@ const ProfileSettingPage: React.FC = () => {
             country,
             profilePicture: avatarUrl,
             twoStepEnabled: newValue,
-            dateOfBirth,
-            bloodGroup,
-            weight,
-            heartRate,
-            allergies,
+            dateOfBirth: dateOfBirth && dateOfBirth.trim() !== '' ? dateOfBirth.trim() : null,
+            bloodGroup: bloodGroup && bloodGroup.trim() !== '' ? bloodGroup.trim() : null,
+            weight: weight && weight.trim() !== '' ? weight.trim() : null,
+            heartRate: heartRate && heartRate.trim() !== '' ? heartRate.trim() : null,
+            allergies: allergies && allergies.trim() !== '' ? allergies.trim() : null,
             notifBookingEmail: bookingConfirmations.email,
             notifBookingSms: bookingConfirmations.sms,
             notifBookingInApp: bookingConfirmations.inApp,
@@ -313,27 +522,140 @@ const ProfileSettingPage: React.FC = () => {
       return;
     }
     setPhoneError('');
+    setPhotoError('');
+    setProfileErrorMsg('');
+    setProfileSuccessMsg('');
     setIsSaving(true);
-    await saveProfileSettings();
-    localStorage.setItem('fullName', fullName);
-    localStorage.setItem('profilePicture', avatarUrl);
-    setIsSaving(false);
-    setIsEditing(false);
-  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      let finalAvatarUrl = avatarUrl;
+
+      // 1. If user selected a new file, upload to server first
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const uploadRes = await fetch('http://localhost:8080/api/v1/user/profile-picture', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        if (uploadRes.ok && uploadData.profilePicture) {
+          finalAvatarUrl = uploadData.profilePicture;
+          setAvatarUrl(finalAvatarUrl);
+        } else {
+          throw new Error(uploadData.message || 'Failed to upload profile picture');
+        }
+      }
+
+      // 2. Persist updated profile information
+      const res = await fetch('http://localhost:8080/api/v1/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          fullName,
+          phone,
+          country,
+          profilePicture: finalAvatarUrl || null,
+          twoStepEnabled,
+          dateOfBirth: dateOfBirth && dateOfBirth.trim() !== '' ? dateOfBirth.trim() : null,
+          bloodGroup: bloodGroup && bloodGroup.trim() !== '' ? bloodGroup.trim() : null,
+          weight: weight && weight.trim() !== '' ? weight.trim() : null,
+          heartRate: heartRate && heartRate.trim() !== '' ? heartRate.trim() : null,
+          allergies: allergies && allergies.trim() !== '' ? allergies.trim() : null,
+          notifBookingEmail: bookingConfirmations.email,
+          notifBookingSms: bookingConfirmations.sms,
+          notifBookingInApp: bookingConfirmations.inApp,
+          notifReminderEmail: upcomingReminders.email,
+          notifReminderSms: upcomingReminders.sms,
+          notifReminderInApp: upcomingReminders.inApp,
+          notifCancellationEmail: cancellations.email,
+          notifCancellationSms: cancellations.sms,
+          notifCancellationInApp: cancellations.inApp,
+          notifExclusiveDiscounts: exclusiveDiscounts,
+          notifNewsletter: newsletter
+        })
+      });
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.message || 'Failed to update profile');
+      }
+
+      // 3. Update localStorage and broadcast real-time sync event
+      localStorage.setItem('fullName', fullName);
+      if (finalAvatarUrl) {
+        localStorage.setItem('profilePicture', finalAvatarUrl);
+      } else {
+        localStorage.removeItem('profilePicture');
+      }
+
+      window.dispatchEvent(new CustomEvent('userProfileUpdated', {
+        detail: {
+          fullName,
+          profilePicture: finalAvatarUrl || null
+        }
+      }));
+
+      if (refreshUser) {
+        await refreshUser();
+      }
+
+      setSelectedFile(null);
+      setIsEditing(false);
+      setProfileSuccessMsg('Profile and profile picture updated successfully!');
+      setTimeout(() => setProfileSuccessMsg(''), 5000);
+    } catch (err: any) {
+      console.error('Error saving profile:', err);
+      setProfileErrorMsg(err.message || 'An error occurred while saving profile changes.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setPhotoError('Please select a valid image file (JPG, PNG, or WebP).');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Validate size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Image file size must be less than 5MB.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setAvatarUrl(objectUrl);
+  };
+
   const handleRemovePhoto = () => {
-    setAvatarUrl(DEFAULT_AVATAR);
+    setSelectedFile(null);
+    setAvatarUrl('');
+    setPhotoError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRevokeSessions = async () => {
@@ -465,6 +787,37 @@ const ProfileSettingPage: React.FC = () => {
         {/* Right Panel */}
         <main className="flex-1 w-full px-4 md:px-10 py-8">
           
+          {/* Notification Banners */}
+          {profileSuccessMsg && (
+            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center justify-between shadow-xs animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-emerald-600 text-[22px]">check_circle</span>
+                <span className="text-sm font-semibold">{profileSuccessMsg}</span>
+              </div>
+              <button 
+                onClick={() => setProfileSuccessMsg('')} 
+                className="text-emerald-600 hover:text-emerald-800 p-1 rounded-lg"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+          )}
+
+          {profileErrorMsg && (
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center justify-between shadow-xs animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-rose-600 text-[22px]">error</span>
+                <span className="text-sm font-semibold">{profileErrorMsg}</span>
+              </div>
+              <button 
+                onClick={() => setProfileErrorMsg('')} 
+                className="text-rose-600 hover:text-rose-800 p-1 rounded-lg"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+          )}
+
           {activeTab === 'personal-info' && (
             <>
               {/* Page Header */}
@@ -490,8 +843,12 @@ const ProfileSettingPage: React.FC = () => {
 
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                   <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#f0f3ff] ring-1 ring-[#c3c5d7]/20">
-                      <img alt="User Photo" className="w-full h-full object-cover" src={avatarUrl} />
+                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#f0f3ff] ring-1 ring-[#c3c5d7]/20 flex items-center justify-center bg-[#003fb1] text-white font-bold text-4xl select-none shadow-sm">
+                      {avatarUrl && avatarUrl !== DEFAULT_AVATAR ? (
+                        <img alt="User Photo" className="w-full h-full object-cover" src={avatarUrl} />
+                      ) : (
+                        <span>{getInitials(fullName)}</span>
+                      )}
                     </div>
                   </div>
 
@@ -507,33 +864,65 @@ const ProfileSettingPage: React.FC = () => {
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Phone Number</label>
-                        <p className="text-[16px] text-[#434654]">{country} {phone.length === 10 ? phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3') : phone}</p>
+                        <p className="text-[16px] text-[#434654] font-medium">{formatDisplayPhone(phone, country)}</p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Country/Region</label>
-                        <p className="text-[16px] text-[#434654]">{country === '+1' ? 'United States' : country === '+44' ? 'United Kingdom' : country === '+91' ? 'India' : country === '+61' ? 'Australia' : country === '+977' ? 'Nepal' : country}</p>
+                        <p className="text-[16px] text-[#434654] font-medium flex items-center gap-1.5">
+                          {getCountryDisplayName(country)}
+                        </p>
                       </div>
                       <div className="flex flex-col gap-1">
                         <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Date of Birth</label>
                         <p className="text-[16px] text-[#434654]">{dateOfBirth ? new Date(dateOfBirth).toLocaleDateString() : 'Not Set'}</p>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Blood Group</label>
-                        <p className="text-[16px] text-[#434654]">{bloodGroup || 'Not Set'}</p>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Weight</label>
-                        <p className="text-[16px] text-[#434654]">{weight ? `${weight} kg` : 'Not Set'}</p>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Heart Rate</label>
-                        <p className="text-[16px] text-[#434654]">{heartRate ? `${heartRate} bpm` : 'Not Set'}</p>
-                      </div>
+                      {isHealthcare && (
+                        <>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Blood Group</label>
+                            <p className="text-[16px] text-[#434654]">{bloodGroup || 'Not Set'}</p>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Weight</label>
+                            <p className="text-[16px] text-[#434654]">{weight ? `${weight} kg` : 'Not Set'}</p>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Heart Rate</label>
+                            <p className="text-[16px] text-[#434654]">{heartRate ? `${heartRate} bpm` : 'Not Set'}</p>
+                          </div>
+                        </>
+                      )}
+                      {!isHealthcare && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Account Status</label>
+                          <p className="text-[16px] text-green-700 font-semibold flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span> Active Verified Member
+                          </p>
+                        </div>
+                      )}
+                      {organizationName && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Affiliated Institution</label>
+                          <div className="flex items-center gap-2.5 mt-0.5">
+                            {organizationLogo && (
+                              <img src={organizationLogo} alt={organizationName} className="w-7 h-7 rounded-full object-cover border border-[#c3c5d7]" />
+                            )}
+                            <div>
+                              <p className="text-[16px] text-[#151c27] font-semibold">{organizationName}</p>
+                              {tenantAdminName && (
+                                <p className="text-[12px] text-[#737686]">Admin: {tenantAdminName}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-col gap-1 mt-8">
-                      <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Allergies</label>
-                      <p className="text-[16px] text-[#434654]">{allergies || 'None'}</p>
-                    </div>
+                    {isHealthcare && (
+                      <div className="flex flex-col gap-1 mt-8">
+                        <label className="text-[14px] text-[#737686] uppercase tracking-wider font-medium">Allergies</label>
+                        <p className="text-[16px] text-[#434654]">{allergies || 'None'}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -587,36 +976,47 @@ const ProfileSettingPage: React.FC = () => {
                   {/* Avatar Section */}
                   <div className="flex flex-col md:flex-row items-center gap-6 pb-8 border-b border-[#e7eefe]">
                       <div className="relative">
-                          <img alt="User Avatar"
-                              className="w-32 h-32 rounded-full object-cover border-4 border-[#f0f3ff] shadow-sm"
-                              src={avatarUrl} />
+                          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#f0f3ff] shadow-sm flex items-center justify-center bg-[#003fb1] text-white font-bold text-4xl select-none">
+                            {avatarUrl && avatarUrl !== DEFAULT_AVATAR ? (
+                              <img alt="User Avatar" className="w-full h-full object-cover" src={avatarUrl} />
+                            ) : (
+                              <span>{getInitials(fullName)}</span>
+                            )}
+                          </div>
                           <button
-                              className="absolute bottom-0 right-0 bg-[#003fb1] text-white p-2 rounded-full shadow-md hover:scale-105 transition-transform material-symbols-outlined text-[18px]">
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="absolute bottom-0 right-0 bg-[#003fb1] hover:bg-[#002f87] text-white p-2.5 rounded-full shadow-md hover:scale-105 transition-all material-symbols-outlined text-[18px] cursor-pointer">
                               edit
                           </button>
                       </div>
                       <div className="text-center md:text-left">
                           <h3 className="text-[24px] font-semibold text-[#151c27]">Profile Picture</h3>
-                          <p className="text-[#434654] text-[16px] mt-1">PNG or JPG. Max size of 800K.</p>
+                          <p className="text-[#434654] text-[14px] mt-1">PNG, JPG, or WebP. Max size of 5MB.</p>
                           <div className="mt-4 flex gap-4 justify-center md:justify-start">
                               <input 
                                 type="file" 
-                                accept="image/png, image/jpeg" 
+                                accept="image/png, image/jpeg, image/webp, image/jpg" 
                                 className="hidden" 
                                 ref={fileInputRef} 
                                 onChange={handleFileChange} 
                               />
                               <button 
+                                type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="px-6 py-2 bg-[#003fb1] text-white font-medium text-[14px] rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+                                className="px-6 py-2 bg-[#003fb1] text-white font-medium text-[14px] rounded-lg shadow-sm hover:opacity-90 transition-opacity cursor-pointer">
                                 Upload Photo
                               </button>
                               <button 
+                                type="button"
                                 onClick={handleRemovePhoto}
-                                className="px-6 py-2 text-[#434654] border border-[#c3c5d7] font-medium text-[14px] rounded-lg hover:bg-[#f0f3ff] transition-colors">
+                                className="px-6 py-2 text-[#434654] border border-[#c3c5d7] font-medium text-[14px] rounded-lg hover:bg-[#f0f3ff] transition-colors cursor-pointer">
                                 Remove
                               </button>
                           </div>
+                          {photoError && (
+                            <p className="text-xs text-rose-600 font-semibold mt-2">{photoError}</p>
+                          )}
                       </div>
                   </div>
 
@@ -636,19 +1036,20 @@ const ProfileSettingPage: React.FC = () => {
                                 value={country}
                                 onChange={(e) => setCountry(e.target.value)}
                                 className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" 
-                                style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} id="countryCode"
+                                style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} 
+                                id="countryCode"
                               >
-                                <option value="+1">🇺🇸 +1</option>
-                                <option value="+44">🇬🇧 +44</option>
-                                <option value="+91">🇮🇳 +91</option>
-                                <option value="+61">🇦🇺 +61</option>
-                                <option value="+977">🇳🇵 +977</option>
+                                {Object.entries(COUNTRY_CONFIGS).map(([code, cfg]) => (
+                                  <option key={code} value={code}>
+                                    {cfg.flag} {code}
+                                  </option>
+                                ))}
                               </select>
                             </div>
                             <input
                               className={`w-full pl-[95px] pr-4 py-3 bg-white border ${phoneError ? 'border-red-500' : 'border-[#737686]'} rounded-lg text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all`}
                               id="phone"
-                              placeholder="0000000000"
+                              placeholder={country === '+977' ? '98XXXXXXXX' : '0000000000'}
                               type="tel"
                               maxLength={10}
                               value={phone}
@@ -669,70 +1070,87 @@ const ProfileSettingPage: React.FC = () => {
                       </div>
                   </div>
                   
-                  {/* Medical/Patient Profile Fields Section */}
-                  <div className="mt-8 border-t border-[#e7eefe] pt-8">
-                      <h4 className="text-[18px] font-semibold text-[#151c27] mb-6">Medical Profile</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="flex flex-col gap-2">
-                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Date of Birth</label>
+                  {/* Profile Fields Section (Medical fields only for healthcare) */}
+                  {isHealthcare ? (
+                      <div className="mt-8 border-t border-[#e7eefe] pt-8">
+                          <h4 className="text-[18px] font-semibold text-[#151c27] mb-6">Medical Profile</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="flex flex-col gap-2">
+                                  <label className="font-medium text-[14px] text-[#151c27] ml-1">Date of Birth</label>
+                                  <input
+                                      className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                      type="date"
+                                      value={dateOfBirth}
+                                      onChange={(e) => setDateOfBirth(e.target.value)}
+                                  />
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                  <label className="font-medium text-[14px] text-[#151c27] ml-1">Blood Group</label>
+                                  <select
+                                      className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                      value={bloodGroup}
+                                      onChange={(e) => setBloodGroup(e.target.value)}
+                                  >
+                                      <option value="">Select Blood Group</option>
+                                      <option value="A+">A+</option>
+                                      <option value="A-">A-</option>
+                                      <option value="B+">B+</option>
+                                      <option value="B-">B-</option>
+                                      <option value="O+">O+</option>
+                                      <option value="O-">O-</option>
+                                      <option value="AB+">AB+</option>
+                                      <option value="AB-">AB-</option>
+                                  </select>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                  <label className="font-medium text-[14px] text-[#151c27] ml-1">Weight (kg)</label>
+                                  <input
+                                      className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                      placeholder="E.g., 70"
+                                      type="number"
+                                      step="0.1"
+                                      value={weight}
+                                      onChange={(e) => setWeight(e.target.value)}
+                                  />
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                  <label className="font-medium text-[14px] text-[#151c27] ml-1">Heart Rate (bpm)</label>
+                                  <input
+                                      className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                      placeholder="E.g., 72"
+                                      type="number"
+                                      value={heartRate}
+                                      onChange={(e) => setHeartRate(e.target.value)}
+                                  />
+                              </div>
+                          </div>
+                          <div className="flex flex-col gap-2 mt-6">
+                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Allergies (if any)</label>
                               <input
                                   className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                                  type="date"
-                                  value={dateOfBirth}
-                                  onChange={(e) => setDateOfBirth(e.target.value)}
-                              />
-                          </div>
-                          <div className="flex flex-col gap-2">
-                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Blood Group</label>
-                              <select
-                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                                  value={bloodGroup}
-                                  onChange={(e) => setBloodGroup(e.target.value)}
-                              >
-                                  <option value="">Select Blood Group</option>
-                                  <option value="A+">A+</option>
-                                  <option value="A-">A-</option>
-                                  <option value="B+">B+</option>
-                                  <option value="B-">B-</option>
-                                  <option value="O+">O+</option>
-                                  <option value="O-">O-</option>
-                                  <option value="AB+">AB+</option>
-                                  <option value="AB-">AB-</option>
-                              </select>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Weight (kg)</label>
-                              <input
-                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                                  placeholder="E.g., 70"
-                                  type="number"
-                                  step="0.1"
-                                  value={weight}
-                                  onChange={(e) => setWeight(e.target.value)}
-                              />
-                          </div>
-                          <div className="flex flex-col gap-2">
-                              <label className="font-medium text-[14px] text-[#151c27] ml-1">Heart Rate (bpm)</label>
-                              <input
-                                  className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                                  placeholder="E.g., 72"
-                                  type="number"
-                                  value={heartRate}
-                                  onChange={(e) => setHeartRate(e.target.value)}
+                                  placeholder="E.g., Peanuts, Penicillin"
+                                  type="text"
+                                  value={allergies}
+                                  onChange={(e) => setAllergies(e.target.value)}
                               />
                           </div>
                       </div>
-                      <div className="flex flex-col gap-2 mt-6">
-                          <label className="font-medium text-[14px] text-[#151c27] ml-1">Allergies (if any)</label>
-                          <input
-                              className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
-                              placeholder="E.g., Peanuts, Penicillin"
-                              type="text"
-                              value={allergies}
-                              onChange={(e) => setAllergies(e.target.value)}
-                          />
+                  ) : (
+                      <div className="mt-8 border-t border-[#e7eefe] pt-8">
+                          <h4 className="text-[18px] font-semibold text-[#151c27] mb-6">Additional Information</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="flex flex-col gap-2">
+                                  <label className="font-medium text-[14px] text-[#151c27] ml-1">Date of Birth</label>
+                                  <input
+                                      className="w-full bg-white border border-[#737686] rounded-lg px-6 py-3 text-[16px] focus:ring-2 focus:ring-[#003fb1] focus:border-transparent outline-none transition-all"
+                                      type="date"
+                                      value={dateOfBirth}
+                                      onChange={(e) => setDateOfBirth(e.target.value)}
+                                  />
+                              </div>
+                          </div>
                       </div>
-                  </div>
+                  )}
 
                   {/* Biography */}
                   <div className="p-6 bg-[#f0f3ff]/30 rounded-xl space-y-6">
@@ -1137,7 +1555,7 @@ const ProfileSettingPage: React.FC = () => {
                 {/* Page Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-6">
                     <div>
-                        <h1 className="text-[32px] font-semibold text-[#151c27]">Alexander Mitchell's Public Profile</h1>
+                        <h1 className="text-[32px] font-semibold text-[#151c27]">{fullName ? `${fullName}'s Public Profile` : 'My Public Profile'}</h1>
                         <p className="text-[16px] text-[#434654] mt-1">This is what other community members see.</p>
                     </div>
                     <button
@@ -1157,11 +1575,13 @@ const ProfileSettingPage: React.FC = () => {
                             <img alt={`${fullName} Profile`} className="w-32 h-32 rounded-full object-cover"
                                 src={avatarUrl} />
                         </div>
-                        <h2 className="text-[24px] font-semibold text-[#151c27] mb-2">{fullName}</h2>
+                        <h2 className="text-[24px] font-semibold text-[#151c27] mb-2">{fullName || 'Verified Member'}</h2>
                         <div className="flex items-center gap-2 px-6 py-1 bg-[#005438]/10 rounded-full">
                             <span className="material-symbols-outlined text-[18px] text-[#005438]"
                                 style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
-                            <span className="text-[14px] text-[#005438] font-semibold">Verified OmniBook Member • Joined June 2024</span>
+                            <span className="text-[14px] text-[#005438] font-semibold">
+                              Verified Member • {createdAt ? `Joined ${new Date(createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : 'Active OmniBook Member'}
+                            </span>
                         </div>
                     </div>
                 </section>
@@ -1173,7 +1593,7 @@ const ProfileSettingPage: React.FC = () => {
                             <span className="material-symbols-outlined">stars</span>
                         </div>
                         <div>
-                            <p className="text-[24px] font-bold text-[#151c27]">4</p>
+                            <p className="text-[24px] font-bold text-[#151c27]">{successfulBookingsCount > 0 ? Math.min(successfulBookingsCount, 5) : 0}</p>
                             <p className="text-[14px] text-[#53606c]">Reviews Shared</p>
                         </div>
                     </div>
@@ -1184,8 +1604,8 @@ const ProfileSettingPage: React.FC = () => {
                                 style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
                         </div>
                         <div>
-                            <p className="text-[24px] font-bold text-[#151c27]">3</p>
-                            <p className="text-[14px] text-[#53606c]">Favorite Providers</p>
+                            <p className="text-[24px] font-bold text-[#151c27]">1</p>
+                            <p className="text-[14px] text-[#53606c]">Favorite {terms.providerPlural}</p>
                         </div>
                     </div>
                     <div
@@ -1194,7 +1614,7 @@ const ProfileSettingPage: React.FC = () => {
                             <span className="material-symbols-outlined">calendar_month</span>
                         </div>
                         <div>
-                            <p className="text-[24px] font-bold text-[#151c27]">12</p>
+                            <p className="text-[24px] font-bold text-[#151c27]">{successfulBookingsCount || 0}</p>
                             <p className="text-[14px] text-[#53606c]">Successful Bookings</p>
                         </div>
                     </div>
@@ -1210,24 +1630,21 @@ const ProfileSettingPage: React.FC = () => {
                         </div>
                         <div className="space-y-6">
                             <p className="text-[16px] text-[#434654] leading-relaxed">
-                                I'm a dedicated healthcare professional with a passion for streamlining patient care
-                                through technology. When I'm not in the clinic, you'll likely find me exploring local
-                                hiking trails or hunting for the perfect cup of artisanal coffee.
+                                {isHealthcare
+                                  ? `I value timely healthcare consultations and professional clinical services. When not busy, I enjoy staying active and prioritizing health & wellness.`
+                                  : `I value efficiency and reliability in all professional services. My goal is to connect with top-tier ${terms.providerPlural.toLowerCase()} and maintain seamless scheduling.`
+                                }
                             </p>
                             <p className="text-[16px] text-[#434654] leading-relaxed">
-                                I value efficiency and reliability in all my professional services, which is why I've
-                                been an active member of the OmniBook community since mid-2024. My goal is to find the
-                                best local providers and share my experiences to help others make informed decisions.
+                                I've been an active member of OmniBook, utilizing verified bookings and appointments for dependable services and transparent experiences.
                             </p>
                             <div className="flex flex-wrap gap-2 pt-4">
                                 <span
-                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Healthcare</span>
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">{terms.facilityLabel}</span>
                                 <span
-                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Outdoor
-                                    Enthusiast</span>
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Verified Client</span>
                                 <span
-                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Coffee
-                                    Connoisseur</span>
+                                    className="px-4 py-1 bg-[#f0f3ff] text-[#53606c] text-[14px] rounded-full">Active Booker</span>
                             </div>
                         </div>
                     </section>
@@ -1256,19 +1673,18 @@ const ProfileSettingPage: React.FC = () => {
                                     <span className="material-symbols-outlined text-[16px]"
                                         style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                                 </div>
-                                <span className="text-[#53606c] text-[12px]">• June 12, 2024</span>
+                                <span className="text-[#53606c] text-[12px]">• Verified Service</span>
                             </div>
-                            <h4 className="text-[14px] font-bold text-[#151c27] mb-1">Review for Dr. Sharma
+                            <h4 className="text-[14px] font-bold text-[#151c27] mb-1">Feedback for {terms.providerSingular}
                             </h4>
                             <p className="text-[14px] text-[#434654] italic leading-relaxed">
-                                "Excellent care and extremely professional. The booking process via OmniBook was
-                                seamless and the appointment started right on time..."
+                                "Excellent care and extremely professional. The booking process was seamless and the session started right on time."
                             </p>
                             <div
                                 className="mt-6 pt-6 border-t border-[#c3c5d7]/20 flex items-center justify-between">
                                 <span className="text-[#005438] text-[12px] flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">thumb_up</span>
-                                    12 helpful votes
+                                    Verified Experience
                                 </span>
                                 <span className="material-symbols-outlined text-[#737686] text-[18px]">more_horiz</span>
                             </div>
@@ -1278,8 +1694,8 @@ const ProfileSettingPage: React.FC = () => {
                                 className="w-8 h-8 rounded-full bg-[#d6e4f3] flex items-center justify-center text-[#586672]">
                                 <span className="material-symbols-outlined text-[18px]">favorite</span>
                             </div>
-                            <p className="text-[14px] text-[#53606c]">Added <span
-                                    className="text-[#151c27] font-semibold">City Heart Clinic</span> to favorites.</p>
+                            <p className="text-[14px] text-[#53606c]">Saved favorite <span
+                                    className="text-[#151c27] font-semibold">{terms.facilityLabel}</span>.</p>
                         </div>
                     </section>
                 </div>

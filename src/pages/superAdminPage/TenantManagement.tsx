@@ -71,7 +71,7 @@ export default function TenantManagement() {
                         {/* Page Heading */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 relative">
                             <div>
-                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary">Platform Overview</h2>
+                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-bold text-primary">Platform Overview</h2>
                                 <p className="font-body-md text-body-md text-on-surface-variant">Real-time surveillance across the OmniBook ecosystem.</p>
                             </div>
                             <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">

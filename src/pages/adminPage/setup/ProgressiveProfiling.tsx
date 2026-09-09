@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { applyTheme } from '../../../utils/themeUtils';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 const ProgressiveProfiling: React.FC = () => {
     const navigate = useNavigate();
-    
+    const terms = useOrganizationTerms();
+
     // State for Profiling Form
     const [logo, setLogo] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -14,7 +17,7 @@ const ProgressiveProfiling: React.FC = () => {
     const [openingTime, setOpeningTime] = useState('09:00');
     const [closingTime, setClosingTime] = useState('17:00');
     const [slotDuration, setSlotDuration] = useState(20);
-    
+
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
     const [tier, setTier] = useState('Enterprise');
@@ -34,9 +37,16 @@ const ProgressiveProfiling: React.FC = () => {
                     if (response.data.phoneContact) {
                         setPhoneContact(response.data.phoneContact);
                     }
+                    if (response.data.primaryAccentColor) {
+                        setPrimaryAccentColor(response.data.primaryAccentColor);
+                        applyTheme(response.data.primaryAccentColor);
+                    } else {
+                        applyTheme(primaryAccentColor);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to fetch tenant", err);
+                applyTheme(primaryAccentColor);
             }
         };
         fetchTenant();
@@ -89,6 +99,16 @@ const ProgressiveProfiling: React.FC = () => {
             });
 
             if (response.data.success) {
+                localStorage.setItem('primaryAccentColor', primaryAccentColor);
+                applyTheme(primaryAccentColor);
+                const savedLogo = response.data.profilePicture || response.data.tenant?.logoUrl;
+                if (savedLogo) {
+                    localStorage.setItem('profilePicture', savedLogo);
+                    localStorage.setItem('logoUrl', savedLogo);
+                    window.dispatchEvent(new CustomEvent('userProfileUpdated', { 
+                        detail: { profilePicture: savedLogo } 
+                    }));
+                }
                 // Navigate to Financial Setup (Step 3)
                 navigate('/admin/setup/financials');
             }
@@ -104,13 +124,13 @@ const ProgressiveProfiling: React.FC = () => {
             <main className="flex min-h-screen">
                 {/* LEFT SIDE: WHITE CONTENT */}
                 <div className="w-full lg:w-1/2 bg-surface-container-lowest flex flex-col p-12 overflow-y-auto border-r border-[#e0e3e5] relative">
-                    
+
                     {/* Header Section */}
                     <div className="flex items-center space-x-4 mb-16">
-                        <img 
-                            alt="OmniBook Logo" 
-                            className="h-8 w-auto object-contain" 
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP848Ao0ojfxhSN1LNdwd3KU_3YRNt-oogm_0NYHPpX9f3Kj6QdoWf2Y31mZLevEgGo4z74fgsa-J9Y7qB0Lyi_LAO4RppllH_zzT07iOT51SxNlubsUHixFCTTNXTsBL3ssxTtiBvZzVCDyAEjdskNornnV_GxVSN1r7LaWUi4SAat-rG1khKomVfEXqSz1gEVPKJO-AjUn0Pl5uKYEAec31kOmbNwwCFaTeWNMVn_ko5tqjHlPota70XrUZWip-RLtiq8JreqDg" 
+                        <img
+                            alt="OmniBook Logo"
+                            className="h-8 w-auto object-contain"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP848Ao0ojfxhSN1LNdwd3KU_3YRNt-oogm_0NYHPpX9f3Kj6QdoWf2Y31mZLevEgGo4z74fgsa-J9Y7qB0Lyi_LAO4RppllH_zzT07iOT51SxNlubsUHixFCTTNXTsBL3ssxTtiBvZzVCDyAEjdskNornnV_GxVSN1r7LaWUi4SAat-rG1khKomVfEXqSz1gEVPKJO-AjUn0Pl5uKYEAec31kOmbNwwCFaTeWNMVn_ko5tqjHlPota70XrUZWip-RLtiq8JreqDg"
                         />
                         <div className="h-6 w-px bg-outline-variant"></div>
                         <span className="font-sans text-sm font-semibold text-on-surface-variant tracking-widest uppercase">Workspace Setup</span>
@@ -121,11 +141,11 @@ const ProgressiveProfiling: React.FC = () => {
                         <div className="bg-secondary-fixed/30 p-6 rounded-xl border border-secondary-fixed">
                             <h1 className="font-sans text-2xl font-bold tracking-tight text-on-secondary-fixed mb-1">Welcome to your Dedicated Tenant Environment</h1>
                             <p className="font-sans text-base text-on-secondary-fixed-variant">
-                                Workspace: <span className="font-mono text-xs tracking-tight">Secure {tier} Instance</span><br/>
-                                Provisioned for: <span className="font-bold">Clinic Activation</span>
+                                Workspace: <span className="font-mono text-xs tracking-tight">Secure {tier} Instance</span><br />
+                                Provisioned for: <span className="font-bold">{terms.facilityLabel} Activation</span>
                             </p>
                         </div>
-                        
+
                         {/* Progress Tracker */}
                         <div className="flex items-center space-x-6 py-2 mb-10">
                             <div className="flex items-center space-x-2">
@@ -159,16 +179,16 @@ const ProgressiveProfiling: React.FC = () => {
                                     <span className="material-symbols-outlined text-[#00668a]">palette</span>
                                     <h2 className="text-[20px] font-semibold text-[#191c1e]">Institutional Brand</h2>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-1 gap-6">
-                                    <input 
-                                        type="file" 
+                                    <input
+                                        type="file"
                                         ref={fileInputRef}
-                                        className="hidden" 
+                                        className="hidden"
                                         accept="image/png, image/jpeg, image/svg+xml"
                                         onChange={handleLogoUpload}
                                     />
-                                    <div 
+                                    <div
                                         onClick={() => fileInputRef.current?.click()}
                                         className="group relative flex flex-col items-center justify-center border-2 border-dashed border-[#c6c6cd] rounded-xl p-8 transition-all cursor-pointer bg-[#f2f4f6]/30 overflow-hidden"
                                         style={{ borderColor: logoPreview ? primaryAccentColor : '#c6c6cd' }}
@@ -183,15 +203,18 @@ const ProgressiveProfiling: React.FC = () => {
                                             </>
                                         )}
                                     </div>
-                                    
+
                                     <div className="space-y-3">
                                         <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Primary Accent Color</label>
                                         <div className="flex items-center gap-4">
                                             <div className="relative h-12 flex-grow flex items-center px-4 rounded-lg border border-[#c6c6cd] bg-white">
-                                                <input 
-                                                    type="color" 
+                                                <input
+                                                    type="color"
                                                     value={primaryAccentColor}
-                                                    onChange={(e) => setPrimaryAccentColor(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setPrimaryAccentColor(e.target.value);
+                                                        applyTheme(e.target.value);
+                                                    }}
                                                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                                                 />
                                                 <div className="w-6 h-6 rounded mr-3 shadow-sm border border-black/10" style={{ backgroundColor: primaryAccentColor }}></div>
@@ -200,9 +223,13 @@ const ProgressiveProfiling: React.FC = () => {
                                             </div>
                                             <div className="flex gap-2 p-1 border border-[#c6c6cd] rounded-lg bg-white">
                                                 {colorHistory.map(color => (
-                                                    <button 
+                                                    <button
                                                         key={color}
-                                                        onClick={() => setPrimaryAccentColor(color)}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setPrimaryAccentColor(color);
+                                                            applyTheme(color);
+                                                        }}
                                                         className="w-10 h-10 rounded-md border border-black/10 shadow-sm transition-transform hover:scale-110"
                                                         style={{ backgroundColor: color }}
                                                     />
@@ -219,14 +246,14 @@ const ProgressiveProfiling: React.FC = () => {
                                     <span className="material-symbols-outlined text-[#00668a]">location_on</span>
                                     <h2 className="text-[20px] font-semibold text-[#191c1e]">Regional Settings</h2>
                                 </div>
-                                
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Phone Contact</label>
                                         <div className="relative">
-                                            <input 
+                                            <input
                                                 className="w-full h-12 px-4 rounded-lg border border-[#c6c6cd] outline-none text-[14px]"
-                                                type="text" 
+                                                type="text"
                                                 value={phoneContact}
                                                 onChange={(e) => setPhoneContact(e.target.value)}
                                                 style={{ borderColor: '#c6c6cd' }}
@@ -236,7 +263,7 @@ const ProgressiveProfiling: React.FC = () => {
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Timezone</label>
-                                        <select 
+                                        <select
                                             className="w-full h-12 px-4 rounded-lg border border-[#c6c6cd] text-[14px] outline-none appearance-none bg-white"
                                             value={timezone}
                                             onChange={(e) => setTimezone(e.target.value)}
@@ -257,14 +284,14 @@ const ProgressiveProfiling: React.FC = () => {
                                     <span className="material-symbols-outlined text-[#00668a]">schedule</span>
                                     <h2 className="text-[20px] font-semibold text-[#191c1e]">Operational Hours</h2>
                                 </div>
-                                
+
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-4">
                                         <div className="flex-grow space-y-2">
                                             <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Opening Time</label>
-                                            <input 
+                                            <input
                                                 className="w-full h-12 px-4 rounded-lg border border-[#c6c6cd] outline-none text-[13px] font-medium font-mono"
-                                                type="time" 
+                                                type="time"
                                                 value={openingTime}
                                                 onChange={(e) => setOpeningTime(e.target.value)}
                                             />
@@ -274,18 +301,18 @@ const ProgressiveProfiling: React.FC = () => {
                                         </div>
                                         <div className="flex-grow space-y-2">
                                             <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Closing Time</label>
-                                            <input 
+                                            <input
                                                 className="w-full h-12 px-4 rounded-lg border border-[#c6c6cd] outline-none text-[13px] font-medium font-mono"
-                                                type="time" 
+                                                type="time"
                                                 value={closingTime}
                                                 onChange={(e) => setClosingTime(e.target.value)}
                                             />
                                         </div>
                                     </div>
-                                    
+
                                     <div className="space-y-2">
                                         <label className="text-[12px] font-semibold text-[#45464d] uppercase tracking-wider">Slot Duration (Minutes)</label>
-                                        <select 
+                                        <select
                                             className="w-full h-12 px-4 rounded-lg border border-[#c6c6cd] outline-none text-[14px] bg-white"
                                             value={slotDuration}
                                             onChange={(e) => setSlotDuration(parseInt(e.target.value))}
@@ -304,7 +331,7 @@ const ProgressiveProfiling: React.FC = () => {
 
                     {/* Footer */}
                     <footer className="mt-auto p-8 border-t border-[#e0e3e5] flex justify-end bg-white sticky bottom-0 z-20">
-                        <button 
+                        <button
                             onClick={handleSaveAndProceed}
                             disabled={isSaving}
                             className="bg-[#0F172A] hover:bg-[#1E293B] disabled:opacity-70 text-white px-8 h-14 rounded-xl flex items-center gap-3 transition-all active:scale-[0.98] shadow-lg shadow-slate-200"
@@ -324,13 +351,13 @@ const ProgressiveProfiling: React.FC = () => {
                         <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[120px]" style={{ backgroundColor: `${primaryAccentColor}20` }}></div>
                         <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full blur-[100px]" style={{ backgroundColor: `${primaryAccentColor}30` }}></div>
                     </div>
-                    
+
                     <div className="z-10 w-full max-w-xl px-8 flex flex-col items-center">
                         <div className="flex items-center gap-2 mb-8 bg-white/50 backdrop-blur px-4 py-2 rounded-full border border-white/80 shadow-sm">
                             <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: primaryAccentColor }}></span>
                             <span className="text-[12px] font-semibold text-[#45464d] uppercase tracking-widest">Live White-Label Preview</span>
                         </div>
-                        
+
                         {/* Mockup Page Container */}
                         <div className="w-full aspect-[4/5] bg-white rounded-2xl shadow-[0_32px_64px_-12px_rgba(15,23,42,0.12)] border border-[#e0e3e5] overflow-hidden flex flex-col transform transition-transform hover:scale-[1.01] duration-500">
                             {/* Preview Nav */}
@@ -350,7 +377,7 @@ const ProgressiveProfiling: React.FC = () => {
                                     <div className="h-2 w-12 bg-[#eceef0] rounded"></div>
                                 </div>
                             </div>
-                            
+
                             {/* Preview Content */}
                             <div className="p-8 flex-grow space-y-8 overflow-y-auto">
                                 <div className="space-y-2">
@@ -360,7 +387,7 @@ const ProgressiveProfiling: React.FC = () => {
                                     <h3 className="text-[22px] font-bold text-[#191c1e]">Book an Appointment</h3>
                                     <p className="text-[14px] text-[#45464d]">Available slots for specialized diagnostic care.</p>
                                 </div>
-                                
+
                                 {/* Calendar Mock */}
                                 <div className="grid grid-cols-7 gap-2">
                                     <div className="aspect-square bg-[#f2f4f6] rounded border border-[#e0e3e5] flex items-center justify-center font-mono text-[11px] text-[#76777d]">12</div>
@@ -371,7 +398,7 @@ const ProgressiveProfiling: React.FC = () => {
                                     <div className="aspect-square bg-[#f2f4f6] rounded border border-[#e0e3e5] flex items-center justify-center font-mono text-[11px] text-[#76777d]">17</div>
                                     <div className="aspect-square bg-[#f2f4f6] rounded border border-[#e0e3e5] flex items-center justify-center font-mono text-[11px] text-[#76777d]">18</div>
                                 </div>
-                                
+
                                 {/* Time Slots Mock */}
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center">
@@ -393,7 +420,7 @@ const ProgressiveProfiling: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* CTA Mock */}
                                 <div className="pt-4">
                                     <div className="h-14 w-full rounded-xl flex items-center justify-center text-white text-[12px] font-semibold uppercase tracking-widest shadow-lg shadow-black/10" style={{ backgroundColor: primaryAccentColor }}>
@@ -401,7 +428,7 @@ const ProgressiveProfiling: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Preview Footer */}
                             <div className="p-4 bg-[#f2f4f6] border-t border-[#e0e3e5] flex justify-center">
                                 <div className="flex items-center gap-2 opacity-50">
@@ -410,10 +437,10 @@ const ProgressiveProfiling: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* Annotation */}
                         <div className="mt-8 text-center space-y-2">
-                            <p className="text-[14px] text-[#45464d]">Changes to your institutional profile are reflected <br/>instantly in your white-label patient portal.</p>
+                            <p className="text-[14px] text-[#45464d]">Changes to your institutional profile are reflected <br />instantly in your white-label patient portal.</p>
                         </div>
                     </div>
                 </div>

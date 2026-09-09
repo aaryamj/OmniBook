@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
+
+export interface ClinicScheduleMatrixHandle {
+    save: () => Promise<boolean>;
+}
 
 interface DailySchedule {
     id?: number;
@@ -18,12 +22,15 @@ interface ScheduleSettings {
     schedules: DailySchedule[];
 }
 
-interface ClinicScheduleMatrixProps {
+export interface ClinicScheduleMatrixProps {
     scheduleData?: any;
     onSave?: (schedules: any[]) => Promise<void>;
+    isProvider?: boolean;
+    isScheduleDelegated?: boolean;
 }
 
-export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps) {
+const ClinicScheduleMatrix = forwardRef<ClinicScheduleMatrixHandle, ClinicScheduleMatrixProps>((props, ref) => {
+    const isProvider = props?.isProvider ?? false;
     const [timezone, setTimezone] = useState("Asia/Kathmandu");
     const [schedules, setSchedules] = useState<DailySchedule[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,28 +38,49 @@ export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps)
     const [successMessage, setSuccessMessage] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+    useImperativeHandle(ref, () => ({
+        save: handleSave
+    }));
+
     useEffect(() => {
         fetchScheduleSettings();
-    }, []);
+    }, [isProvider]);
 
     const fetchScheduleSettings = async () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:8080/api/v1/admin/schedule', {
+            const endpoint = isProvider 
+                ? 'http://localhost:8080/api/v1/provider/schedule/me'
+                : 'http://localhost:8080/api/v1/admin/schedule';
+            const response = await axios.get(endpoint, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data: ScheduleSettings = response.data;
-            setTimezone(data.timezone);
+            setTimezone(data.timezone || "Asia/Kathmandu");
             
-            // Format time strings from HH:mm:ss to HH:mm
-            const formattedSchedules = data.schedules.map(schedule => ({
-                ...schedule,
-                openingTime: schedule.openingTime ? schedule.openingTime.substring(0, 5) : "09:00",
-                closingTime: schedule.closingTime ? schedule.closingTime.substring(0, 5) : "17:00",
-                breakStartTime: schedule.breakStartTime ? schedule.breakStartTime.substring(0, 5) : "13:00",
-                breakEndTime: schedule.breakEndTime ? schedule.breakEndTime.substring(0, 5) : "14:00"
-            }));
+            const parseTime = (val: any, fallback: string) => {
+                if (!val) return fallback;
+                if (typeof val === 'string') return val.length >= 5 ? val.substring(0, 5) : val;
+                if (Array.isArray(val) && val.length >= 2) {
+                    return `${String(val[0]).padStart(2, '0')}:${String(val[1]).padStart(2, '0')}`;
+                }
+                return fallback;
+            };
+
+            const formattedSchedules = (data.schedules || []).map(schedule => {
+                const activeVal = (schedule as any).isActive !== undefined 
+                    ? (schedule as any).isActive 
+                    : (schedule as any).active;
+                return {
+                    ...schedule,
+                    isActive: Boolean(activeVal),
+                    openingTime: parseTime(schedule.openingTime, "09:00"),
+                    closingTime: parseTime(schedule.closingTime, "17:00"),
+                    breakStartTime: parseTime(schedule.breakStartTime, "13:00"),
+                    breakEndTime: parseTime(schedule.breakEndTime, "14:00")
+                };
+            });
             
             // Sort schedules properly
             const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -74,44 +102,71 @@ export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps)
             setErrorMessage('');
             const token = localStorage.getItem('token');
             
-            // Validate break times
+            // Validate break times only for active days
             for (const s of schedules) {
                 if (s.isActive) {
                     if (s.breakStartTime < s.openingTime || s.breakEndTime > s.closingTime) {
                         setErrorMessage(`Break time must be within operating hours on ${s.dayOfWeek}`);
                         setSaving(false);
-                        return;
+                        return false;
                     }
                     if (s.breakStartTime >= s.breakEndTime) {
                         setErrorMessage(`Break start time must be before break end time on ${s.dayOfWeek}`);
                         setSaving(false);
-                        return;
+                        return false;
                     }
                 }
             }
             
-            // Convert times back to HH:mm:ss if needed (Spring accepts HH:mm or HH:mm:ss)
-            const payload: ScheduleSettings = {
+            // Format to standard HH:mm:ss for backend LocalTime parsing
+            const formatForBackend = (val: string, fallback: string) => {
+                if (!val) return fallback;
+                if (val.length === 5) return `${val}:00`;
+                return val;
+            };
+
+            const payload: any = {
                 timezone,
-                slotDuration: 30, // Default value since we removed it from UI
+                slotDuration: 30,
                 schedules: schedules.map(s => ({
-                    ...s,
-                    openingTime: s.openingTime.length === 5 ? `${s.openingTime}:00` : s.openingTime,
-                    closingTime: s.closingTime.length === 5 ? `${s.closingTime}:00` : s.closingTime,
-                    breakStartTime: s.breakStartTime.length === 5 ? `${s.breakStartTime}:00` : s.breakStartTime,
-                    breakEndTime: s.breakEndTime.length === 5 ? `${s.breakEndTime}:00` : s.breakEndTime,
+                    id: s.id,
+                    dayOfWeek: s.dayOfWeek,
+                    isActive: Boolean(s.isActive),
+                    active: Boolean(s.isActive),
+                    openingTime: formatForBackend(s.openingTime, "09:00:00"),
+                    closingTime: formatForBackend(s.closingTime, "17:00:00"),
+                    breakStartTime: formatForBackend(s.breakStartTime, "13:00:00"),
+                    breakEndTime: formatForBackend(s.breakEndTime, "14:00:00"),
+                    closedMessage: s.closedMessage
                 }))
             };
+
+            if (props?.isScheduleDelegated !== undefined) {
+                payload.isScheduleDelegated = props.isScheduleDelegated;
+            }
             
-            await axios.put('http://localhost:8080/api/v1/admin/schedule', payload, {
+            const endpoint = isProvider 
+                ? 'http://localhost:8080/api/v1/provider/schedule/me'
+                : 'http://localhost:8080/api/v1/admin/schedule';
+
+            await axios.put(endpoint, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            if (props?.onSave) {
+                await props.onSave(payload.schedules);
+            }
             
-            setSuccessMessage('Schedule settings saved successfully!');
-            setTimeout(() => setSuccessMessage(''), 3000);
-        } catch (error) {
+            setSuccessMessage('Operating hours and provider schedules synchronized successfully!');
+            setTimeout(() => setSuccessMessage(''), 5000);
+            await fetchScheduleSettings();
+            return true;
+        } catch (error: any) {
             console.error("Failed to save schedule settings", error);
-            setErrorMessage("Failed to save schedule settings.");
+            const msg = error.response?.data?.message || "Failed to save schedule settings.";
+            setErrorMessage(msg);
+            setTimeout(() => setErrorMessage(''), 5000);
+            return false;
         } finally {
             setSaving(false);
         }
@@ -149,8 +204,6 @@ export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps)
                 </div>
                 
                 <div className="flex items-center gap-3">
-                    {successMessage && <span className="text-green-600 text-sm font-medium">{successMessage}</span>}
-                    {errorMessage && <span className="text-red-600 text-sm font-medium">{errorMessage}</span>}
                     <button 
                         onClick={handleSave}
                         disabled={saving}
@@ -161,6 +214,37 @@ export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps)
                     </button>
                 </div>
             </div>
+
+            {/* Attractive Horizontal Message Banner */}
+            {successMessage && (
+                <div className="mx-6 mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-emerald-600 text-2xl">check_circle</span>
+                        <div>
+                            <p className="font-bold text-sm text-emerald-900">Operating Schedule Synchronized</p>
+                            <p className="text-xs text-emerald-700">{successMessage}</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setSuccessMessage('')} className="p-1 hover:bg-emerald-100 rounded text-emerald-600 transition-colors">
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+            )}
+
+            {errorMessage && (
+                <div className="mx-6 mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center gap-3">
+                        <span className="material-symbols-outlined text-rose-600 text-2xl">error</span>
+                        <div>
+                            <p className="font-bold text-sm text-rose-900">Schedule Update Failed</p>
+                            <p className="text-xs text-rose-700">{errorMessage}</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setErrorMessage('')} className="p-1 hover:bg-rose-100 rounded text-rose-600 transition-colors">
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+            )}
 
             {/* WEEKLY MATRIX */}
             <div className="p-6">
@@ -245,4 +329,6 @@ export default function ClinicScheduleMatrix(_props?: ClinicScheduleMatrixProps)
             </div>
         </div>
     );
-}
+});
+
+export default ClinicScheduleMatrix;

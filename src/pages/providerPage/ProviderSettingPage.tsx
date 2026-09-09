@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ProviderTopNavigation from './components/ProviderTopNavigation';
+import ProviderSidebar from './components/ProviderSidebar';
 import ClinicScheduleMatrix from '../adminPage/components/ClinicScheduleMatrix';
+import { useOrganizationTerms } from '../../utils/organizationTerms';
+import { applyTheme } from '../../utils/themeUtils';
 
 export default function ProviderSettingPage() {
+    const terms = useOrganizationTerms();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'profile' | 'schedule' | 'security'>('profile');
     const [profileData, setProfileData] = useState<any>(null);
@@ -19,7 +23,7 @@ export default function ProviderSettingPage() {
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToastMessage(message);
         setToastType(type);
-        setTimeout(() => setToastMessage(null), 3000);
+        setTimeout(() => setToastMessage(null), 3500);
     };
 
     // Profile States
@@ -31,16 +35,28 @@ export default function ProviderSettingPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-    const handleLogout = (e: React.MouseEvent) => {
-        e.preventDefault();
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        navigate('/login');
-    };
+    // Security / Password States
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+    // Theme & branding sync
+    useEffect(() => {
+        const cachedColor = localStorage.getItem('primaryAccentColor');
+        if (cachedColor) {
+            applyTheme(cachedColor);
+        }
+    }, []);
 
     useEffect(() => {
-        const role = localStorage.getItem('role');
-        if (role !== 'service_provider') {
+        const token = localStorage.getItem('token');
+        const role = (localStorage.getItem('role') || '').toLowerCase();
+        const isProvider = role === 'service_provider' || role === 'provider' || role === 'role_provider';
+        if (!token || !isProvider) {
             navigate('/login');
         } else {
             fetchProfileData();
@@ -78,6 +94,9 @@ export default function ProviderSettingPage() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setScheduleData(response.data);
+            if (response.data?.isScheduleDelegated !== undefined && response.data?.isScheduleDelegated !== null) {
+                setIsScheduleDelegated(response.data.isScheduleDelegated);
+            }
         } catch (error) {
             console.error("Failed to fetch schedule data", error);
         }
@@ -91,8 +110,8 @@ export default function ProviderSettingPage() {
         }
     };
 
-    const handleUpdateProfile = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleUpdateProfile = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         setIsSaving(true);
         try {
             const token = localStorage.getItem('token');
@@ -104,21 +123,32 @@ export default function ProviderSettingPage() {
                 isScheduleDelegated
             };
 
-            await axios.put('http://localhost:8080/api/v1/provider/settings/profile', payload, {
+            const res = await axios.put('http://localhost:8080/api/v1/provider/settings/profile', payload, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
+            if (fullName) {
+                localStorage.setItem('fullName', fullName);
+            }
 
             if (selectedFile) {
                 const formData = new FormData();
                 formData.append('file', selectedFile);
-                await axios.post('http://localhost:8080/api/v1/provider/settings/profile/picture', formData, {
+                const picRes = await axios.post('http://localhost:8080/api/v1/provider/settings/profile/picture', formData, {
                     headers: { 
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
                     }
                 });
+                if (picRes.data?.profilePictureUrl) {
+                    setPreviewUrl(picRes.data.profilePictureUrl);
+                }
+            } else if (res.data?.profilePictureUrl) {
+                setPreviewUrl(res.data.profilePictureUrl);
             }
             
+            // Broadcast event so top navigation immediately updates
+            window.dispatchEvent(new Event('userProfileUpdated'));
             showToast("Profile updated successfully!", "success");
         } catch (error: any) {
             showToast(error.response?.data?.message || "Failed to update profile", "error");
@@ -127,29 +157,76 @@ export default function ProviderSettingPage() {
         }
     };
 
-    const handleUpdateSchedule = async (schedules: any[]) => {
-        setIsSaving(true);
+    const handleToggleDelegation = async (delegated: boolean) => {
+        setIsScheduleDelegated(delegated);
         try {
             const token = localStorage.getItem('token');
-            const payload = { schedules };
-
-            const response = await axios.put('http://localhost:8080/api/v1/provider/schedule/me', payload, {
+            await axios.put('http://localhost:8080/api/v1/provider/settings/profile', {
+                isScheduleDelegated: delegated
+            }, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            
-            setScheduleData(response.data);
-            showToast("Schedule updated successfully!", "success");
+            await axios.put('http://localhost:8080/api/v1/provider/schedule/me', {
+                isScheduleDelegated: delegated
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            showToast(`Schedule delegation ${delegated ? 'enabled' : 'disabled'} successfully!`, "success");
         } catch (error: any) {
-            showToast(error.response?.data?.message || "Failed to update schedule", "error");
+            showToast("Failed to update delegation setting", "error");
+            setIsScheduleDelegated(!delegated);
+        }
+    };
+
+    const handleUpdatePassword = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!currentPassword) {
+            showToast("Please enter your current password", "error");
+            return;
+        }
+        if (!newPassword) {
+            showToast("Please enter a new password", "error");
+            return;
+        }
+        if (newPassword.length < 6) {
+            showToast("New password must be at least 6 characters long", "error");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showToast("New password and confirmation do not match", "error");
+            return;
+        }
+
+        setIsUpdatingPassword(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.put('http://localhost:8080/api/v1/user/password', {
+                currentPassword,
+                newPassword,
+                confirmPassword
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.data?.success) {
+                showToast("Password updated successfully!", "success");
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+            } else {
+                showToast(response.data?.message || "Failed to update password", "error");
+            }
+        } catch (error: any) {
+            showToast(error.response?.data?.message || "Failed to update password", "error");
         } finally {
-            setIsSaving(false);
+            setIsUpdatingPassword(false);
         }
     };
 
     return (
-        <div className="superadmin-theme">
+        <div className="tenant-theme">
             {toastMessage && (
-                <div className={`fixed top-24 right-8 z-50 px-6 py-3 rounded-lg shadow-lg font-medium text-white transition-all transform ${toastType === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+                <div className={`fixed top-24 right-8 z-50 px-6 py-3 rounded-lg shadow-lg font-medium text-white transition-all transform animate-bounce ${toastType === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined">{toastType === 'success' ? 'check_circle' : 'error'}</span>
                         {toastMessage}
@@ -159,47 +236,7 @@ export default function ProviderSettingPage() {
             <div className="bg-background font-body-md text-on-surface antialiased min-h-screen relative">
                 
                 {/* Sidebar */}
-                <nav className="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 bg-[#f0f3ff] border-r border-[#c3c5d7]/30 py-6 px-4 flex flex-col gap-2 z-40 hidden md:flex">
-                    <div className="mb-4 px-4">
-                    <div className="flex items-center gap-4">
-                        <span className="material-symbols-outlined text-[#003fb1]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        dashboard
-                        </span>
-                        <span className="text-[24px] text-[#003fb1] font-bold">Portal</span>
-                    </div>
-                    </div>
-                    <NavLink to="/provider-dashboard" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                    <span className="material-symbols-outlined text-[18px]">dashboard</span>
-                    Dashboard
-                    </NavLink>
-                    <NavLink to="/master-calendar" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                    <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-                    Master Calendar
-                    </NavLink>
-                    <NavLink to="/patients" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                    <span className="material-symbols-outlined text-[18px]">group</span>
-                    Patients/Clients
-                    </NavLink>
-                    <NavLink to="/services" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                    <span className="material-symbols-outlined text-[18px]">medical_services</span>
-                    Services Manager
-                    </NavLink>
-                    <NavLink to="/analytics" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                    <span className="material-symbols-outlined text-[18px]">bar_chart</span>
-                    Revenue & Analytics
-                    </NavLink>
-            
-                    <div className="mt-auto flex flex-col gap-1">
-                    <NavLink to="/provider/settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-                        <span className="material-symbols-outlined text-[18px]">settings</span>
-                        Settings
-                    </NavLink>
-                    <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all text-[#ba1a1a] hover:bg-[#ffdad6]/20 text-left">
-                        <span className="material-symbols-outlined text-[18px]">logout</span>
-                        Log Out
-                    </button>
-                    </div>
-                </nav>
+                <ProviderSidebar />
 
                 <ProviderTopNavigation />
                 
@@ -210,7 +247,7 @@ export default function ProviderSettingPage() {
                             <div className="flex items-center gap-2 text-on-surface-variant mb-2">
                                 <span className="font-label-md text-label-md uppercase tracking-widest cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/provider-dashboard')}>Settings</span>
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
-                                <span className="font-label-md text-label-md uppercase tracking-widest text-secondary font-bold">
+                                <span className="font-label-md text-label-md uppercase tracking-widest text-primary font-bold">
                                     {activeTab === 'profile' ? 'Profile Settings' : activeTab === 'schedule' ? 'My Schedule' : 'Security'}
                                 </span>
                             </div>
@@ -219,24 +256,26 @@ export default function ProviderSettingPage() {
                             </h2>
                             <p className="text-on-surface-variant mt-1">
                                 {activeTab === 'profile' 
-                                    ? 'Manage your professional details and contact information.' 
+                                    ? 'Manage your professional details, credentials, and contact information.' 
                                     : activeTab === 'schedule'
-                                    ? 'Configure your working hours and delegate schedule management.'
-                                    : 'Manage your password and security settings.'
+                                    ? 'Configure your weekly availability, break times, and schedule delegation.'
+                                    : 'Manage your password and security credentials.'
                                 }
                             </p>
                         </div>
-                        <button 
-                            onClick={(e) => {
-                                if (activeTab === 'profile') handleUpdateProfile(e);
-                                else if (activeTab === 'schedule') handleUpdateSchedule(scheduleData?.schedules || []);
-                            }}
-                            disabled={isSaving}
-                            className="bg-primary hover:bg-primary/90 text-on-primary px-6 py-2.5 rounded font-label-md text-label-md flex items-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">save</span>
-                            {isSaving ? 'Saving...' : 'Save Settings'}
-                        </button>
+                        {activeTab !== 'schedule' && (
+                            <button 
+                                onClick={(e) => {
+                                    if (activeTab === 'profile') handleUpdateProfile(e);
+                                    else if (activeTab === 'security') handleUpdatePassword(e);
+                                }}
+                                disabled={isSaving || isUpdatingPassword}
+                                className="bg-primary hover:brightness-110 text-on-primary px-6 py-2.5 rounded-xl font-label-md text-label-md flex items-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">save</span>
+                                {isSaving || isUpdatingPassword ? 'Saving...' : (activeTab === 'security' ? 'Update Password' : 'Save Settings')}
+                            </button>
+                        )}
                     </section>
 
                     {/* Dual Column Workspace */}
@@ -250,7 +289,7 @@ export default function ProviderSettingPage() {
                                 <nav className="flex flex-col">
                                     <button 
                                         onClick={() => setActiveTab('profile')}
-                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md ${activeTab === 'profile' ? 'bg-secondary-container/10 border-r-4 border-secondary text-secondary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
+                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md cursor-pointer ${activeTab === 'profile' ? 'bg-primary/10 border-r-4 border-primary text-primary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
                                     >
                                         <span className="flex items-center gap-3">
                                             <span className="material-symbols-outlined" style={{fontVariationSettings: activeTab === 'profile' ? "'FILL' 1" : ""}}>domain</span>
@@ -259,7 +298,7 @@ export default function ProviderSettingPage() {
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('schedule')}
-                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md ${activeTab === 'schedule' ? 'bg-secondary-container/10 border-r-4 border-secondary text-secondary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
+                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md cursor-pointer ${activeTab === 'schedule' ? 'bg-primary/10 border-r-4 border-primary text-primary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
                                     >
                                         <span className="flex items-center gap-3">
                                             <span className="material-symbols-outlined" style={{fontVariationSettings: activeTab === 'schedule' ? "'FILL' 1" : ""}}>schedule</span>
@@ -268,7 +307,7 @@ export default function ProviderSettingPage() {
                                     </button>
                                     <button 
                                         onClick={() => setActiveTab('security')}
-                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md ${activeTab === 'security' ? 'bg-secondary-container/10 border-r-4 border-secondary text-secondary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
+                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md cursor-pointer ${activeTab === 'security' ? 'bg-primary/10 border-r-4 border-primary text-primary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
                                     >
                                         <span className="flex items-center gap-3">
                                             <span className="material-symbols-outlined" style={{fontVariationSettings: activeTab === 'security' ? "'FILL' 1" : ""}}>security</span>
@@ -304,7 +343,7 @@ export default function ProviderSettingPage() {
                                                                 <span className="material-symbols-outlined text-4xl text-on-surface-variant/50">person</span>
                                                             )}
                                                         </div>
-                                                        <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-on-primary rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors">
+                                                        <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-on-primary rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-primary/90 transition-colors" title="Change Headshot">
                                                             <span className="material-symbols-outlined text-[16px]">edit</span>
                                                             <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                                                         </label>
@@ -312,7 +351,7 @@ export default function ProviderSettingPage() {
                                                     <div>
                                                         <h4 className="font-label-lg text-on-surface">Profile Picture</h4>
                                                         <p className="text-sm text-on-surface-variant mt-1">Upload a professional headshot.</p>
-                                                        <p className="text-xs text-on-surface-variant/70 mt-1">Recommended size: 400x400px</p>
+                                                        <p className="text-xs text-on-surface-variant/70 mt-1">Recommended size: 400x400px (JPG, PNG, WebP)</p>
                                                     </div>
                                                 </div>
 
@@ -353,29 +392,38 @@ export default function ProviderSettingPage() {
                                                     <h3 className="font-title-lg text-primary mb-6">Professional Credentials</h3>
                                                     <div className="grid grid-cols-2 gap-6">
                                                         <div>
-                                                            <label className="block text-sm font-medium text-on-surface-variant mb-2">Specialization</label>
+                                                            <label className="block text-sm font-medium text-on-surface-variant mb-2">{terms.specialtyLabel}</label>
                                                             <input 
                                                                 type="text" 
                                                                 value={specialization}
                                                                 onChange={(e) => setSpecialization(e.target.value)}
-                                                                placeholder="e.g. General Practice, Dentistry"
+                                                                placeholder="e.g. Primary Field of Expertise"
                                                                 className="w-full bg-surface-variant border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm font-medium text-on-surface-variant mb-2">License Number</label>
+                                                            <label className="block text-sm font-medium text-on-surface-variant mb-2">{terms.licenseLabel} Number</label>
                                                             <input 
                                                                 type="text" 
                                                                 value={licenseNumber}
-                                                                disabled
-                                                                placeholder="e.g. MED-123456"
-                                                                className="w-full bg-surface-variant/50 border border-outline-variant rounded-xl px-4 py-3 text-on-surface-variant opacity-70 cursor-not-allowed"
+                                                                onChange={(e) => setLicenseNumber(e.target.value)}
+                                                                placeholder={`e.g. ${terms.orgType.toUpperCase()}-123456`}
+                                                                className="w-full bg-surface-variant border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                                                             />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
-                                                
+
+                                                <div className="pt-2">
+                                                    <button 
+                                                        type="submit"
+                                                        disabled={isSaving}
+                                                        className="bg-primary hover:brightness-110 text-on-primary px-8 py-3 rounded-xl font-label-md text-label-md flex items-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px]">save</span>
+                                                        {isSaving ? 'Saving Changes...' : 'Save Profile Changes'}
+                                                    </button>
+                                                </div>
                                             </form>
                                         )}
                                     </div>
@@ -389,7 +437,7 @@ export default function ProviderSettingPage() {
                                             <div className="flex-1">
                                                 <h4 className="font-title-md text-on-surface mb-1">Delegate Schedule Management</h4>
                                                 <p className="text-on-surface-variant text-sm leading-relaxed">
-                                                    Allow Clinic Administrators to manage and override your schedule matrix. If disabled, only you can update your working hours, and administrators will be locked out of modifying your schedule.
+                                                    Allow Administrators to manage and override your schedule matrix. If disabled, only you can update your working hours, and administrators will be locked out of modifying your schedule.
                                                 </p>
                                             </div>
                                             <div className="flex items-center">
@@ -398,10 +446,7 @@ export default function ProviderSettingPage() {
                                                         type="checkbox" 
                                                         className="sr-only peer"
                                                         checked={isScheduleDelegated}
-                                                        onChange={(e) => {
-                                                            setIsScheduleDelegated(e.target.checked);
-                                                            handleUpdateProfile({ preventDefault: () => {} } as any);
-                                                        }}
+                                                        onChange={(e) => handleToggleDelegation(e.target.checked)}
                                                     />
                                                     <div className="w-14 h-7 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
                                                 </label>
@@ -409,59 +454,111 @@ export default function ProviderSettingPage() {
                                         </div>
                                         
                                         <div className="flex justify-between items-center mb-6">
-                                            <h3 className="font-title-lg text-primary">Your Weekly Matrix</h3>
+                                            <div>
+                                                <h3 className="font-title-lg text-primary">Your Weekly Matrix</h3>
+                                                <p className="text-xs text-[#53606c] mt-0.5">Customize your active working days, operating hours, and break periods.</p>
+                                            </div>
                                             <div className="text-sm text-on-surface-variant flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-[18px]">info</span>
                                                 Times are shown in 24-hour format
                                             </div>
                                         </div>
                                         
-                                        {scheduleData ? (
-                                            <ClinicScheduleMatrix 
-                                                scheduleData={scheduleData} 
-                                                onSave={handleUpdateSchedule} 
-                                            />
-                                        ) : (
-                                            <div className="flex justify-center p-12">
-                                                <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                                            </div>
-                                        )}
+                                        <ClinicScheduleMatrix 
+                                            isProvider={true}
+                                            scheduleData={scheduleData}
+                                            isScheduleDelegated={isScheduleDelegated}
+                                            onSave={fetchScheduleData}
+                                        />
                                     </div>
                                 )}
                                 
                                 {/* Security Settings Tab */}
                                 {activeTab === 'security' && (
                                     <div className="p-8">
-                                        <h3 className="font-title-lg text-primary mb-6">Change Password</h3>
-                                        <form className="space-y-6 max-w-xl">
+                                        <h3 className="font-title-lg text-primary mb-2">Change Password</h3>
+                                        <p className="text-sm text-on-surface-variant mb-6">
+                                            Ensure your account is using a long, random password to stay secure.
+                                        </p>
+
+                                        <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-xl">
                                             <div>
                                                 <label className="block text-sm font-medium text-on-surface-variant mb-2">Current Password</label>
-                                                <input 
-                                                    type="password" 
-                                                    className="w-full bg-surface-variant border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                                                />
+                                                <div className="relative">
+                                                    <input 
+                                                        type={showCurrentPassword ? "text" : "password"} 
+                                                        value={currentPassword}
+                                                        onChange={(e) => setCurrentPassword(e.target.value)}
+                                                        placeholder="Enter your current password"
+                                                        required
+                                                        className="w-full bg-surface-variant border border-outline-variant rounded-xl pl-4 pr-11 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            {showCurrentPassword ? 'visibility_off' : 'visibility'}
+                                                        </span>
+                                                    </button>
+                                                </div>
                                             </div>
+
                                             <div>
                                                 <label className="block text-sm font-medium text-on-surface-variant mb-2">New Password</label>
-                                                <input 
-                                                    type="password" 
-                                                    className="w-full bg-surface-variant border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                                                />
+                                                <div className="relative">
+                                                    <input 
+                                                        type={showNewPassword ? "text" : "password"} 
+                                                        value={newPassword}
+                                                        onChange={(e) => setNewPassword(e.target.value)}
+                                                        placeholder="Enter new password (min. 6 characters)"
+                                                        required
+                                                        className="w-full bg-surface-variant border border-outline-variant rounded-xl pl-4 pr-11 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            {showNewPassword ? 'visibility_off' : 'visibility'}
+                                                        </span>
+                                                    </button>
+                                                </div>
                                             </div>
+
                                             <div>
                                                 <label className="block text-sm font-medium text-on-surface-variant mb-2">Confirm New Password</label>
-                                                <input 
-                                                    type="password" 
-                                                    className="w-full bg-surface-variant border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                                                />
+                                                <div className="relative">
+                                                    <input 
+                                                        type={showConfirmPassword ? "text" : "password"} 
+                                                        value={confirmPassword}
+                                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                                        placeholder="Confirm your new password"
+                                                        required
+                                                        className="w-full bg-surface-variant border border-outline-variant rounded-xl pl-4 pr-11 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                                    />
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary cursor-pointer"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[20px]">
+                                                            {showConfirmPassword ? 'visibility_off' : 'visibility'}
+                                                        </span>
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex justify-end pt-2">
+
+                                            <div className="pt-2">
                                                 <button 
-                                                    type="button" 
-                                                    className="bg-primary text-on-primary px-6 py-3 rounded-xl font-label-lg tracking-wide hover:bg-primary/90 transition-colors shadow-sm"
-                                                    onClick={() => showToast("Password reset functionality to be implemented by AuthService", "error")}
+                                                    type="submit" 
+                                                    disabled={isUpdatingPassword}
+                                                    className="bg-primary hover:brightness-110 text-on-primary px-8 py-3 rounded-xl font-label-lg tracking-wide shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center gap-2"
                                                 >
-                                                    Update Password
+                                                    <span className="material-symbols-outlined text-[18px]">lock_reset</span>
+                                                    {isUpdatingPassword ? 'Updating Password...' : 'Update Password'}
                                                 </button>
                                             </div>
                                         </form>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 interface AdminKPIsProps {
     todayVolume: number;
@@ -19,6 +20,7 @@ export default function AdminKPIs({
     esewaSettled,
     stripeConnect
 }: AdminKPIsProps) {
+    const terms = useOrganizationTerms();
     const capacityPercent = totalCapacity > 0 ? Math.round((todayVolume / totalCapacity) * 100) : 0;
     const dashoffset = 175.9 - (175.9 * capacityPercent) / 100;
 
@@ -44,15 +46,15 @@ export default function AdminKPIs({
 
             {/* KPI 2 */}
             <div className="glass-card p-5 rounded-xl">
-                <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Active In-Clinic</p>
-                <h3 className="text-headline-lg font-extrabold mt-1">{activeInClinic} <span className="text-body-lg font-normal">Patients</span></h3>
+                <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Active {terms.inFacility}</p>
+                <h3 className="text-headline-lg font-extrabold mt-1">{activeInClinic} <span className="text-body-lg font-normal">{terms.customerPlural}</span></h3>
                 <div className="flex gap-4 mt-2">
                     <div className="flex flex-col">
                         <span className="text-on-surface-variant text-[11px]">Waiting</span>
                         <span className="text-headline-md font-bold text-error">{waitingPatients}</span>
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-on-surface-variant text-[11px]">In-Consult</span>
+                        <span className="text-on-surface-variant text-[11px]">{terms.inConsult}</span>
                         <span className="text-headline-md font-bold text-secondary">{inConsultPatients}</span>
                     </div>
                 </div>

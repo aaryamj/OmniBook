@@ -3,56 +3,10 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
 import ProviderManagementHub from './components/ProviderManagementHub';
-
-const initialProviders = [
-    {
-        id: 'p1',
-        name: 'Dr. Sarah Adler',
-        role: 'Head of Cardiology',
-        tier: 'TIER 1',
-        utilization: 82,
-        utilLabel: 'Optimal',
-        utilColor: 'text-green-600',
-        stripe: '$1,200.00',
-        esewa: 'Rs. 40,000',
-        imageBg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBHWD8ig2IGSdb6vtpEDeTbSywEiTLDgYBY5-TbH9iuaj5mzONXqPHSxqPDyQkvFDFSlgeeMx654HB0xHxXaJWOHoFoqqlt-hzLzfCBDPkZOrtTGL0eJVoBfwobcgK_6GSbJS3OTYtDpV4lteR1GTJy4YL4KFP_FA5Rw5rI-O-kk6XHZIoCs0dEUEeRTc3nBcNMTgLsmfcV01H62CrZBChe4Cbpg-0OaJPX6UoBxmEiKpnGSI6amPjY0SbjYY1ULB_lT38EMnpmf2o',
-        imageAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCWQO702KACk-4Gumfv1cnVWlZdMnsaxkOUb0zoPW8hm09X95pQJ6AYd4L-u927R3uv6ywADoq3_PS6SG9k4M20z-h_BQzLqF6mQ3KuUSyxORl5sUFLivXM0COXaF2phsqOhBFfVeXQs6x9nxHPPF-FvWtso7qHQCiSB1C58VqlRT2IizE__s5OpW6EMOu8ojlqZwbfC-smmd2OMlL-XiJwtHmDilurjOzquqYsd3o4sSS2zf9iRuoeoiX8Gn0Xm3UR-eZdnJIoB8U',
-        isLive: true,
-        hasHeatmap: true
-    },
-    {
-        id: 'p2',
-        name: 'Dr. Elias Thorne',
-        role: 'General Medicine',
-        tier: 'TIER 2',
-        utilization: 80,
-        utilLabel: 'Stable',
-        utilColor: 'text-on-surface',
-        stripe: '$900.00',
-        esewa: 'Rs. 25,000',
-        imageBg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpoR1sz2z7Q1zg_iKjkzYfdsquaQrZmdTb97jaP_bVMs9sjTRdIEO_oXDcdWa0JYrmKBDLi1T8flYy0zc4Ck9td-lYTG_X3GAgZ3xmB7Dzh3k_HMgKMWVqDBe0CSGDMlV4g71UEOw_U7bmBLwBmfqGEbold6o01VBsfNymzr8ZjKs15F-NPmCWd8KqfYeE5v6NILeVgckg7Wbei66kGSEblG1irPqdyevV_gQsmn-mSiij_bPQtYc0JEdUEAhmkS1FL-PGSBHqKl8',
-        imageAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCmHOJD8-mTNCccCQIcRuy0ildrRdOXdNqQ1ZuGZFVa3ro4yTMTNoWdRNrVGJFY0_kwAdPjoTzNVYGcqrGaIdZ0KaDTCyDB5kXH6S7gZT3m4mGZh0oBovX_y4W3P3BXShaisk1KPSB5waCki0Ii_g8Nd5npTuvVfKR4MxR9TDAI9R2_esAGTHVG2MuCvI07E2ol5vs198pf032s_JivuOothsJRM5t7Hm7nO3kSSY4G8K0wlkOm__aoAJZ61pwMjJeglxZdW8kI2DY',
-        isLive: false,
-        hasHeatmap: false
-    },
-    {
-        id: 'p3',
-        name: 'Dr. Ananya Gupta',
-        role: 'Pediatrics',
-        tier: 'TIER 2',
-        utilization: 65,
-        utilLabel: 'Available',
-        utilColor: 'text-on-surface',
-        stripe: '$750.00',
-        esewa: 'Rs. 15,000',
-        imageBg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAERTJL1DO3LZLXoqBLV7SR3JigMJG50XPXhb84htb0JeBgNgQ5oujaslrIK1PVu3JbeJb8fvxm5v2qgOIOhaysh7ycgqVuiLRT3lzIx_jqnsv6XkcaYhc6GGpxxXQP8NaRwZAGMTbn5upaQmPeEy-mdkgEIK5MDGAfjwAPduzBi46gea5A0F-i-3f5weNt4fMVasdh6x50Nz6rsmjhvYJK3sJeoSMPpBQulrfIaOHGyaVEFO5dBNIwNyvSswdpI9qbqVpe7gBckUg',
-        imageAvatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTfSxiDLvoFbfOwYhL1CDxZhcQVDI9cgAlGuCnrCeGqP4nQ4KUGEg1Vit3uVmAw3AqBz1t1KOXU6YCsKyzD80DGWibT81GncN7m5TCkaME6-SuZ_JXvAIUEacRdF8O4ksL8LpKJQHPDBGABY4kLJHZtVD9z-ZHuIv51aYBLW7yC6ulzQ57OT05FarzkX-wKOvN5VU4zGJT74sDDGxnZV5_9QcPEAXLmqAtPGvyFlx-UxZ4zpchps3W8eJZsGXkxn1jRSCxERR73RE',
-        isLive: false,
-        hasHeatmap: false
-    }
-];
+import { useOrganizationTerms, setAndBroadcastOrgType } from '../../utils/organizationTerms';
 
 export default function ManageProviders() {
+    const terms = useOrganizationTerms();
     const [providers, setProviders] = useState<any[]>([]);
     
     // Modal & Drawer states
@@ -61,7 +15,16 @@ export default function ManageProviders() {
     const [drawerStep, setDrawerStep] = useState(1);
     const [isProvisioning, setIsProvisioning] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
+    const [subscriptionError, setSubscriptionError] = useState('');
     const [departments, setDepartments] = useState<any[]>([]);
+    const [topEarner, setTopEarner] = useState<{
+        name: string;
+        role: string;
+        avatar: string;
+        stripeFormatted: string;
+        esewaFormatted: string;
+        thisWeekTotal: number;
+    } | null>(null);
     
     // Macro Calendar States
     const [shifts, setShifts] = useState<Record<string, any>>({});
@@ -94,8 +57,17 @@ export default function ManageProviders() {
                 const response = await axios.get('http://localhost:8080/api/v1/tenant/me', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                if (response.data && response.data.address) {
-                    setDrawerForm(prev => ({ ...prev, address: response.data.address }));
+                if (response.data) {
+                    if (response.data.address) {
+                        setDrawerForm(prev => ({ ...prev, address: response.data.address }));
+                    }
+                    if (response.data.organizationType) {
+                        localStorage.setItem('organizationType', response.data.organizationType);
+                        setAndBroadcastOrgType(response.data.organizationType);
+                    }
+                    if (response.data.organizationName) {
+                        localStorage.setItem('organizationName', response.data.organizationName);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch clinic address:", error);
@@ -110,7 +82,7 @@ export default function ManageProviders() {
                 const response = await axios.get('http://localhost:8080/api/v1/admin/departments', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
-                setDepartments(response.data.filter((d: any) => d.active));
+                setDepartments(response.data.filter((d: any) => d.active !== false && d.isActive !== false));
             } catch (error) {
                 console.error("Failed to fetch departments:", error);
             }
@@ -128,29 +100,71 @@ export default function ManageProviders() {
                 const activeProviders = response.data.filter((p: any) => p.status === 'ACTIVE');
                 
                 // Map DB providers to the format needed for the Shifts UI and KPI
-                const mappedProviders = activeProviders.map((p: any) => ({
-                    id: p.id.toString(),
-                    name: p.name || p.email,
-                    role: p.primarySpecialty || p.role || 'Provider',
-                    tier: p.tier || 'TIER 1',
-                    utilization: 80, // Simulated metric
-                    utilLabel: 'Stable',
-                    utilColor: 'text-on-surface',
-                    stripe: '$0.00',
-                    esewa: 'Rs. 0',
-                    imageBg: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDpoR1sz2z7Q1zg_iKjkzYfdsquaQrZmdTb97jaP_bVMs9sjTRdIEO_oXDcdWa0JYrmKBDLi1T8flYy0zc4Ck9td-lYTG_X3GAgZ3xmB7Dzh3k_HMgKMWVqDBe0CSGDMlV4g71UEOw_U7bmBLwBmfqGEbold6o01VBsfNymzr8ZjKs15F-NPmCWd8KqfYeE5v6NILeVgckg7Wbei66kGSEblG1irPqdyevV_gQsmn-mSiij_bPQtYc0JEdUEAhmkS1FL-PGSBHqKl8',
-                    imageAvatar: p.profilePictureUrl || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRzI9P7k4Z-Q3fW-iO404l-tC6M5D1E1z4E9Q&s',
-                    isLive: false,
-                    hasHeatmap: false
-                }));
+                const mappedProviders = activeProviders.map((p: any) => {
+                    const stripeAmount = p.thisWeekStripe || 0;
+                    const esewaAmount = p.thisWeekEsewa || 0;
+                    const stripeStr = stripeAmount > 0 
+                        ? `$${stripeAmount >= 1000 ? (stripeAmount / 1000).toFixed(1) + 'k' : stripeAmount.toLocaleString()}` 
+                        : '$0.00';
+                    const esewaStr = esewaAmount > 0 
+                        ? `Rs. ${esewaAmount >= 1000 ? (esewaAmount / 1000).toFixed(1) + 'k' : esewaAmount.toLocaleString()}` 
+                        : 'Rs. 0';
+
+                    return {
+                        id: p.id.toString(),
+                        name: p.name || p.email,
+                        role: p.primarySpecialty || p.role || terms.providerSingular,
+                        tier: p.tier || 'TIER 1',
+                        utilization: 80, // Simulated metric
+                        utilLabel: 'Stable',
+                        utilColor: 'text-on-surface',
+                        stripe: stripeStr,
+                        esewa: esewaStr,
+                        thisWeekTotal: p.thisWeekTotal || 0,
+                        thisWeekStripe: stripeAmount,
+                        thisWeekEsewa: esewaAmount,
+                        totalEarnings: p.totalEarnings || 0,
+                        imageBg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800',
+                        imageAvatar: p.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name || 'Staff')}&background=0D9488&color=fff&bold=true`,
+                        isLive: false,
+                        hasHeatmap: false
+                    };
+                });
                 
                 setProviders(mappedProviders);
+
+                // Compute Top Earner (This Week):
+                // Sort by thisWeekTotal desc, then totalEarnings desc
+                if (activeProviders.length > 0) {
+                    const sorted = [...activeProviders].sort((a: any, b: any) => {
+                        const diff = (b.thisWeekTotal || 0) - (a.thisWeekTotal || 0);
+                        if (diff !== 0) return diff;
+                        return (b.totalEarnings || 0) - (a.totalEarnings || 0);
+                    });
+                    const top = sorted[0];
+                    const sAmt = top.thisWeekStripe || 0;
+                    const eAmt = top.thisWeekEsewa || 0;
+
+                    setTopEarner({
+                        name: top.name || top.email,
+                        role: top.primarySpecialty || top.role || terms.providerSingular,
+                        avatar: top.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(top.name || 'Staff')}&background=0D9488&color=fff&bold=true`,
+                        stripeFormatted: sAmt > 0 ? `$${sAmt >= 1000 ? (sAmt / 1000).toFixed(1) + 'k' : sAmt.toLocaleString()}` : '$0.00',
+                        esewaFormatted: eAmt > 0 ? `Rs. ${eAmt >= 1000 ? (eAmt / 1000).toFixed(1) + 'k' : eAmt.toLocaleString()}` : 'Rs. 0',
+                        thisWeekTotal: top.thisWeekTotal || 0
+                    });
+                } else {
+                    setTopEarner(null);
+                }
             } catch (error) {
                 console.error("Failed to fetch all providers:", error);
             }
         };
+
         fetchAllProviders();
-    }, []);
+        window.addEventListener('providers-updated', fetchAllProviders);
+        return () => window.removeEventListener('providers-updated', fetchAllProviders);
+    }, [terms.providerSingular]);
     const initialScheduleForm = {
         intervalMinutes: 20,
         standardWeek: {
@@ -282,7 +296,13 @@ export default function ManageProviders() {
         } catch (error: any) {
             setIsProvisioning(false);
             console.error('Failed to invite provider', error);
-            alert('Failed to send invitation: ' + (error.response?.data?.message || error.message));
+            const errorMsg = error.response?.data?.message || error.message;
+            if (errorMsg && errorMsg.toLowerCase().includes("subscription limit exceeded")) {
+                setSubscriptionError(errorMsg);
+                setIsDrawerOpen(false);
+            } else {
+                alert('Failed to send invitation: ' + errorMsg);
+            }
         }
     };
 
@@ -330,12 +350,12 @@ export default function ManageProviders() {
     };
 
     return (
-        <div className="superadmin-theme">
+        <div className="tenant-theme">
             <div className="bg-background text-on-surface font-sans min-h-screen relative">
                 <AdminSidebar />
                 <TopNavigation />
 
-                <main className="ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
+                <main className="lg:ml-[280px] ml-0 ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col bg-[#F8FAFC]">
                     {/* View Content */}
                     {/* View Content */}
                     {!isManageShiftsOpen ? (
@@ -343,8 +363,8 @@ export default function ManageProviders() {
                             {/* Page Title & Actions */}
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                                 <div>
-                                    <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-black text-primary tracking-tight">Provider & Access Management</h2>
-                                    <p className="text-on-surface-variant mt-1 text-sm sm:text-base">High-authority control over clinic staffing and medical permissions.</p>
+                                    <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-black text-primary tracking-tight">{terms.providerSingular} & Access Management</h2>
+                                    <p className="text-on-surface-variant mt-1 text-sm sm:text-base">High-authority control over {terms.facilityLabel.toLowerCase()} staffing and permissions.</p>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                                     <button 
@@ -359,7 +379,7 @@ export default function ManageProviders() {
                                         onClick={() => { setIsDrawerOpen(true); setDrawerStep(1); }}
                                     >
                                         <span className="material-symbols-outlined">person_add</span>
-                                        Provision New Provider
+                                        Provision New {terms.providerSingular}
                                     </button>
                                 </div>
                             </div>
@@ -369,8 +389,8 @@ export default function ManageProviders() {
                                 {/* KPI 1 */}
                                 <div className="glass-card p-6 rounded-2xl flex items-center justify-between transition-colors">
                                     <div>
-                                        <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Active Medical Staff</p>
-                                        <h3 className="text-4xl font-black text-primary">{providers.length} <span className="text-lg font-medium text-on-surface-variant">Providers</span></h3>
+                                        <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Active Staff / {terms.providerPlural}</p>
+                                        <h3 className="text-4xl font-black text-primary">{providers.length} <span className="text-lg font-medium text-on-surface-variant">{terms.providerPlural}</span></h3>
                                     </div>
                                     <div className="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center">
                                         <span className="material-symbols-outlined text-secondary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>groups</span>
@@ -381,7 +401,7 @@ export default function ManageProviders() {
                                 <div className="glass-card p-6 rounded-2xl transition-colors">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
-                                            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">Clinic Utilization</p>
+                                            <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-1">{terms.facilityLabel} Utilization</p>
                                             <h3 className="text-4xl font-black text-primary">84% <span className="text-lg font-medium text-on-surface-variant">Capacity</span></h3>
                                         </div>
                                         <div className="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-md flex items-center gap-1">
@@ -405,24 +425,53 @@ export default function ManageProviders() {
                                     {/* Thin blue design on the left, curved and fading out */}
                                     <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-gradient-to-b from-[#0EA5E9] via-[#0EA5E9]/80 to-transparent rounded-l-2xl shadow-[-2px_0_12px_rgba(14,165,233,0.8)]"></div>
                                     
-                                    <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-2">Top Earner (This Week)</p>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <img className="w-10 h-10 rounded-full object-cover" alt="Dr. Sarah Adler" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZZJSv49efLX5fD2Hu8f35aMHPVZq5N7H9rS4tx3RCKiOKH20Xvlq1pSEzYlmFPETv5o-deCMVigpd6tcDLi_bLmKUkNfivq3a-OteUznt_HSbouQxhqRYSkyjtd23G1gFATmGMHsezkDv_irvs4TTIdJS9NOmj4xKI1jjeCjEeHBAU90PNVDZlEBZ6I1k-Gy9twMo8F23ao_s4Kp1il4NNj_u37I1rKzNoIA6rjgJ576-fZ7TIYtr2FgOYIGGj_2SJIi6k9rsJxI" />
-                                        <div>
-                                            <h4 className="font-bold text-primary">Dr. Sarah Adler</h4>
-                                            <p className="text-[10px] text-on-surface-variant font-mono uppercase">Lead Cardiologist</p>
-                                        </div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="text-on-surface-variant text-xs font-bold uppercase tracking-widest">Top Earner (This Week)</p>
+                                        {topEarner && topEarner.thisWeekTotal > 0 && (
+                                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-0.5">
+                                                <span className="material-symbols-outlined text-[12px] text-amber-500">emoji_events</span>
+                                                TOP
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-outline-variant/30">
-                                        <div className="text-center flex-1 border-r border-outline-variant/20">
-                                            <p className="text-[10px] text-on-surface-variant uppercase font-bold">Stripe</p>
-                                            <p className="font-mono-data text-secondary font-bold">$1.2k</p>
+
+                                    {topEarner ? (
+                                        <>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <img 
+                                                    className="w-10 h-10 rounded-full object-cover border border-outline-variant/60 shadow-sm shrink-0" 
+                                                    alt={topEarner.name} 
+                                                    src={topEarner.avatar} 
+                                                />
+                                                <div className="min-w-0 flex-1">
+                                                    <h4 className="font-bold text-primary truncate" title={topEarner.name}>
+                                                        {topEarner.name}
+                                                    </h4>
+                                                    <p className="text-[10px] text-on-surface-variant font-mono uppercase truncate" title={topEarner.role}>
+                                                        {topEarner.role}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-outline-variant/30">
+                                                <div className="text-center flex-1 border-r border-outline-variant/20">
+                                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">Stripe</p>
+                                                    <p className="font-mono-data text-secondary font-bold">{topEarner.stripeFormatted}</p>
+                                                </div>
+                                                <div className="text-center flex-1">
+                                                    <p className="text-[10px] text-on-surface-variant uppercase font-bold">eSewa</p>
+                                                    <p className="font-mono-data text-secondary font-bold">{topEarner.esewaFormatted}</p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="py-2 text-center">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                                                <span className="material-symbols-outlined text-lg">person_off</span>
+                                            </div>
+                                            <p className="text-xs font-semibold text-on-surface-variant">No active {terms.providerPlural.toLowerCase()} yet</p>
+                                            <p className="text-[11px] text-outline mt-0.5">Earnings will appear once booked</p>
                                         </div>
-                                        <div className="text-center flex-1">
-                                            <p className="text-[10px] text-on-surface-variant uppercase font-bold">eSewa</p>
-                                            <p className="font-mono-data text-secondary font-bold">Rs. 40k</p>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                             
@@ -634,7 +683,7 @@ export default function ManageProviders() {
                                 <div className="flex-1 bg-surface border border-outline-variant rounded-3xl shadow-sm overflow-hidden flex flex-col">
                                     <div className="grid grid-cols-6 border-b border-outline-variant bg-surface-container-lowest">
                                         <div className="p-4 border-r border-outline-variant font-bold text-on-surface-variant text-sm flex items-center justify-center bg-surface-container-lowest">
-                                            Providers
+                                            {terms.providerPlural}
                                         </div>
                                         {days.map(day => (
                                             <div key={day} className="p-4 border-r border-outline-variant last:border-r-0 font-bold text-primary text-center">
@@ -707,7 +756,7 @@ export default function ManageProviders() {
                             {/* Drawer Header */}
                             <div className="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
                                 <div>
-                                    <h3 className="font-headline-md text-headline-md font-bold text-primary">Provision New Provider</h3>
+                                    <h3 className="font-headline-md text-headline-md font-bold text-primary">Provision New {terms.providerSingular}</h3>
                                     <p className="text-sm text-on-surface-variant mt-1">Step {drawerStep} of 2</p>
                                 </div>
                                 <button 
@@ -728,14 +777,14 @@ export default function ManageProviders() {
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Full Name</label>
-                                            <input required type="text" value={drawerForm.name} onChange={e => setDrawerForm({...drawerForm, name: e.target.value})} className="w-full bg-surface-container border border-outline-variant p-3 rounded-xl focus:ring-2 focus:ring-secondary-container outline-none transition-shadow" placeholder="e.g. Dr. John Doe" />
+                                            <input required type="text" value={drawerForm.name} onChange={e => setDrawerForm({...drawerForm, name: e.target.value})} className="w-full bg-surface-container border border-outline-variant p-3 rounded-xl focus:ring-2 focus:ring-secondary-container outline-none transition-shadow" placeholder="e.g. Full Name" />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Email Address</label>
-                                            <input required type="email" value={drawerForm.email} onChange={e => setDrawerForm({...drawerForm, email: e.target.value})} className="w-full bg-surface-container border border-outline-variant p-3 rounded-xl focus:ring-2 focus:ring-secondary-container outline-none transition-shadow" placeholder="dr.doe@clinic.com" />
+                                            <input required type="email" value={drawerForm.email} onChange={e => setDrawerForm({...drawerForm, email: e.target.value})} className="w-full bg-surface-container border border-outline-variant p-3 rounded-xl focus:ring-2 focus:ring-secondary-container outline-none transition-shadow" placeholder="email@organization.com" />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Specialization & Department</label>
+                                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{terms.specialtyLabel} & Department</label>
                                             <select 
                                                 required 
                                                 value={drawerForm.specialization} 
@@ -750,52 +799,122 @@ export default function ManageProviders() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Clinic Address / Location <span className="text-error">*</span></label>
-                                            <input type="text" value={drawerForm.address} readOnly className="w-full bg-surface-container-low border border-outline-variant p-3 rounded-xl cursor-not-allowed focus:outline-none text-on-surface-variant" placeholder="Fetched automatically from your clinic profile..." />
+                                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{terms.facilityLabel} Address / Location <span className="text-error">*</span></label>
+                                            <input type="text" value={drawerForm.address} readOnly className="w-full bg-surface-container-low border border-outline-variant p-3 rounded-xl cursor-not-allowed focus:outline-none text-on-surface-variant" placeholder={`Fetched automatically from your ${terms.facilityLabel.toLowerCase()} profile...`} />
                                         </div>
                                     </div>
                                 )}
                                 
-                                {drawerStep === 2 && (
-                                    <div className="space-y-6 animate-fade-in">
-                                        <div>
-                                            <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-4 border-l-4 border-secondary pl-3">RBAC Selection</h4>
-                                            <p className="text-sm text-on-surface-variant mb-6">Select the appropriate Role-Based Access Control tier for this provider. This determines their permissions across OmniBook.</p>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Access Tier</label>
-                                            <div className="space-y-3">
-                                                <label className={`block border ${drawerForm.tier === 'TIER 1' ? 'border-primary bg-primary/5' : 'border-outline-variant hover:bg-surface-variant'} rounded-xl p-4 cursor-pointer transition-colors`}>
-                                                    <div className="flex items-center gap-3">
-                                                        <input type="radio" name="tier" value="TIER 1" checked={drawerForm.tier === 'TIER 1'} onChange={e => setDrawerForm({...drawerForm, tier: e.target.value})} className="w-4 h-4 text-primary" />
-                                                        <div>
-                                                            <div className="font-bold text-primary">TIER 1 (Full Clinical)</div>
-                                                            <div className="text-xs text-on-surface-variant mt-1">Full access to patient records, billing, and scheduling.</div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                                <label className={`block border ${drawerForm.tier === 'TIER 2' ? 'border-primary bg-primary/5' : 'border-outline-variant hover:bg-surface-variant'} rounded-xl p-4 cursor-pointer transition-colors`}>
-                                                    <div className="flex items-center gap-3">
-                                                        <input type="radio" name="tier" value="TIER 2" checked={drawerForm.tier === 'TIER 2'} onChange={e => setDrawerForm({...drawerForm, tier: e.target.value})} className="w-4 h-4 text-primary" />
-                                                        <div>
-                                                            <div className="font-bold text-primary">TIER 2 (Consultant)</div>
-                                                            <div className="text-xs text-on-surface-variant mt-1">Read access to records, edit access to assigned appointments.</div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                                <label className={`block border ${drawerForm.tier === 'TIER 3' ? 'border-primary bg-primary/5' : 'border-outline-variant hover:bg-surface-variant'} rounded-xl p-4 cursor-pointer transition-colors`}>
-                                                    <div className="flex items-center gap-3">
-                                                        <input type="radio" name="tier" value="TIER 3" checked={drawerForm.tier === 'TIER 3'} onChange={e => setDrawerForm({...drawerForm, tier: e.target.value})} className="w-4 h-4 text-primary" />
-                                                        <div>
-                                                            <div className="font-bold text-primary">TIER 3 (Read-Only)</div>
-                                                            <div className="text-xs text-on-surface-variant mt-1">Can only view schedules and basic patient demographics.</div>
-                                                        </div>
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                 {drawerStep === 2 && (
+                                     <div className="space-y-6 animate-fade-in">
+                                         <div>
+                                             <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-4 border-l-4 border-secondary pl-3">RBAC Selection</h4>
+                                             <p className="text-sm text-on-surface-variant mb-6">Select the appropriate Role-Based Access Control tier for this {terms.providerSingular.toLowerCase()}. This determines their permissions across OmniBook.</p>
+                                         </div>
+                                         <div>
+                                             <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Access Tier</label>
+                                             <div className="space-y-3">
+                                                 {(() => {
+                                                     const norm = (terms.facilityLabel || '').toLowerCase();
+                                                     let tiers = [
+                                                         {
+                                                             value: 'TIER 1',
+                                                             title: 'TIER 1 (Full Clinical)',
+                                                             desc: 'Full access to patient records, billing, and scheduling.'
+                                                         },
+                                                         {
+                                                             value: 'TIER 2',
+                                                             title: 'TIER 2 (Consultant)',
+                                                             desc: 'Read access to records, edit access to assigned appointments.'
+                                                         },
+                                                         {
+                                                             value: 'TIER 3',
+                                                             title: 'TIER 3 (Read-Only)',
+                                                             desc: 'Can only view schedules and basic patient demographics.'
+                                                         }
+                                                     ];
+                                                     if (norm.includes('college') || norm.includes('acad')) {
+                                                         tiers = [
+                                                             {
+                                                                 value: 'TIER 1',
+                                                                 title: 'TIER 1 (Full Faculty Access)',
+                                                                 desc: 'Full access to student academic records, grading, and scheduling.'
+                                                             },
+                                                             {
+                                                                 value: 'TIER 2',
+                                                                 title: 'TIER 2 (Instructor / Lecturer)',
+                                                                 desc: 'Read access to course records, edit access to assigned sessions.'
+                                                             },
+                                                             {
+                                                                 value: 'TIER 3',
+                                                                 title: 'TIER 3 (Teaching Assistant / Observer)',
+                                                                 desc: 'Can only view class timetables and basic student directory.'
+                                                             }
+                                                         ];
+                                                     } else if (norm.includes('salon') || norm.includes('saloon') || norm.includes('spa')) {
+                                                         tiers = [
+                                                             {
+                                                                 value: 'TIER 1',
+                                                                 title: 'TIER 1 (Full Salon Access)',
+                                                                 desc: 'Full access to client history, billing, and appointment scheduling.'
+                                                             },
+                                                             {
+                                                                 value: 'TIER 2',
+                                                                 title: 'TIER 2 (Senior Stylist)',
+                                                                 desc: 'Read access to client preferences, edit access to assigned appointments.'
+                                                             },
+                                                             {
+                                                                 value: 'TIER 3',
+                                                                 title: 'TIER 3 (Junior Stylist / Assistant)',
+                                                                 desc: 'Can only view appointment schedules and basic client contact info.'
+                                                             }
+                                                         ];
+                                                     } else if (!norm.includes('clinic') && !norm.includes('hosp')) {
+                                                         tiers = [
+                                                             {
+                                                                 value: 'TIER 1',
+                                                                 title: 'TIER 1 (Full Professional Access)',
+                                                                 desc: `Full access to ${terms.customerPlural.toLowerCase()} records, billing, and scheduling.`
+                                                             },
+                                                             {
+                                                                 value: 'TIER 2',
+                                                                 title: `TIER 2 (Senior ${terms.providerSingular})`,
+                                                                 desc: `Read access to records, edit access to assigned ${terms.appointmentPlural.toLowerCase()}.`
+                                                             },
+                                                             {
+                                                                 value: 'TIER 3',
+                                                                 title: 'TIER 3 (Associate / Read-Only)',
+                                                                 desc: `Can only view schedules and basic ${terms.customerSingular.toLowerCase()} directory.`
+                                                             }
+                                                         ];
+                                                     }
+
+                                                     return tiers.map(tierItem => (
+                                                         <label 
+                                                             key={tierItem.value} 
+                                                             className={`block border ${drawerForm.tier === tierItem.value ? 'border-primary bg-primary/5' : 'border-outline-variant hover:bg-surface-variant'} rounded-xl p-4 cursor-pointer transition-colors`}
+                                                         >
+                                                             <div className="flex items-center gap-3">
+                                                                 <input 
+                                                                     type="radio" 
+                                                                     name="tier" 
+                                                                     value={tierItem.value} 
+                                                                     checked={drawerForm.tier === tierItem.value} 
+                                                                     onChange={e => setDrawerForm({...drawerForm, tier: e.target.value})} 
+                                                                     className="w-4 h-4 text-primary" 
+                                                                 />
+                                                                 <div>
+                                                                     <div className="font-bold text-primary">{tierItem.title}</div>
+                                                                     <div className="text-xs text-on-surface-variant mt-1">{tierItem.desc}</div>
+                                                                 </div>
+                                                             </div>
+                                                         </label>
+                                                     ));
+                                                 })()}
+                                             </div>
+                                         </div>
+                                     </div>
+                                 )}
                             </div>
 
                             {/* Drawer Footer */}
@@ -1089,6 +1208,44 @@ export default function ManageProviders() {
                                     ) : (
                                         'Confirm Revocation'
                                     )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Subscription Limit Modal */}
+                {subscriptionError && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-surface p-8 rounded-3xl shadow-2xl max-w-md w-full border border-error text-center flex flex-col relative overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 h-2 bg-error"></div>
+                            <div className="w-20 h-20 bg-error/10 text-error rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-error/20 shadow-[0_0_20px_rgba(220,38,38,0.3)] animate-pulse">
+                                <span className="material-symbols-outlined text-[40px]">group_off</span>
+                            </div>
+                            <h3 className="text-2xl font-black text-error mb-4">Plan Limit Reached</h3>
+                            <p className="text-on-surface-variant font-medium text-base mb-6 leading-relaxed">
+                                {subscriptionError}
+                            </p>
+                            
+                            <div className="bg-surface-container-low border border-outline-variant rounded-xl p-4 mb-8">
+                                <p className="text-sm text-on-surface">To add more medical staff to your workspace, please upgrade your subscription plan to <strong>Professional</strong> or <strong>Enterprise</strong>.</p>
+                            </div>
+                            
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    className="w-full py-3.5 rounded-xl bg-error text-white font-bold tracking-wide shadow-lg shadow-error/20 hover:bg-red-700 hover:-translate-y-0.5 transition-all"
+                                    onClick={() => setSubscriptionError('')}
+                                >
+                                    Understood
+                                </button>
+                                <button 
+                                    className="w-full py-3.5 rounded-xl text-on-surface font-bold border border-outline hover:bg-surface-variant transition-colors"
+                                    onClick={() => {
+                                        setSubscriptionError('');
+                                        // window.location.href = '/billing'; // Future routing
+                                    }}
+                                >
+                                    View Upgrade Options
                                 </button>
                             </div>
                         </div>

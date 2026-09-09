@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ProviderScheduleModal from './ProviderScheduleModal';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 interface Provider {
     id: number;
@@ -18,6 +19,7 @@ interface Provider {
 }
 
 export default function ProviderManagementHub() {
+    const terms = useOrganizationTerms();
     const [providers, setProviders] = useState<Provider[]>([]);
     const [filter, setFilter] = useState('All');
     const [openActionId, setOpenActionId] = useState<number | null>(null);
@@ -62,6 +64,7 @@ export default function ProviderManagementHub() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             fetchProviders(); // refresh the list
+            window.dispatchEvent(new Event('providers-updated'));
             setOpenActionId(null);
         } catch (error: any) {
             console.error("Failed to approve provider", error);
@@ -77,6 +80,7 @@ export default function ProviderManagementHub() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             fetchProviders(); // refresh the list
+            window.dispatchEvent(new Event('providers-updated'));
             setOpenActionId(null);
         } catch (error: any) {
             console.error("Failed to reject provider", error);
@@ -95,6 +99,7 @@ export default function ProviderManagementHub() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             fetchProviders(); // refresh the list
+            window.dispatchEvent(new Event('providers-updated'));
             setSuspendProviderId(null);
             setSuspendConfirmText('');
             setOpenActionId(null);
@@ -117,6 +122,7 @@ export default function ProviderManagementHub() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             fetchProviders(); // refresh the list
+            window.dispatchEvent(new Event('providers-updated'));
             setReactivateProviderId(null);
             setReactivateConfirmText('');
             setOpenActionId(null);
@@ -169,9 +175,9 @@ export default function ProviderManagementHub() {
                     <div>
                         <h2 className="text-xl font-bold text-primary flex items-center gap-2">
                             <span className="material-symbols-outlined text-secondary">manage_accounts</span>
-                            Provider Management Hub
+                            {terms.providerSingular} Management Hub
                         </h2>
-                        <p className="text-sm text-on-surface-variant mt-1">Review, approve, and manage clinic providers.</p>
+                        <p className="text-sm text-on-surface-variant mt-1">Review, approve, and manage {terms.facilityLabel.toLowerCase()} {terms.providerPlural.toLowerCase()}.</p>
                     </div>
                     
                     {/* Filters */}
@@ -190,9 +196,9 @@ export default function ProviderManagementHub() {
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-surface-container-low font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
                         <tr>
-                            <th className="px-6 py-4 font-semibold">Provider Name</th>
+                            <th className="px-6 py-4 font-semibold">{terms.providerSingular} Name</th>
                             <th className="px-6 py-4 font-semibold">Email</th>
-                            <th className="px-6 py-4 font-semibold">Speciality & License</th>
+                            <th className="px-6 py-4 font-semibold">{terms.specialtyLabel} & {terms.licenseLabel}</th>
                             <th className="px-6 py-4 font-semibold">Tier</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-right">Actions</th>
@@ -201,8 +207,8 @@ export default function ProviderManagementHub() {
                     <tbody className="divide-y divide-surface-container font-body-md text-body-md relative">
                         {filteredProviders.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
-                                    No providers found matching "{filter}".
+                                <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant">
+                                    No {terms.providerPlural.toLowerCase()} found matching "{filter}".
                                 </td>
                             </tr>
                         ) : (
@@ -297,14 +303,14 @@ export default function ProviderManagementHub() {
                                                                 className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2"
                                                             >
                                                                 <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                                                                Approve Provider
+                                                                Approve {terms.providerSingular}
                                                             </button>
                                                             <button 
                                                                 onClick={() => handleReject(provider.id)}
                                                                 className="w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2"
                                                             >
                                                                 <span className="material-symbols-outlined text-[18px]">cancel</span>
-                                                                Reject Provider
+                                                                Reject {terms.providerSingular}
                                                             </button>
                                                             <div className="h-px bg-outline-variant my-1"></div>
                                                         </>
@@ -337,7 +343,7 @@ export default function ProviderManagementHub() {
                                                         className="w-full text-left px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container flex items-center gap-2"
                                                     >
                                                         <span className="material-symbols-outlined text-[18px]">mail</span>
-                                                        Contact Provider
+                                                        Contact {terms.providerSingular}
                                                     </button>
                                                     
                                                     {isActive && (
@@ -443,11 +449,11 @@ export default function ProviderManagementHub() {
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="md:col-span-2">
-                                        <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Medical License Number</p>
+                                        <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">{terms.licenseLabel} Number</p>
                                         <p className="text-sm font-mono bg-surface-container-low p-2 rounded border border-outline-variant inline-block">{selectedProvider.medicalLicense || <span className="italic opacity-50 font-sans">Not provided</span>}</p>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Medical License Document</p>
+                                        <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{terms.licenseLabel} Document</p>
                                         {selectedProvider.licenseImageUrl ? (
                                             <div className="border border-outline-variant rounded-xl overflow-hidden bg-surface-container-low p-2">
                                                 <img src={selectedProvider.licenseImageUrl} alt="Medical License" className="max-w-full h-auto max-h-[400px] object-contain mx-auto rounded-lg shadow-sm" />

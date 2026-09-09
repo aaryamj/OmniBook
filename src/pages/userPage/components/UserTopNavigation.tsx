@@ -1,24 +1,61 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../NotificationBell';
+import { useAuth } from '../../../context/AuthContext';
 
 export default function UserTopNavigation() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user, logout, refreshUser } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+
+    const [liveProfilePic, setLiveProfilePic] = useState<string | null | undefined>(user?.profilePicture);
+    const [liveDisplayName, setLiveDisplayName] = useState<string>(user?.fullName || 'OmniBook User');
+
+    useEffect(() => {
+        setLiveProfilePic(user?.profilePicture);
+        setLiveDisplayName(user?.fullName || 'OmniBook User');
+    }, [user?.profilePicture, user?.fullName]);
+
+    useEffect(() => {
+        const handleProfileUpdate = (e: any) => {
+            if (e?.detail) {
+                if (e.detail.profilePicture !== undefined) {
+                    setLiveProfilePic(e.detail.profilePicture);
+                }
+                if (e.detail.fullName) {
+                    setLiveDisplayName(e.detail.fullName);
+                }
+            }
+            if (refreshUser) {
+                refreshUser();
+            }
+        };
+
+        window.addEventListener('userProfileUpdated', handleProfileUpdate);
+        return () => window.removeEventListener('userProfileUpdated', handleProfileUpdate);
+    }, [refreshUser]);
+
+    const displayName = liveDisplayName;
+    const profilePic = liveProfilePic;
+
+    const getInitials = (name?: string) => {
+        if (!name) return 'U';
+        const parts = name.trim().split(/\s+/);
+        if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+        return parts[0].slice(0, 2).toUpperCase();
+    };
 
     useEffect(() => {
         setIsMobileMenuOpen(false);
         setIsProfileDropdownOpen(false);
     }, [location.pathname]);
 
-    const handleLogout = () => {
-        localStorage.clear();
+    const handleLogout = async () => {
+        await logout();
         navigate('/login');
     };
-
-    const profilePic = localStorage.getItem('profilePicture') || 'https://lh3.googleusercontent.com/aida-public/AB6AXuALan3Fe5liRYVvqOzbYPXALuhl1M_JrzKY62jsudutF-Y4kRwnw4no-RMdfy3kIqv1Pwvt4YNwLk09F8-YiOqLdcmDLbD8z8PfxNXA5LulAwItUiFnPDiM2CIPYIlitAQwvN0vTuDjaDgHGdcvqmtnQVICN825lJ_J6Gay2MKwe9QZ5j0m2TW3QgH9DIcW4nkj_-PRO8Ny3cmQDxAWN3MCHm9Grv2-ok3arYQPU0wypdDtdLrnEcUA0n9wYoUk0Nv28IHRfPR7qzs';
 
     return (
         <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur-md border-b border-[#dce2f3]">
@@ -79,19 +116,42 @@ export default function UserTopNavigation() {
                     <div className="relative group ml-1 sm:ml-2">
                         <div 
                             onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden border border-[#c3c5d7] hover:scale-105 transition-transform cursor-pointer shadow-sm"
+                            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full overflow-hidden border border-[#c3c5d7] hover:scale-105 transition-transform cursor-pointer shadow-sm ring-2 ring-transparent hover:ring-[#003fb1]/30 flex items-center justify-center bg-primary text-on-primary font-bold text-sm select-none"
                         >
-                            <img
-                                alt="User Profile Avatar"
-                                className="w-full h-full object-cover"
-                                src={profilePic}
-                            />
+                            {profilePic ? (
+                                <img
+                                    alt="User Profile Avatar"
+                                    className="w-full h-full object-cover"
+                                    src={profilePic}
+                                />
+                            ) : (
+                                <span>{getInitials(displayName)}</span>
+                            )}
                         </div>
                         
                         {/* Profile Dropdown */}
-                        <div className={`absolute right-0 mt-2 w-48 bg-white shadow-xl rounded-xl border border-[#dce2f3] py-2 z-[60] transition-all duration-200 ${
+                        <div className={`absolute right-0 mt-2 w-56 bg-white shadow-xl rounded-xl border border-[#dce2f3] py-2 z-[60] transition-all duration-200 ${
                             isProfileDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible md:group-hover:opacity-100 md:group-hover:visible'
                         }`}>
+                            {/* User Header */}
+                            <div className="px-4 py-2.5 border-b border-[#dce2f3]/60 flex items-center gap-3">
+                                {profilePic ? (
+                                    <img
+                                        alt="User Avatar"
+                                        className="w-9 h-9 rounded-full object-cover border border-[#c3c5d7]"
+                                        src={profilePic}
+                                    />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-full bg-primary text-on-primary font-bold text-xs flex items-center justify-center border border-[#c3c5d7] shrink-0 select-none">
+                                        {getInitials(displayName)}
+                                    </div>
+                                )}
+                                <div className="truncate">
+                                    <p className="text-xs font-bold text-[#151c27] truncate">{displayName}</p>
+                                    <p className="text-[11px] text-[#53606c] truncate">{user?.organizationName ? user.organizationName : 'Client / User'}</p>
+                                </div>
+                            </div>
+
                             <NavLink
                                 className="flex items-center gap-3 px-4 py-2.5 hover:bg-[#f0f3ff] text-[#151c27] text-[14px] font-medium transition-colors"
                                 to="/profile-settings"

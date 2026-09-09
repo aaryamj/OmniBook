@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 const FinancialActivation: React.FC = () => {
     const navigate = useNavigate();
-    
+    const terms = useOrganizationTerms();
+
     // Form State
     const [legalBusinessName, setLegalBusinessName] = useState('');
     const [businessEntityType, setBusinessEntityType] = useState('Private Company');
@@ -14,7 +16,7 @@ const FinancialActivation: React.FC = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
     const [tier, setTier] = useState('Enterprise');
-    
+
     useEffect(() => {
         const fetchTenant = async () => {
             try {
@@ -36,7 +38,7 @@ const FinancialActivation: React.FC = () => {
         };
         fetchTenant();
     }, []);
-    
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,13 +97,13 @@ const FinancialActivation: React.FC = () => {
             <main className="flex min-h-screen">
                 {/* LEFT SIDE: WHITE CONTENT */}
                 <div className="w-full lg:w-1/2 bg-surface-container-lowest flex flex-col p-12 overflow-y-auto border-r border-[#e0e3e5] relative">
-                    
+
                     {/* Header Section */}
                     <div className="flex items-center space-x-4 mb-16">
-                        <img 
-                            alt="OmniBook Logo" 
-                            className="h-8 w-auto object-contain" 
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP848Ao0ojfxhSN1LNdwd3KU_3YRNt-oogm_0NYHPpX9f3Kj6QdoWf2Y31mZLevEgGo4z74fgsa-J9Y7qB0Lyi_LAO4RppllH_zzT07iOT51SxNlubsUHixFCTTNXTsBL3ssxTtiBvZzVCDyAEjdskNornnV_GxVSN1r7LaWUi4SAat-rG1khKomVfEXqSz1gEVPKJO-AjUn0Pl5uKYEAec31kOmbNwwCFaTeWNMVn_ko5tqjHlPota70XrUZWip-RLtiq8JreqDg" 
+                        <img
+                            alt="OmniBook Logo"
+                            className="h-8 w-auto object-contain"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP848Ao0ojfxhSN1LNdwd3KU_3YRNt-oogm_0NYHPpX9f3Kj6QdoWf2Y31mZLevEgGo4z74fgsa-J9Y7qB0Lyi_LAO4RppllH_zzT07iOT51SxNlubsUHixFCTTNXTsBL3ssxTtiBvZzVCDyAEjdskNornnV_GxVSN1r7LaWUi4SAat-rG1khKomVfEXqSz1gEVPKJO-AjUn0Pl5uKYEAec31kOmbNwwCFaTeWNMVn_ko5tqjHlPota70XrUZWip-RLtiq8JreqDg"
                         />
                         <div className="h-6 w-px bg-outline-variant"></div>
                         <span className="font-sans text-sm font-semibold text-on-surface-variant tracking-widest uppercase">Workspace Setup</span>
@@ -112,11 +114,11 @@ const FinancialActivation: React.FC = () => {
                         <div className="bg-secondary-fixed/30 p-6 rounded-xl border border-secondary-fixed">
                             <h1 className="font-sans text-2xl font-bold tracking-tight text-on-secondary-fixed mb-1">Welcome to your Dedicated Tenant Environment</h1>
                             <p className="font-sans text-base text-on-secondary-fixed-variant">
-                                Workspace: <span className="font-mono text-xs tracking-tight">Secure {tier} Instance</span><br/>
-                                Provisioned for: <span className="font-bold">Clinic Activation</span>
+                                Workspace: <span className="font-mono text-xs tracking-tight">Secure {tier} Instance</span><br />
+                                Provisioned for: <span className="font-bold">{terms.facilityLabel} Activation</span>
                             </p>
                         </div>
-                        
+
                         {/* Progress Tracker */}
                         <div className="flex items-center space-x-6 py-2 mb-10">
                             <div className="flex items-center space-x-2">
@@ -146,7 +148,7 @@ const FinancialActivation: React.FC = () => {
                                 </div>
                                 <h2 className="font-headline-lg text-3xl font-bold text-primary">Application Submitted!</h2>
                                 <p className="font-body-lg text-on-surface-variant max-w-sm">
-                                    Your workspace application and KYC details are currently under review by our administration team. 
+                                    Your workspace application and KYC details are currently under review by our administration team.
                                 </p>
                                 <div className="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 mt-6 max-w-sm w-full shadow-sm">
                                     <h3 className="font-bold text-on-surface mb-4 text-left flex items-center gap-2">
@@ -164,7 +166,7 @@ const FinancialActivation: React.FC = () => {
                                         </li>
                                     </ul>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => navigate('/login')}
                                     className="w-full max-w-sm bg-white border-2 border-outline-variant hover:border-[#0F172A] hover:text-[#0F172A] text-on-surface-variant font-semibold py-3 rounded-xl transition-all active:scale-[0.98] mt-8"
                                 >
@@ -194,19 +196,19 @@ const FinancialActivation: React.FC = () => {
                                 <form className="space-y-6" onSubmit={handleSubmit}>
                                     <div className="space-y-1.5">
                                         <label className="font-label-md text-xs font-semibold uppercase tracking-wider text-outline">Legal business name</label>
-                                        <input 
-                                            className="w-full bg-white border border-outline-variant text-on-surface font-body-md py-3 px-4 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none" 
-                                            type="text" 
+                                        <input
+                                            className="w-full bg-white border border-outline-variant text-on-surface font-body-md py-3 px-4 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none"
+                                            type="text"
                                             placeholder="e.g., Mediciti Core Healthcare Pvt. Ltd."
                                             value={legalBusinessName}
                                             onChange={(e) => setLegalBusinessName(e.target.value)}
                                             required
                                         />
                                     </div>
-                                    
+
                                     <div className="space-y-1.5">
                                         <label className="font-label-md text-xs font-semibold uppercase tracking-wider text-outline">Business Entity Type</label>
-                                        <select 
+                                        <select
                                             className="w-full bg-white border border-outline-variant text-on-surface font-body-md py-3 px-4 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none"
                                             value={businessEntityType}
                                             onChange={(e) => setBusinessEntityType(e.target.value)}
@@ -218,13 +220,13 @@ const FinancialActivation: React.FC = () => {
                                             <option value="Non-Profit">Non-Profit</option>
                                         </select>
                                     </div>
-                                    
+
                                     <div className="space-y-1.5">
                                         <label className="font-label-md text-xs font-semibold uppercase tracking-wider text-outline">IBAN / Account Number</label>
                                         <div className="relative">
-                                            <input 
-                                                className="w-full bg-white border border-outline-variant text-on-surface font-mono py-3 px-4 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" 
-                                                type="text" 
+                                            <input
+                                                className="w-full bg-white border border-outline-variant text-on-surface font-mono py-3 px-4 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none"
+                                                type="text"
                                                 placeholder="Enter account number"
                                                 value={ibanAccountNumber}
                                                 onChange={(e) => setIbanAccountNumber(e.target.value)}
@@ -233,25 +235,25 @@ const FinancialActivation: React.FC = () => {
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">lock</span>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="space-y-1.5">
-                                        <label className="font-label-md text-xs font-semibold uppercase tracking-wider text-outline">Medical License</label>
-                                        <input 
-                                            type="file" 
+                                        <label className="font-label-md text-xs font-semibold uppercase tracking-wider text-outline">{terms.registrationLabel}</label>
+                                        <input
+                                            type="file"
                                             ref={fileInputRef}
-                                            className="hidden" 
+                                            className="hidden"
                                             accept=".pdf,image/*"
                                             onChange={handleFileSelect}
                                         />
-                                        
+
                                         {!medicalLicenseFile ? (
-                                            <div 
+                                            <div
                                                 onClick={() => fileInputRef.current?.click()}
                                                 className="flex items-center justify-center p-6 border-2 border-dashed border-outline-variant rounded-lg bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors"
                                             >
                                                 <div className="text-center">
                                                     <span className="material-symbols-outlined text-outline mb-2 text-3xl">upload_file</span>
-                                                    <p className="text-sm font-medium text-on-surface">Click to upload medical license</p>
+                                                    <p className="text-sm font-medium text-on-surface">Click to upload {terms.registrationLabel.toLowerCase()}</p>
                                                     <p className="text-xs text-outline mt-1">PDF, JPG, PNG up to 10MB</p>
                                                 </div>
                                             </div>
@@ -269,10 +271,10 @@ const FinancialActivation: React.FC = () => {
                                             </div>
                                         )}
                                     </div>
-                                    
-                                    <button 
+
+                                    <button
                                         disabled={isSubmitting}
-                                        className="w-full bg-[#0F172A] hover:bg-[#1E293B] disabled:opacity-70 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] mt-8 flex justify-center items-center gap-2" 
+                                        className="w-full bg-[#0F172A] hover:bg-[#1E293B] disabled:opacity-70 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98] mt-8 flex justify-center items-center gap-2"
                                         type="submit"
                                     >
                                         {isSubmitting ? (
@@ -285,7 +287,7 @@ const FinancialActivation: React.FC = () => {
                                         )}
                                     </button>
                                 </form>
-                                
+
                                 <div className="mt-8 text-center pb-8">
                                     <p className="font-label-md text-xs text-outline">
                                         By submitting, you agree to the <a className="underline hover:text-primary transition-colors cursor-pointer">Financial Terms of Service</a>.
@@ -303,7 +305,7 @@ const FinancialActivation: React.FC = () => {
                         <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-secondary-fixed rounded-full blur-[120px]"></div>
                         <div className="absolute bottom-[-10%] left-[-10%] w-96 h-96 bg-primary-fixed rounded-full blur-[120px]"></div>
                     </div>
-                    
+
                     <div className="relative z-10 w-[480px]">
                         {/* Floating Dashboard Card */}
                         <div className="bg-white rounded-2xl shadow-2xl border border-surface-variant p-8 transform transition-transform hover:-translate-y-2 duration-500">
@@ -316,7 +318,7 @@ const FinancialActivation: React.FC = () => {
                                     <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
                                 </div>
                             </div>
-                            
+
                             {/* Revenue Chart Placeholder */}
                             <div className="mb-8">
                                 <div className="flex items-end justify-between space-x-2 h-32 mb-4">
@@ -333,7 +335,7 @@ const FinancialActivation: React.FC = () => {
                                     <span className="font-label-md text-xs font-bold bg-emerald-50 text-emerald-700 px-2 py-1 rounded">▲ 12.4%</span>
                                 </div>
                             </div>
-                            
+
                             {/* Notification Toast inside Preview */}
                             <div className="space-y-4">
                                 <div className="flex items-start space-x-4 p-4 rounded-xl bg-surface-bright border border-surface-variant">
@@ -352,15 +354,15 @@ const FinancialActivation: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        
+
                         {/* Descriptive Text */}
                         <div className="mt-12 text-center">
                             <p className="font-body-lg text-on-surface-variant max-w-sm mx-auto leading-relaxed">
-                                Automated multi-party routing, <br/><span className="text-primary font-bold">powered by Stripe Connect.</span>
+                                Automated multi-party routing, <br /><span className="text-primary font-bold">powered by Stripe Connect.</span>
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Abstract Grid Overlay */}
                     <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: "radial-gradient(#cbd5e1 1.5px, transparent 1.5px)", backgroundSize: "24px 24px" }}></div>
                 </div>

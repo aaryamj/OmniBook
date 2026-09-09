@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, NavLink } from 'react-router-dom';
 import ProviderTopNavigation from './components/ProviderTopNavigation';
+import ProviderSidebar from './components/ProviderSidebar';
+import NewAppointmentModal from '../adminPage/components/NewAppointmentModal';
+import { useOrganizationTerms } from '../../utils/organizationTerms';
 
 interface Patient {
   id: string;
@@ -18,6 +21,7 @@ interface Patient {
 
 
 const PatientsPage: React.FC = () => {
+  const terms = useOrganizationTerms();
   const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,46 +31,91 @@ const PatientsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive' | 'Missed'>('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('Booking link copied to clipboard!');
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  
+  // Dynamic Note States scoped by provider ID
+  const currentProviderId = localStorage.getItem('userId') || 'default';
+  const notesStorageKey = `provider_patient_notes_${currentProviderId}`;
+
+  const [patientNotes, setPatientNotes] = useState<{ [id: string]: string }>(() => {
+    try {
+      const saved = localStorage.getItem(notesStorageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [currentNoteText, setCurrentNoteText] = useState('');
+
   const copyBookingLink = () => {
-    // Generate a proper link based on standard user format
-    const providerId = localStorage.getItem('userId') || '1'; // Fallback to 1 if not available
-    const link = `http://localhost:5173/book/${providerId}`;
+    const providerId = localStorage.getItem('userId') || '';
+    const link = providerId 
+      ? `${window.location.origin}/book-appointment?provider=${providerId}`
+      : `${window.location.origin}/book-appointment`;
     navigator.clipboard.writeText(link);
+    setToastMessage(`Public booking link copied to clipboard!`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleSaveNotes = () => {
+    if (!selectedPatient) return;
+    const updated = { ...patientNotes, [selectedPatient.id]: currentNoteText };
+    setPatientNotes(updated);
+    localStorage.setItem(notesStorageKey, JSON.stringify(updated));
+    setIsEditingNotes(false);
+    setToastMessage(`Notes saved successfully!`);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
-    useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:8080/api/v1/provider/patients', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setPatients(data);
+  const fetchPatients = React.useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8080/api/v1/provider/patients', {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } catch (error) {
-        console.error('Error fetching patients:', error);
-      } finally {
-        setIsLoading(false);
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPatients(data);
       }
-    };
-    fetchPatients();
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
+
+  useEffect(() => {
     const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
+    const role = (localStorage.getItem('role') || '').toLowerCase();
+    const isProvider = role === 'service_provider' || role === 'provider' || role === 'role_provider';
     
-    // Redirect if no token or role is not 'service_provider'
-    if (!token || role !== 'service_provider') {
+    // Redirect if no token or role is not provider
+    if (!token || !isProvider) {
       navigate('/login');
+      return;
+    }
+
+    const permissionsJson = localStorage.getItem('permissionsJson');
+    const tenantRoleName = localStorage.getItem('tenantRoleName');
+    if (tenantRoleName && permissionsJson) {
+      try {
+        const p = JSON.parse(permissionsJson);
+        if (p.patients && p.patients.read === false) {
+          navigate('/provider-dashboard');
+        }
+      } catch (e) {}
     }
   }, [navigate]);
 
@@ -86,10 +135,13 @@ const PatientsPage: React.FC = () => {
 
   const openPatientPanel = (patient: Patient) => {
     setSelectedPatient(patient);
+    setIsEditingNotes(false);
+    setCurrentNoteText(patientNotes[patient.id] || '');
   };
 
   const closePanel = () => {
     setSelectedPatient(null);
+    setIsEditingNotes(false);
   };
 
   const filteredPatients = patients.filter(p => {
@@ -115,7 +167,7 @@ const PatientsPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', 'patients_directory.csv');
+    link.setAttribute('download', `${terms.customerPlural.toLowerCase()}_directory.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -123,56 +175,11 @@ const PatientsPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F3F4F6] text-[#151c27] font-sans min-h-screen flex overflow-x-hidden">
+    <div className="tenant-theme bg-[#F3F4F6] text-[#151c27] font-sans min-h-screen flex overflow-x-hidden">
       <ProviderTopNavigation />
 
       {/* SideNavBar */}
-      <nav className="fixed left-0 top-20 h-[calc(100vh-80px)] w-64 bg-[#f0f3ff] border-r border-[#c3c5d7]/30 py-6 px-4 flex flex-col gap-2 z-40 hidden md:flex">
-        <div className="mb-4 px-4">
-          <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined text-[#003fb1]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              dashboard
-            </span>
-            <span className="text-[24px] text-[#003fb1] font-bold">Portal</span>
-          </div>
-        </div>
-        
-        <NavLink to="/provider-dashboard" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-          <span className="material-symbols-outlined text-[18px]">dashboard</span>
-          Dashboard
-        </NavLink>
-        
-        <NavLink to="/master-calendar" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-          <span className="material-symbols-outlined text-[18px]">calendar_month</span>
-          Master Calendar
-        </NavLink>
-        
-        <NavLink to="/patients" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-          <span className="material-symbols-outlined text-[18px]">group</span>
-          Patients/Clients
-        </NavLink>
-        
-        <NavLink to="/services" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-          <span className="material-symbols-outlined text-[18px]">medical_services</span>
-          Services Manager
-        </NavLink>
-        
-        <NavLink to="/analytics" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-          <span className="material-symbols-outlined text-[18px]">bar_chart</span>
-          Revenue & Analytics
-        </NavLink>
-
-        <div className="mt-auto flex flex-col gap-1">
-          <NavLink to="/provider/settings" className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-[#d6e4f3]'}`}>
-            <span className="material-symbols-outlined text-[18px]">settings</span>
-            Settings
-          </NavLink>
-          <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all text-[#ba1a1a] hover:bg-[#ffdad6]/20 text-left">
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-            Log Out
-          </button>
-        </div>
-      </nav>
+      <ProviderSidebar />
 
       {/* Main Content Area */}
       <main className="pt-24 pb-8 md:ml-64 px-4 md:px-10 h-screen flex-1 md:w-[calc(100%-256px)] flex flex-col relative overflow-hidden">
@@ -180,16 +187,18 @@ const PatientsPage: React.FC = () => {
         {/* Page Header & Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">Patient Directory</h1>
-            <p className="text-sm font-medium text-[#53606c] mt-1">Manage your {filteredPatients.length} registered patients and viewing history.</p>
+            <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">{terms.customerSingular} Directory</h1>
+            <p className="text-sm font-medium text-[#53606c] mt-1">Manage your {filteredPatients.length} registered {terms.customerPlural.toLowerCase()} and viewing history.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <button onClick={exportCSV} className="flex-1 sm:flex-initial px-4 py-2.5 text-sm font-bold text-[#3b4854] bg-white border border-[#c3c5d7] rounded-xl hover:bg-[#f9f9ff] transition flex items-center justify-center gap-2 shadow-sm cursor-pointer">
               <span className="material-symbols-outlined text-[18px]">download</span> Export CSV
             </button>
-            <button className="flex-1 sm:flex-initial bg-[#1a56db] hover:bg-[#123e9e] text-white font-bold py-2.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer">
-              <span className="material-symbols-outlined text-[20px]">add</span> Add Patient
+            <button 
+              onClick={() => setIsAddCustomerModalOpen(true)}
+              className="flex-1 sm:flex-initial bg-primary hover:brightness-110 text-on-primary font-bold py-2.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer">
+              <span className="material-symbols-outlined text-[20px]">add</span> Add {terms.customerSingular}
             </button>
           </div>
         </div>
@@ -200,10 +209,10 @@ const PatientsPage: React.FC = () => {
             <span className="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-[#53606c]">search</span>
             <input 
               type="text" 
-              placeholder="Search by name, phone, or email..." 
+              placeholder={`Search by ${terms.customerSingular.toLowerCase()} name, phone, or email...`} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-[#c3c5d7] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#1a56db]/20 focus:border-[#1a56db] transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-[#c3c5d7] rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
             />
           </div>
           <div className="relative">
@@ -212,7 +221,7 @@ const PatientsPage: React.FC = () => {
               className="px-4 py-3 bg-white border border-[#c3c5d7] rounded-xl text-[#53606c] hover:bg-[#f9f9ff] transition shadow-sm flex items-center gap-2 text-sm font-bold"
             >
               <span className="material-symbols-outlined text-[18px]">filter_alt</span> 
-              Filters {statusFilter !== 'All' && <span className="w-2 h-2 rounded-full bg-[#1a56db] ml-1"></span>}
+              Filters {statusFilter !== 'All' && <span className="w-2 h-2 rounded-full bg-primary ml-1"></span>}
             </button>
             {showFilterDropdown && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-[#c3c5d7] rounded-xl shadow-lg z-50 overflow-hidden py-1">
@@ -223,7 +232,7 @@ const PatientsPage: React.FC = () => {
                       setStatusFilter(status as any);
                       setShowFilterDropdown(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status ? 'bg-[#1a56db]/10 text-[#003fb1] font-bold' : 'text-[#3b4854] hover:bg-[#f0f3ff]'}`}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${statusFilter === status ? 'bg-primary/10 text-primary font-bold' : 'text-[#3b4854] hover:bg-surface-container-high'}`}
                   >
                     {status}
                   </button>
@@ -239,7 +248,7 @@ const PatientsPage: React.FC = () => {
             <table className="w-full min-w-[720px] text-left border-collapse">
               <thead className="bg-[#f9f9ff]/80 sticky top-0 z-10 backdrop-blur-sm">
                 <tr>
-                  <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">Patient Info</th>
+                  <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">{terms.customerSingular} Info</th>
                   <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">Contact</th>
                   <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">Last Visit</th>
                   <th className="py-4 px-6 text-[11px] font-bold text-[#53606c] uppercase tracking-wider border-b border-[#c3c5d7]/30">Total Bookings</th>
@@ -310,14 +319,14 @@ const PatientsPage: React.FC = () => {
                             className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#151c27] hover:bg-[#f0f3ff] transition-colors flex items-center gap-2" 
                             onClick={(e) => { e.stopPropagation(); setOpenActionMenuId(null); }}
                           >
-                            <span className="material-symbols-outlined text-[16px]">mail</span> Contact Patient
+                            <span className="material-symbols-outlined text-[16px]">mail</span> Contact {terms.customerSingular}
                           </a>
                           <div className="h-[1px] w-full bg-[#c3c5d7]/30 my-1"></div>
                           <button 
                             className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#151c27] hover:bg-[#f0f3ff] transition-colors flex items-center gap-2" 
                             onClick={(e) => { e.stopPropagation(); navigate(`/master-calendar?patient=${encodeURIComponent(patient.email)}`); setOpenActionMenuId(null); }}
                           >
-                            <span className="material-symbols-outlined text-[16px]">history</span> View Medical History
+                            <span className="material-symbols-outlined text-[16px]">history</span> View History
                           </button>
                         </div>
                       )}
@@ -326,8 +335,27 @@ const PatientsPage: React.FC = () => {
                 ))}
                 {filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-[#53606c] font-medium">
-                      No patients found matching your search criteria.
+                    <td colSpan={6} className="py-16 text-center text-[#53606c]">
+                      <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                          <span className="material-symbols-outlined text-primary text-[32px]">{terms.customersNavIcon}</span>
+                        </div>
+                        <h3 className="font-bold text-[#151c27] text-lg mb-1">
+                          {searchQuery || statusFilter !== 'All' ? `No ${terms.customerPlural.toLowerCase()} match your filters` : `No ${terms.customerPlural.toLowerCase()} yet`}
+                        </h3>
+                        <p className="text-xs text-[#53606c] mb-5 leading-relaxed">
+                          {searchQuery || statusFilter !== 'All'
+                            ? `Try clearing your search query or changing filters to see your ${terms.customerPlural.toLowerCase()}.`
+                            : `Clients who book appointments with you will automatically appear here in your directory.`}
+                        </p>
+                        <button
+                          onClick={copyBookingLink}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-xs font-bold rounded-xl hover:brightness-110 shadow-sm transition active:scale-95 cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          Copy My Public Booking Link
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -360,7 +388,7 @@ const PatientsPage: React.FC = () => {
               
               {/* Panel Header */}
               <div className="px-8 py-6 flex justify-between items-start border-b border-[#c3c5d7]/30 bg-[#f9f9ff]">
-                <h3 className="font-bold text-[#151c27] text-lg">Patient Overview</h3>
+                <h3 className="font-bold text-[#151c27] text-lg">{terms.customerSingular} Overview</h3>
                 <button 
                   className="w-8 h-8 rounded-full bg-[#f0f3ff] hover:bg-[#dce2f3] text-[#53606c] flex items-center justify-center transition-colors"
                   onClick={closePanel}
@@ -404,23 +432,76 @@ const PatientsPage: React.FC = () => {
                 {/* Internal Notes */}
                 <div className="mb-8">
                   <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-bold text-[#151c27]">Internal Provider Notes</h4>
-                    <button className="text-xs font-bold text-[#1a56db] hover:underline">Edit Notes</button>
+                    <h4 className="font-bold text-[#151c27]">Internal {terms.providerSingular} Notes</h4>
+                    {!isEditingNotes ? (
+                      <button 
+                        onClick={() => {
+                          setCurrentNoteText(patientNotes[selectedPatient.id] || '');
+                          setIsEditingNotes(true);
+                        }}
+                        className="text-xs font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">edit</span>
+                        Edit Notes
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setIsEditingNotes(false)}
+                          className="text-xs font-medium text-[#53606c] hover:underline cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          onClick={handleSaveNotes}
+                          className="text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-[#fff8e6] p-4 rounded-xl border border-[#ffeaad] text-sm text-[#b38600] shadow-sm leading-relaxed">
-                    Allergic to Penicillin. Prefers morning appointments. Requires wheelchair accessibility upon arrival.
-                  </div>
+                  
+                  {isEditingNotes ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={currentNoteText}
+                        onChange={(e) => setCurrentNoteText(e.target.value)}
+                        placeholder={`Add internal remarks for this ${terms.customerSingular.toLowerCase()}...`}
+                        rows={3}
+                        className="w-full p-3 rounded-xl border border-primary/40 focus:ring-2 focus:ring-primary/20 focus:outline-none text-sm text-[#151c27] bg-[#f9f9ff]"
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-[#fff8e6] p-4 rounded-xl border border-[#ffeaad] text-sm text-[#b38600] shadow-sm leading-relaxed">
+                      {patientNotes[selectedPatient.id] ? (
+                        patientNotes[selectedPatient.id]
+                      ) : (
+                        <span className="italic opacity-80">
+                          No internal notes recorded yet for this {terms.customerSingular.toLowerCase()}. Click "Edit Notes" to add confidential remarks.
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Quick Actions List */}
                 <h4 className="font-bold text-[#151c27] mb-3">Quick Actions</h4>
                 <div className="space-y-2">
-                  <button onClick={copyBookingLink} className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-[#1a56db] hover:bg-[#1a56db]/5 font-semibold text-[#3b4854] hover:text-[#003fb1] transition flex items-center justify-between group">
-                    <span className="flex items-center gap-3"><span className="material-symbols-outlined text-[#53606c] group-hover:text-[#1a56db] transition">content_copy</span> Copy Public Booking Link</span>
+                  <button onClick={copyBookingLink} className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-primary hover:bg-primary/5 font-semibold text-[#3b4854] hover:text-primary transition flex items-center justify-between group cursor-pointer">
+                    <span className="flex items-center gap-3"><span className="material-symbols-outlined text-[#53606c] group-hover:text-primary transition">content_copy</span> Copy Public Booking Link</span>
                     <span className="material-symbols-outlined text-[18px] text-[#c3c5d7]">chevron_right</span>
                   </button>
-                  <button className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-[#1a56db] hover:bg-[#1a56db]/5 font-semibold text-[#3b4854] hover:text-[#003fb1] transition flex items-center justify-between group">
-                    <span className="flex items-center gap-3"><span className="material-symbols-outlined text-[#53606c] group-hover:text-[#1a56db] transition">history</span> View Medical/Booking History</span>
+                  <button 
+                    onClick={() => {
+                      navigate(`/master-calendar?patient=${encodeURIComponent(selectedPatient.email)}`);
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-xl border border-[#c3c5d7]/50 hover:border-primary hover:bg-primary/5 font-semibold text-[#3b4854] hover:text-primary transition flex items-center justify-between group cursor-pointer"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#53606c] group-hover:text-primary transition">history</span> 
+                      View {terms.serviceSingular} History
+                    </span>
                     <span className="material-symbols-outlined text-[18px] text-[#c3c5d7]">chevron_right</span>
                   </button>
                 </div>
@@ -428,13 +509,27 @@ const PatientsPage: React.FC = () => {
             </div>
           </>
         )}
-              {showToast && (
-          <div className="fixed bottom-6 right-6 bg-[#1a56db] text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-[slideInRight_0.3s_ease-out] z-50">
+        {showToast && (
+          <div className="fixed bottom-6 right-6 bg-primary text-on-primary px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 animate-[slideInRight_0.3s_ease-out] z-50">
             <span className="material-symbols-outlined text-[20px]">check_circle</span>
-            <span className="font-semibold text-sm">Booking link copied to clipboard!</span>
+            <span className="font-semibold text-sm">{toastMessage}</span>
           </div>
         )}
       </main>
+
+      {/* NEW CUSTOMER / APPOINTMENT MODAL */}
+      <NewAppointmentModal
+        isOpen={isAddCustomerModalOpen}
+        onClose={() => setIsAddCustomerModalOpen(false)}
+        onSuccess={() => {
+          setIsAddCustomerModalOpen(false);
+          fetchPatients();
+          setToastMessage(`${terms.customerSingular} added successfully!`);
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 4000);
+        }}
+        preselectedProviderName={localStorage.getItem('fullName') || undefined}
+      />
 
       {/* Basic Keyframes for slide in */}
       <style>{`

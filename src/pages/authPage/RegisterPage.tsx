@@ -13,6 +13,14 @@ const RegisterPage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [countryCode, setCountryCode] = useState(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz === 'Asia/Kathmandu') return '+977';
+      if (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') return '+91';
+    } catch (e) {}
+    return '+977';
+  });
 
   // UI states
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -247,12 +255,18 @@ const RegisterPage: React.FC = () => {
                     <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="phone">Phone Number</label>
                     <div className="relative group">
                       <div className="absolute left-[1px] top-[1px] bottom-[1px] flex items-center border-r border-[#c3c5d7] pr-2 pl-3 bg-[#f9f9ff] rounded-l-[11px] pointer-events-auto">
-                        <select className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} id="countryCode">
+                        <select 
+                          value={countryCode}
+                          onChange={(e) => setCountryCode(e.target.value)}
+                          className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-[#434654] font-medium cursor-pointer appearance-none focus:ring-0" 
+                          style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}} 
+                          id="countryCode"
+                        >
+                          <option value="+977">🇳🇵 +977</option>
+                          <option value="+91">🇮🇳 +91</option>
                           <option value="+1">🇺🇸 +1</option>
                           <option value="+44">🇬🇧 +44</option>
-                          <option value="+91">🇮🇳 +91</option>
                           <option value="+61">🇦🇺 +61</option>
-                          <option value="+977">🇳🇵 +977</option>
                         </select>
                       </div>
                       <input

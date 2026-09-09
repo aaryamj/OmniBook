@@ -1,20 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import '../superAdminPage/superAdmin.css';
 import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
+import { useOrganizationTerms } from '../../utils/organizationTerms';
 
 import axios from 'axios';
+import AdminAppointmentDetailModal from './components/AdminAppointmentDetailModal';
+import NewAppointmentModal from './components/NewAppointmentModal';
 
 interface AdminAppointmentDTO {
     id: string;
     patientName: string;
+    patientEmail?: string;
+    patientPhone?: string;
+    patientProfilePicture?: string;
     initials: string;
     date: string;
     time: string;
     providerName: string;
+    doctorSpecialty?: string;
+    doctorProfilePicture?: string;
     department: string;
     status: string;
     paymentStatus: string;
+    appointmentType?: string;
+    price?: number;
+    reasonForVisit?: string;
+    organizationType?: string;
+    organizationName?: string;
+    bookedAt?: string;
+    bookedByName?: string;
+    bookedByRole?: string;
+    approvedAt?: string;
+    approvedByName?: string;
+    approvedByRole?: string;
+    checkedInAt?: string;
+    checkedInByName?: string;
+    checkedInByRole?: string;
+    completedAt?: string;
+    completedByName?: string;
+    completedByRole?: string;
+    cancelledAt?: string;
+    cancelledByName?: string;
+    cancelledByRole?: string;
+    treatmentSummary?: string;
+    internalNotes?: string;
+    patientRating?: number;
+    patientReview?: string;
     bgColor?: string;
     statusColor?: string;
     paymentColor?: string;
@@ -24,15 +57,18 @@ interface AdminAppointmentDTO {
 const dateRangeList = ['Oct 24 - Oct 31, 2026', 'Nov 1 - Nov 7, 2026', 'Nov 8 - Nov 14, 2026'];
 
 export default function AllAppointments() {
+    const terms = useOrganizationTerms();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [appointments, setAppointments] = React.useState<AdminAppointmentDTO[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const [providersList, setProvidersList] = React.useState<string[]>(['All Providers']);
+    const [providersList, setProvidersList] = React.useState<string[]>(['All ' + terms.providerPlural]);
+    const [adminRosterProviders, setAdminRosterProviders] = useState<string[]>([]);
     
     const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
     
     const [statusFilter, setStatusFilter] = useState('All');
-    const [providerFilter, setProviderFilter] = useState('All Providers');
-    const [searchQuery, setSearchQuery] = useState('');
+    const [providerFilter, setProviderFilter] = useState('All ' + terms.providerPlural);
+    const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
     const [selectedDate, setSelectedDate] = useState('');
 
     const [isProviderDropdownOpen, setIsProviderDropdownOpen] = useState(false);
@@ -40,15 +76,54 @@ export default function AllAppointments() {
     const [viewDetailsApp, setViewDetailsApp] = useState<any>(null);
     const [rescheduleApp, setRescheduleApp] = useState<any>(null);
 
+    // Compute dynamic defaults based on organization type
+    const defaults = useMemo(() => {
+        const norm = (terms.facilityLabel || '').toLowerCase();
+        if (norm.includes('college') || norm.includes('acad')) {
+            return {
+                deptLabel: 'FACULTY / DEPARTMENT',
+                deptPlaceholder: 'e.g. Computer Science',
+                defaultDept: 'Computer Science'
+            };
+        } else if (norm.includes('salon') || norm.includes('saloon') || norm.includes('spa')) {
+            return {
+                deptLabel: 'SERVICE / SPECIALIZATION',
+                deptPlaceholder: 'e.g. Hair Styling & Treatment',
+                defaultDept: 'Hair Styling & Treatment'
+            };
+        } else if (norm.includes('clinic') || norm.includes('hosp')) {
+            return {
+                deptLabel: 'DEPARTMENT',
+                deptPlaceholder: 'e.g. Cardiology',
+                defaultDept: 'Cardiology'
+            };
+        } else {
+            return {
+                deptLabel: 'DEPARTMENT / CATEGORY',
+                deptPlaceholder: `e.g. General ${terms.serviceSingular}`,
+                defaultDept: `General ${terms.serviceSingular}`
+            };
+        }
+    }, [terms.facilityLabel, terms.serviceSingular]);
+
+    const providerOptions = adminRosterProviders;
+
     // New Appointment Modal State
     const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false);
-    const [newAppForm, setNewAppForm] = useState({
-        patientName: '',
-        date: '',
-        time: '',
-        provider: 'Dr. Adler',
-        department: 'Cardiology'
-    });
+
+    // Check if opened via URL query parameter (e.g. from Dashboard click or Global Search)
+    useEffect(() => {
+        if (searchParams.get('new') === 'true') {
+            setIsNewAppointmentModalOpen(true);
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('new');
+            setSearchParams(nextParams, { replace: true });
+        }
+        const s = searchParams.get('search');
+        if (s !== null) {
+            setSearchQuery(s);
+        }
+    }, [searchParams, setSearchParams]);
 
     const [rescheduleForm, setRescheduleForm] = useState({ date: '', time: '' });
 
@@ -93,7 +168,7 @@ export default function AllAppointments() {
             mappedData.forEach((app: any) => {
                 if (app.providerName) uniqueProviders.add(app.providerName);
             });
-            setProvidersList(['All Providers', ...Array.from(uniqueProviders)]);
+            setProvidersList(['All ' + terms.providerPlural, ...Array.from(uniqueProviders)]);
         } catch (error) {
             console.error("Failed to fetch appointments", error);
         } finally {
@@ -103,6 +178,26 @@ export default function AllAppointments() {
 
     React.useEffect(() => {
         fetchAppointments();
+
+        // Also fetch provider roster to populate dropdown dynamically
+        const fetchProvidersRoster = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const res = await axios.get('http://localhost:8080/api/v1/admin/providers', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+                    const names = res.data.map((p: any) => p.name || p.fullName).filter(Boolean);
+                    if (names.length > 0) {
+                        setAdminRosterProviders(names);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch admin providers roster", err);
+            }
+        };
+        fetchProvidersRoster();
     }, []);
 
     const parseAppDate = (dateStr: string) => {
@@ -112,8 +207,14 @@ export default function AllAppointments() {
     const filteredAppointments = appointments.filter(app => {
         const matchesStatus = statusFilter === 'All' || app.status === statusFilter || (statusFilter === 'Upcoming' && app.status === 'SCHEDULED'); 
         const exactMatchStatus = statusFilter === 'All' || (statusFilter === 'Upcoming' ? ['Upcoming', 'SCHEDULED', 'Rescheduled'].includes(app.status) : app.status.toUpperCase() === statusFilter.toUpperCase());
-        const matchesProvider = providerFilter === 'All Providers' || app.providerName === providerFilter;
-        const matchesSearch = app.patientName.toLowerCase().includes(searchQuery.toLowerCase()) || app.id.includes(searchQuery);
+        const matchesProvider = providerFilter === ('All ' + terms.providerPlural) || providerFilter === 'All Providers' || app.providerName === providerFilter;
+        const qLower = searchQuery.toLowerCase();
+        const matchesSearch = !searchQuery || 
+            (app.patientName && app.patientName.toLowerCase().includes(qLower)) || 
+            (app.id && app.id.toLowerCase().includes(qLower)) ||
+            (app.patientEmail && app.patientEmail.toLowerCase().includes(qLower)) ||
+            (app.patientPhone && app.patientPhone.toLowerCase().includes(qLower)) ||
+            (app.reasonForVisit && app.reasonForVisit.toLowerCase().includes(qLower));
         const matchesDate = !selectedDate || parseAppDate(app.date) === selectedDate;
         return exactMatchStatus && matchesProvider && matchesSearch && matchesDate;
     });
@@ -144,26 +245,6 @@ export default function AllAppointments() {
     };
 
     // --- Action Handlers ---
-    const handleAddAppointment = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-              const token = localStorage.getItem('token');
-              const payload = {
-                  ...newAppForm,
-                  providerName: newAppForm.provider
-              };
-              await axios.post('http://localhost:8080/api/v1/admin/appointments', payload, {
-                  headers: { Authorization: `Bearer ${token}` }
-              });
-            setIsNewAppointmentModalOpen(false);
-            setNewAppForm({ patientName: '', date: '', time: '', provider: 'Dr. Adler', department: 'Cardiology' });
-            fetchAppointments();
-        } catch (error) {
-            console.error("Failed to add walk-in appointment", error);
-            alert("Failed to create appointment.");
-        }
-    };
-
     const handleRescheduleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!rescheduleApp) return;
@@ -197,19 +278,19 @@ export default function AllAppointments() {
     };
 
     return (
-        <div className="superadmin-theme">
+        <div className="tenant-theme">
             <div className="bg-background text-on-surface font-sans min-h-screen">
                 <AdminSidebar />
                 <TopNavigation />
                 
                 {/* Main Content Area */}
-                <main className="ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col">
+                <main className="lg:ml-[280px] ml-0 ml-sidebar-width pt-24 pb-gutter px-gutter min-h-screen flex flex-col">
                     <div className="max-w-container-max mx-auto w-full flex-1 flex flex-col">
                         
                         {/* View Controls & Header */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                             <div>
-                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg text-primary tracking-tighter">Appointment Roster</h2>
+                                <h2 className="text-2xl sm:text-headline-lg font-headline-lg font-bold text-primary tracking-tighter">{terms.appointmentSingular} Roster</h2>
                                 <p className="text-on-surface-variant font-body-md text-body-md mt-1">Real-time scheduling and operational oversight.</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -230,11 +311,11 @@ export default function AllAppointments() {
                                     </button>
                                 </div>
                                 <button 
-                                    className="w-full sm:w-auto bg-[#0EA5E9] text-white px-6 py-2.5 font-bold rounded flex items-center justify-center gap-2 shadow-lg shadow-sky-400/30 hover:brightness-105 transition-all cursor-pointer"
+                                    className="w-full sm:w-auto bg-primary text-on-primary px-6 py-2.5 font-bold rounded flex items-center justify-center gap-2 shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
                                     onClick={() => setIsNewAppointmentModalOpen(true)}
                                 >
                                     <span className="material-symbols-outlined">add</span>
-                                    New Appointment
+                                    New {terms.appointmentSingular}
                                 </button>
                             </div>
                         </div>
@@ -258,7 +339,7 @@ export default function AllAppointments() {
                                     className="flex items-center gap-2 cursor-pointer p-1 hover:bg-surface-container rounded transition-colors"
                                     onClick={() => setIsProviderDropdownOpen(!isProviderDropdownOpen)}
                                 >
-                                    <span className="material-symbols-outlined text-on-surface-variant text-sm">medical_information</span>
+                                    <span className="material-symbols-outlined text-on-surface-variant text-sm">{terms.providersNavIcon}</span>
                                     <span className="font-label-md text-label-md text-on-surface">{providerFilter}</span>
                                     <span className="material-symbols-outlined text-on-surface-variant text-sm ml-auto">arrow_drop_down</span>
                                 </div>
@@ -290,7 +371,7 @@ export default function AllAppointments() {
                                 <span className="material-symbols-outlined text-on-surface-variant">search</span>
                                 <input 
                                     className="w-full bg-transparent border-none focus:ring-0 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 outline-none" 
-                                    placeholder="Search by Patient Name or ID..." 
+                                    placeholder={`Search by ${terms.customerSingular} Name or ID...`} 
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -306,8 +387,8 @@ export default function AllAppointments() {
                                         <thead className="bg-[#F1F5F9] border-b border-outline-variant sticky top-0 z-10">
                                             <tr>
                                                 <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Date &amp; Time</th>
-                                                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Patient Details</th>
-                                                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Assigned Provider</th>
+                                                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">{terms.customerSingular} Details</th>
+                                                <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Assigned {terms.providerSingular}</th>
                                                 <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Operational Status</th>
                                                 <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Payment Status</th>
                                                 <th className="px-6 py-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Action</th>
@@ -323,7 +404,18 @@ export default function AllAppointments() {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${app.bgColor}`}>{app.initials}</div>
+                                                                {app.patientProfilePicture ? (
+                                                                    <img 
+                                                                        src={app.patientProfilePicture} 
+                                                                        alt={app.patientName} 
+                                                                        className="w-8 h-8 rounded-full object-cover border border-outline-variant flex-shrink-0"
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${app.bgColor} flex-shrink-0`}>{app.initials}</div>
+                                                                )}
                                                                 <div>
                                                                     <div className="font-body-md text-body-md font-bold text-on-surface">{app.patientName}</div>
                                                                     <div className="text-[10px] text-on-surface-variant uppercase font-mono-data">ID: {app.id}</div>
@@ -331,8 +423,20 @@ export default function AllAppointments() {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="font-body-md text-body-md text-on-surface">{app.providerName}</div>
-                                                            <div className="text-[11px] font-semibold text-[#00668a] uppercase">{app.department}</div>
+                                                            <div className="flex items-center gap-2.5">
+                                                                <img 
+                                                                    src={app.doctorProfilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.providerName || 'Provider')}&background=e2e8f8&color=1a56db&size=64&rounded=true`}
+                                                                    alt={app.providerName}
+                                                                    className="w-8 h-8 rounded-full object-cover border border-outline-variant/60 flex-shrink-0"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(app.providerName || 'Provider')}&background=e2e8f8&color=1a56db&size=64&rounded=true`;
+                                                                    }}
+                                                                />
+                                                                <div>
+                                                                    <div className="font-body-md text-body-md text-on-surface font-semibold">{app.providerName}</div>
+                                                                    <div className="text-[11px] font-semibold text-[#00668a] uppercase">{app.department}</div>
+                                                                </div>
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${app.statusColor}`}>
@@ -386,7 +490,7 @@ export default function AllAppointments() {
                                                                                 handleCancelAppointment(app.id);
                                                                             }}
                                                                         >
-                                                                            Cancel Appointment
+                                                                            Cancel {terms.appointmentSingular}
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -397,7 +501,7 @@ export default function AllAppointments() {
                                             ) : (
                                                 <tr>
                                                     <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant font-body-md">
-                                                        No appointments found matching the current filters.
+                                                        No {terms.appointmentPlural.toLowerCase()} found matching the current filters.
                                                     </td>
                                                 </tr>
                                             )}
@@ -460,7 +564,18 @@ export default function AllAppointments() {
                                                 <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-1">
                                                     {dailyApps.map(app => (
                                                         <div key={app.id} className={`p-1.5 rounded border border-l-4 text-xs shadow-sm flex flex-col gap-1 bg-white cursor-pointer hover:shadow-md transition-shadow ${app.status === 'Completed' ? 'border-l-green-500 opacity-60' : app.status === 'Cancelled' ? 'border-l-red-500' : app.status === 'Rescheduled' ? 'border-l-amber-500' : 'border-l-blue-500'}`}>
-                                                            <div className="font-bold truncate text-on-surface">{app.time}</div>
+                                                            <div className="flex items-center justify-between gap-1">
+                                                                <div className="font-bold truncate text-on-surface">{app.time}</div>
+                                                                <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded uppercase tracking-wider ${
+                                                                    app.status?.toUpperCase() === 'COMPLETED' 
+                                                                        ? 'bg-emerald-100 text-emerald-800' 
+                                                                        : app.status?.toUpperCase() === 'CANCELLED'
+                                                                            ? 'bg-red-100 text-red-800'
+                                                                            : 'bg-blue-100 text-blue-800'
+                                                                }`}>
+                                                                    {app.status?.toUpperCase() === 'COMPLETED' ? 'Completed' : app.status?.toUpperCase() === 'CANCELLED' ? 'Cancelled' : 'Booked'}
+                                                                </span>
+                                                            </div>
                                                             <div className="truncate font-semibold text-primary">{app.patientName}</div>
                                                             <div className="text-[10px] text-on-surface-variant truncate">{app.providerName}</div>
                                                         </div>
@@ -476,165 +591,20 @@ export default function AllAppointments() {
                     </div>
                 </main>
 
-                {/* New Appointment Modal Overlay */}
-                {isNewAppointmentModalOpen && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                            <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-[#F8FAFC]">
-                                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">New Appointment</h3>
-                                <button 
-                                    className="p-1 rounded hover:bg-surface-container text-on-surface-variant"
-                                    onClick={() => setIsNewAppointmentModalOpen(false)}
-                                >
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
-                            </div>
-                            <form className="p-6 flex flex-col gap-4" onSubmit={handleAddAppointment}>
-                                <div>
-                                    <label className="block text-xs font-bold text-on-surface-variant mb-1 uppercase tracking-wide">Patient Name</label>
-                                    <input 
-                                        required
-                                        type="text" 
-                                        className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                        value={newAppForm.patientName}
-                                        onChange={(e) => setNewAppForm({...newAppForm, patientName: e.target.value})}
-                                        placeholder="e.g. John Doe"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-on-surface-variant mb-1 uppercase tracking-wide">Date</label>
-                                        <input 
-                                            required
-                                            type="date" 
-                                            className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                            value={newAppForm.date}
-                                            onChange={(e) => setNewAppForm({...newAppForm, date: e.target.value})}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-on-surface-variant mb-1 uppercase tracking-wide">Time</label>
-                                        <input 
-                                            required
-                                            type="time" 
-                                            className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                            value={newAppForm.time}
-                                            onChange={(e) => setNewAppForm({...newAppForm, time: e.target.value})}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-on-surface-variant mb-1 uppercase tracking-wide">Provider</label>
-                                    <select 
-                                        className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white"
-                                        value={newAppForm.provider}
-                                        onChange={(e) => setNewAppForm({...newAppForm, provider: e.target.value})}
-                                    >
-                                        <option value="Dr. Adler">Dr. Adler</option>
-                                        <option value="Dr. Thorne">Dr. Thorne</option>
-                                        <option value="Dr. Gupta">Dr. Gupta</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-on-surface-variant mb-1 uppercase tracking-wide">Department</label>
-                                    <input 
-                                        required
-                                        type="text" 
-                                        className="w-full border border-outline-variant rounded px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-                                        value={newAppForm.department}
-                                        onChange={(e) => setNewAppForm({...newAppForm, department: e.target.value})}
-                                        placeholder="e.g. Cardiology"
-                                    />
-                                </div>
-                                
-                                <div className="mt-4 flex justify-end gap-3 pt-4 border-t border-outline-variant">
-                                    <button 
-                                        type="button"
-                                        className="px-4 py-2 rounded text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-colors"
-                                        onClick={() => setIsNewAppointmentModalOpen(false)}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        type="submit"
-                                        className="px-6 py-2 rounded bg-primary text-white text-sm font-bold shadow-md shadow-primary/20 hover:brightness-110 transition-all"
-                                    >
-                                        Create Appointment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                {/* New Appointment / Session Modal */}
+                <NewAppointmentModal 
+                    isOpen={isNewAppointmentModalOpen} 
+                    onClose={() => setIsNewAppointmentModalOpen(false)} 
+                    onSuccess={fetchAppointments} 
+                />
 
                 {/* View Details Modal Overlay */}
                 {viewDetailsApp && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                            <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-[#F8FAFC]">
-                                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Appointment Details</h3>
-                                <button 
-                                    className="p-1 rounded hover:bg-surface-container text-on-surface-variant"
-                                    onClick={() => setViewDetailsApp(null)}
-                                >
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
-                            </div>
-                            <div className="p-6 flex flex-col gap-6">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${viewDetailsApp.bgColor}`}>
-                                        {viewDetailsApp.initials}
-                                    </div>
-                                    <div>
-                                        <div className="font-headline-sm text-headline-sm font-bold text-on-surface">{viewDetailsApp.patientName}</div>
-                                        <div className="text-xs text-on-surface-variant uppercase font-mono-data">ID: {viewDetailsApp.id}</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-y-4 gap-x-6 border-t border-b border-outline-variant py-4">
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1">Date</div>
-                                        <div className="font-body-md text-on-surface font-semibold">{viewDetailsApp.date}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1">Time</div>
-                                        <div className="font-body-md text-on-surface font-semibold">{viewDetailsApp.time}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1">Provider</div>
-                                        <div className="font-body-md text-on-surface font-semibold">{viewDetailsApp.providerName}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1">Department</div>
-                                        <div className="font-body-md text-[#00668a] font-bold">{viewDetailsApp.department}</div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1">Status</div>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${viewDetailsApp.statusColor}`}>
-                                            {viewDetailsApp.status}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide mb-1 text-right">Payment</div>
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wide ${viewDetailsApp.paymentColor}`}>
-                                            {viewDetailsApp.payment}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-surface-container-lowest px-6 py-4 border-t border-outline-variant flex justify-end">
-                                <button 
-                                    className="px-6 py-2 rounded bg-primary text-white text-sm font-bold shadow hover:brightness-110 transition-all"
-                                    onClick={() => setViewDetailsApp(null)}
-                                >
-                                    Done
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <AdminAppointmentDetailModal 
+                        appointmentId={viewDetailsApp.id}
+                        appointmentData={viewDetailsApp}
+                        onClose={() => setViewDetailsApp(null)}
+                    />
                 )}
 
                 {/* Reschedule Modal Overlay */}
@@ -642,7 +612,7 @@ export default function AllAppointments() {
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
                             <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-[#F8FAFC]">
-                                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Reschedule Appointment</h3>
+                                <h3 className="font-headline-sm text-headline-sm text-on-surface font-bold">Reschedule {terms.appointmentSingular}</h3>
                                 <button 
                                     className="p-1 rounded hover:bg-surface-container text-on-surface-variant"
                                     onClick={() => setRescheduleApp(null)}

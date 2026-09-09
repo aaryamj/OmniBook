@@ -6,8 +6,8 @@ interface Tenant {
     subscriptionTier: string;
 }
 
-export default function PlatformRevenueChart() {
-    const [timeFilter, setTimeFilter] = useState<'1W' | '1M' | '1Y'>('1M');
+export default function PlatformRevenueChart({ timeFilter: dashboardTimeFilter = 'All Time' }: { timeFilter?: string }) {
+    const [chartInterval, setChartInterval] = useState<'1W' | '1M' | '1Y'>('1M');
     const [chartData, setChartData] = useState<{ [key: string]: number[] }>({
         '1W': [],
         '1M': [],
@@ -17,13 +17,14 @@ export default function PlatformRevenueChart() {
     const [currentData, setCurrentData] = useState<number[]>([]);
     const [donutData, setDonutData] = useState({ total: 0, enterprise: 0, pro: 0, starter: 0 });
 
-    // Fetch Real Tenant Data for Donut Chart
+    // Fetch Real Tenant Data for Donut Chart & Dashboard Revenue
     useEffect(() => {
         const fetchTenants = async () => {
             try {
                 const token = localStorage.getItem('token');
                 const res = await axios.get('http://localhost:8080/api/v1/superadmin/tenants', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    params: { timeFilter: dashboardTimeFilter }
                 });
                 
                 const tenants: Tenant[] = res.data || [];
@@ -60,11 +61,12 @@ export default function PlatformRevenueChart() {
             try {
                 const token = localStorage.getItem('token');
                 const res = await axios.get('http://localhost:8080/api/v1/superadmin/dashboard', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    params: { timeFilter: dashboardTimeFilter }
                 });
                 if (res.data && res.data.revenueChartData) {
                     setChartData(res.data.revenueChartData);
-                    setCurrentData(res.data.revenueChartData[timeFilter] || []);
+                    setCurrentData(res.data.revenueChartData[chartInterval] || []);
                 }
             } catch (error) {
                 console.error("Failed to fetch revenue chart data", error);
@@ -78,22 +80,22 @@ export default function PlatformRevenueChart() {
             fetchChartData();
         }, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [dashboardTimeFilter]);
 
-    // Update displayed chart when timeFilter changes
+    // Update displayed chart when chartInterval changes
     useEffect(() => {
-        setCurrentData(chartData[timeFilter] || []);
-    }, [timeFilter, chartData]);
+        setCurrentData(chartData[chartInterval] || []);
+    }, [chartInterval, chartData]);
 
     const getFilterClass = (filter: string) => {
-        return timeFilter === filter 
+        return chartInterval === filter 
             ? "px-3 py-1 text-[11px] font-bold bg-primary text-white rounded transition-colors"
             : "px-3 py-1 text-[11px] font-bold bg-surface-container hover:bg-surface-container-high text-on-surface-variant rounded transition-colors";
     };
 
     const getXAxisLabels = () => {
-        if (timeFilter === '1W') return ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'YEST', 'TODAY'];
-        if (timeFilter === '1M') return ['W1', 'W2', 'W3', 'W4'];
+        if (chartInterval === '1W') return ['D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'YEST', 'TODAY'];
+        if (chartInterval === '1M') return ['W1', 'W2', 'W3', 'W4'];
         
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         const currentMonth = new Date().getMonth();
@@ -129,12 +131,12 @@ export default function PlatformRevenueChart() {
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                             </span>
                         </h3>
-                        <p className="font-body-md text-body-md text-on-surface-variant">Live MRR growth and historical trends</p>
+                        <p className="font-body-md text-body-md text-on-surface-variant">Live MRR growth and historical trends ({dashboardTimeFilter})</p>
                     </div>
                     <div className="flex space-x-2">
-                        <button onClick={() => setTimeFilter('1W')} className={getFilterClass('1W')}>1W</button>
-                        <button onClick={() => setTimeFilter('1M')} className={getFilterClass('1M')}>1M</button>
-                        <button onClick={() => setTimeFilter('1Y')} className={getFilterClass('1Y')}>1Y</button>
+                        <button onClick={() => setChartInterval('1W')} className={getFilterClass('1W')}>1W</button>
+                        <button onClick={() => setChartInterval('1M')} className={getFilterClass('1M')}>1M</button>
+                        <button onClick={() => setChartInterval('1Y')} className={getFilterClass('1Y')}>1Y</button>
                     </div>
                 </div>
                 <div className="flex-1 relative">
@@ -179,7 +181,7 @@ export default function PlatformRevenueChart() {
                 <div className="flex justify-between items-start mb-8">
                     <div>
                         <h3 className="font-headline-md text-headline-md text-on-surface mb-1 flex items-center gap-2">
-                            Clinics by Plan
+                            Organizations by Plan
                             <span className="flex h-2 w-2 relative">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -198,7 +200,7 @@ export default function PlatformRevenueChart() {
                         {/* Inner hollow circle */}
                         <div className="absolute inset-4 bg-surface-container-lowest rounded-full flex flex-col items-center justify-center z-10 shadow-inner">
                             <p className="text-[32px] font-bold text-on-surface tracking-tighter leading-none">{donutData.total}</p>
-                            <p className="text-[10px] font-label-md text-on-surface-variant uppercase mt-1">Total Clinics</p>
+                            <p className="text-[10px] font-label-md text-on-surface-variant uppercase mt-1">Total Organizations</p>
                         </div>
                     </div>
                     

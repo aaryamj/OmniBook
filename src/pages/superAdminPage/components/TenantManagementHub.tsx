@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface Tenant {
     id: number;
@@ -26,8 +26,10 @@ interface Tenant {
 }
 
 export default function TenantManagementHub({ timeFilter }: { timeFilter?: string }) {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [filter, setFilter] = useState('All');
+    const [searchFilter, setSearchFilter] = useState(() => searchParams.get('search') || '');
     const [openActionId, setOpenActionId] = useState<number | null>(null);
     const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
     const actionMenuRef = useRef<HTMLDivElement>(null);
@@ -40,10 +42,17 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const s = searchParams.get('search');
+        if (s !== null) {
+            setSearchFilter(s);
+        }
+    }, [searchParams]);
+
     const fetchTenants = async () => {
         try {
             const token = localStorage.getItem('token');
-            const url = timeFilter 
+            const url = timeFilter
                 ? `http://localhost:8080/api/v1/superadmin/tenants?timeFilter=${encodeURIComponent(timeFilter)}`
                 : 'http://localhost:8080/api/v1/superadmin/tenants';
             const res = await axios.get(url, {
@@ -116,11 +125,21 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
 
     // Filter Logic
     const filteredTenants = tenants.filter(t => {
-        if (filter === 'All') return true;
-        if (filter === 'Active') return t.status === 'ACTIVE';
-        if (filter === 'Pending') return t.status === 'PENDING_VERIFICATION';
-        if (filter === 'Suspended') return t.status === 'SUSPENDED';
-        return true;
+        let statusMatch = true;
+        if (filter === 'Active') statusMatch = t.status === 'ACTIVE';
+        if (filter === 'Pending') statusMatch = t.status === 'PENDING_VERIFICATION' || t.status === 'PENDING_SETUP' || t.status === 'PENDING';
+        if (filter === 'Suspended') statusMatch = t.status === 'SUSPENDED';
+
+        let searchMatch = true;
+        if (searchFilter.trim() !== '') {
+            const q = searchFilter.toLowerCase();
+            searchMatch = (t.organizationName && t.organizationName.toLowerCase().includes(q)) ||
+                          (t.adminEmail && t.adminEmail.toLowerCase().includes(q)) ||
+                          (t.registrationNumber && t.registrationNumber.toLowerCase().includes(q)) ||
+                          String(t.id).includes(q);
+        }
+
+        return statusMatch && searchMatch;
     });
 
     // Close action menu on outside click
@@ -149,13 +168,31 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
     return (
         <section className="bg-surface-container-lowest rounded-xl border border-surface-container shadow-sm overflow-hidden">
             <div className="p-4 sm:p-6 border-b border-surface-container flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-bright">
-                <h3 className="font-headline-md text-headline-md text-primary flex items-center gap-2">
-                    Tenant Management Hub
-                    <span className="flex h-2 w-2 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                </h3>
+                <div className="flex items-center gap-3">
+                    <h3 className="font-headline-md text-headline-md text-primary flex items-center gap-2">
+                        Tenant Management Hub
+                        <span className="flex h-2 w-2 relative">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                    </h3>
+                    {searchFilter && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
+                            <span>Filter: "{searchFilter}"</span>
+                            <button 
+                                onClick={() => {
+                                    setSearchFilter('');
+                                    const next = new URLSearchParams(searchParams);
+                                    next.delete('search');
+                                    setSearchParams(next, { replace: true });
+                                }}
+                                className="hover:text-error ml-1"
+                            >
+                                <span className="material-symbols-outlined text-[14px]">close</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
                 <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
                     <div className="flex border border-outline-variant rounded p-1 bg-surface-container-low w-full sm:w-auto justify-around sm:justify-start">
                         <button onClick={() => setFilter('All')} className={getFilterClass('All')}>All</button>
@@ -165,12 +202,12 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                     </div>
                 </div>
             </div>
-            
+
             <div className="overflow-x-auto min-h-[300px]">
                 <table className="w-full min-w-[650px] text-left border-collapse">
                     <thead className="bg-surface-container-low font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
                         <tr>
-                            <th className="px-6 py-4 font-semibold">Clinic Name & ID</th>
+                            <th className="px-6 py-4 font-semibold">Organization Name & ID</th>
                             <th className="px-6 py-4 font-semibold">Admin Email</th>
                             <th className="px-6 py-4 font-semibold">Plan</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
@@ -186,87 +223,109 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                             </tr>
                         ) : (
                             filteredTenants.map((tenant) => {
-                                const isPending = tenant.status === 'PENDING_VERIFICATION';
+                                const isPendingVerification = tenant.status === 'PENDING_VERIFICATION';
+                                const isPendingSetup = tenant.status === 'PENDING_SETUP' || tenant.status === 'PENDING';
                                 const isActive = tenant.status === 'ACTIVE';
-                                
-                                const statusColor = isActive ? 'bg-green-100 text-green-800' : isPending ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
-                                const statusDot = isActive ? 'bg-green-500' : isPending ? 'bg-yellow-500' : 'bg-red-500';
-                                const displayStatus = isPending ? 'Pending' : isActive ? 'Active' : 'Suspended';
+
+                                const statusColor = isActive 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : isPendingVerification 
+                                    ? 'bg-amber-100 text-amber-800' 
+                                    : isPendingSetup
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-red-100 text-red-800';
+
+                                const statusDot = isActive 
+                                    ? 'bg-green-500' 
+                                    : isPendingVerification 
+                                    ? 'bg-amber-500' 
+                                    : isPendingSetup
+                                    ? 'bg-blue-500'
+                                    : 'bg-red-500';
+
+                                const displayStatus = isActive 
+                                    ? 'Active' 
+                                    : isPendingVerification 
+                                    ? 'Awaiting Approval' 
+                                    : isPendingSetup 
+                                    ? 'Pending Setup' 
+                                    : 'Suspended';
                                 const initials = tenant.organizationName.substring(0, 2).toUpperCase();
-                                
+
                                 return (
-                                <tr key={tenant.id} className="hover:bg-surface-bright transition-all duration-200 group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3 transform group-hover:translate-x-1 transition-transform">
-                                            {tenant.logoUrl ? (
-                                                <img src={tenant.logoUrl} alt="Logo" className="w-8 h-8 rounded object-cover border border-surface-container bg-surface-container-lowest" />
-                                            ) : (
-                                                <div className="w-8 h-8 rounded flex items-center justify-center font-bold font-mono-data bg-secondary-fixed text-secondary">
-                                                    {initials}
+                                    <tr key={tenant.id} className="hover:bg-surface-bright transition-all duration-200 group">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3 transform group-hover:translate-x-1 transition-transform">
+                                                {tenant.logoUrl ? (
+                                                    <img src={tenant.logoUrl} alt="Logo" className="w-8 h-8 rounded object-cover border border-surface-container bg-surface-container-lowest" />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded flex items-center justify-center font-bold font-mono-data bg-secondary-fixed text-secondary">
+                                                        {initials}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <p className="font-bold text-primary">{tenant.organizationName}</p>
+                                                    <p className="text-[11px] font-mono-data text-on-surface-variant">ID: {tenant.id} | Reg: {tenant.registrationNumber}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-on-surface-variant">{tenant.adminEmail}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase ${tenant.subscriptionTier === 'Starter' ? 'bg-green-100 text-green-800' : tenant.subscriptionTier === 'Professional' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                                {tenant.subscriptionTier || 'Enterprise'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${statusColor}`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`}></span> {displayStatus}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right relative">
+                                            <button
+                                                onClick={(e) => toggleActionMenu(tenant.id, e)}
+                                                className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant transition-all active:scale-95"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                                            </button>
+
+                                            {/* Action Dropdown Menu */}
+                                            {openActionId === tenant.id && (
+                                                <div
+                                                    ref={actionMenuRef}
+                                                    className="absolute right-6 top-10 w-48 bg-surface-container-lowest border border-surface-container rounded-xl shadow-lg z-50 overflow-hidden text-left"
+                                                >
+                                                    <ul className="py-1">
+                                                        {(isPendingVerification || isPendingSetup || (!tenant.kycVerified && tenant.status !== 'ACTIVE' && tenant.status !== 'SUSPENDED')) && (
+                                                            <li onClick={() => handleApprove(tenant.id)} className="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-2 text-green-700 text-sm font-bold transition-colors">
+                                                                <span className="material-symbols-outlined text-[16px]">verified</span> Approve Tenant
+                                                            </li>
+                                                        )}
+                                                        <li onClick={() => { setSelectedTenant(tenant); setOpenActionId(null); }} className="px-4 py-2 hover:bg-surface-container-low cursor-pointer flex items-center gap-2 text-on-surface text-sm transition-colors">
+                                                            <span className="material-symbols-outlined text-[16px]">visibility</span> View Details
+                                                        </li>
+                                                        <div className="border-t border-surface-container my-1"></div>
+
+                                                        {tenant.status === 'SUSPENDED' ? (
+                                                            <li onClick={() => { setReactivateTenantId(tenant.id); setOpenActionId(null); }} className="px-4 py-2 hover:bg-green-50 hover:text-green-700 cursor-pointer flex items-center gap-2 text-on-surface text-sm transition-colors">
+                                                                <span className="material-symbols-outlined text-[16px]">settings_backup_restore</span> Reactivate Account
+                                                            </li>
+                                                        ) : (
+                                                            <li onClick={() => { setSuspendTenantId(tenant.id); setOpenActionId(null); }} className="px-4 py-2 hover:bg-error-container/20 hover:text-error cursor-pointer flex items-center gap-2 text-error text-sm transition-colors">
+                                                                <span className="material-symbols-outlined text-[16px]">block</span> Suspend Account
+                                                            </li>
+                                                        )}
+                                                    </ul>
                                                 </div>
                                             )}
-                                            <div>
-                                                <p className="font-bold text-primary">{tenant.organizationName}</p>
-                                                <p className="text-[11px] font-mono-data text-on-surface-variant">ID: {tenant.id} | Reg: {tenant.registrationNumber}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-on-surface-variant">{tenant.adminEmail}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase ${tenant.subscriptionTier === 'Starter' ? 'bg-green-100 text-green-800' : tenant.subscriptionTier === 'Professional' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                                            {tenant.subscriptionTier || 'Enterprise'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${statusColor}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`}></span> {displayStatus}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right relative">
-                                        <button 
-                                            onClick={(e) => toggleActionMenu(tenant.id, e)}
-                                            className="p-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant transition-all active:scale-95"
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                                        </button>
-                                        
-                                        {/* Action Dropdown Menu */}
-                                        {openActionId === tenant.id && (
-                                            <div 
-                                                ref={actionMenuRef}
-                                                className="absolute right-6 top-10 w-48 bg-surface-container-lowest border border-surface-container rounded-xl shadow-lg z-50 overflow-hidden text-left"
-                                            >
-                                                <ul className="py-1">
-                                                    {isPending && (
-                                                        <li onClick={() => handleApprove(tenant.id)} className="px-4 py-2 hover:bg-green-50 cursor-pointer flex items-center gap-2 text-green-700 text-sm font-bold transition-colors">
-                                                            <span className="material-symbols-outlined text-[16px]">verified</span> Approve Tenant
-                                                        </li>
-                                                    )}
-                                                    <li onClick={() => { setSelectedTenant(tenant); setOpenActionId(null); }} className="px-4 py-2 hover:bg-surface-container-low cursor-pointer flex items-center gap-2 text-on-surface text-sm transition-colors">
-                                                        <span className="material-symbols-outlined text-[16px]">visibility</span> View Details
-                                                    </li>
-                                                    <div className="border-t border-surface-container my-1"></div>
-                                                    
-                                                    {tenant.status === 'SUSPENDED' ? (
-                                                        <li onClick={() => { setReactivateTenantId(tenant.id); setOpenActionId(null); }} className="px-4 py-2 hover:bg-green-50 hover:text-green-700 cursor-pointer flex items-center gap-2 text-on-surface text-sm transition-colors">
-                                                            <span className="material-symbols-outlined text-[16px]">settings_backup_restore</span> Reactivate Account
-                                                        </li>
-                                                    ) : (
-                                                        <li onClick={() => { setSuspendTenantId(tenant.id); setOpenActionId(null); }} className="px-4 py-2 hover:bg-error-container/20 hover:text-error cursor-pointer flex items-center gap-2 text-error text-sm transition-colors">
-                                                            <span className="material-symbols-outlined text-[16px]">block</span> Suspend Account
-                                                        </li>
-                                                    )}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            )})
+                                        </td>
+                                    </tr>
+                                )
+                            })
                         )}
                     </tbody>
                 </table>
             </div>
-            
+
             <div className="p-4 border-t border-surface-container bg-surface-container-low flex justify-between items-center">
                 <p className="font-label-md text-label-md text-on-surface-variant">Showing {filteredTenants.length} of {tenants.length} Tenants</p>
                 <div className="flex gap-2">
@@ -298,10 +357,10 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                                 <span className="material-symbols-outlined">close</span>
                             </button>
                         </div>
-                        
+
                         {/* Modal Body */}
                         <div className="p-6 overflow-y-auto flex-1 space-y-8 bg-surface-container-lowest">
-                            
+
                             {/* Profile & Settings */}
                             <div>
                                 <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2 border-b border-surface-container pb-2">
@@ -327,7 +386,7 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                                     <div>
                                         <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Business Hours</p>
                                         <p className="text-sm text-on-surface">
-                                            {selectedTenant.openingTime && selectedTenant.closingTime 
+                                            {selectedTenant.openingTime && selectedTenant.closingTime
                                                 ? `${selectedTenant.openingTime} - ${selectedTenant.closingTime} (${selectedTenant.slotDuration}m slots)`
                                                 : <span className="italic opacity-50">Not provided</span>}
                                         </p>
@@ -340,14 +399,30 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">Status</p>
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${selectedTenant.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : selectedTenant.status === 'PENDING_VERIFICATION' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full ${selectedTenant.status === 'ACTIVE' ? 'bg-green-500' : selectedTenant.status === 'PENDING_VERIFICATION' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
-                                            {selectedTenant.status === 'PENDING_VERIFICATION' ? 'Pending' : selectedTenant.status === 'ACTIVE' ? 'Active' : 'Suspended'}
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                                            selectedTenant.status === 'ACTIVE' 
+                                                ? 'bg-green-100 text-green-800' 
+                                                : selectedTenant.status === 'PENDING_VERIFICATION' 
+                                                ? 'bg-amber-100 text-amber-800' 
+                                                : (selectedTenant.status === 'PENDING_SETUP' || selectedTenant.status === 'PENDING')
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : 'bg-red-100 text-red-800'
+                                        }`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${
+                                                selectedTenant.status === 'ACTIVE' 
+                                                    ? 'bg-green-500' 
+                                                    : selectedTenant.status === 'PENDING_VERIFICATION' 
+                                                    ? 'bg-amber-500' 
+                                                    : (selectedTenant.status === 'PENDING_SETUP' || selectedTenant.status === 'PENDING')
+                                                    ? 'bg-blue-500'
+                                                    : 'bg-red-500'
+                                            }`}></span>
+                                            {selectedTenant.status === 'ACTIVE' ? 'Active' : selectedTenant.status === 'PENDING_VERIFICATION' ? 'Awaiting Approval' : (selectedTenant.status === 'PENDING_SETUP' || selectedTenant.status === 'PENDING') ? 'Pending Setup' : 'Suspended'}
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Financial & Legal */}
                             <div>
                                 <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2 border-b border-surface-container pb-2">
@@ -388,7 +463,7 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                             </div>
 
                         </div>
-                        
+
                         {/* Modal Footer */}
                         <div className="p-4 border-t border-surface-container bg-surface flex justify-end gap-3">
                             {selectedTenant.status === 'PENDING_VERIFICATION' && (
@@ -415,30 +490,30 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                             <h3 className="font-headline-md text-headline-md font-black text-error mb-2">Danger Zone: Suspend Access</h3>
                             <p className="text-body-md text-on-surface-variant mb-6">
                                 This will instantly suspend the tenant's access. They will no longer be able to log in or use the platform.
-                                <br/><br/>
+                                <br /><br />
                                 To proceed, please type <strong className="text-on-surface select-none font-bold">{tenants.find(t => t.id === suspendTenantId)?.organizationName}</strong> below:
                             </p>
-                            
-                            <input 
+
+                            <input
                                 type="text"
                                 value={actionConfirmText}
                                 onChange={(e) => setActionConfirmText(e.target.value)}
                                 placeholder="Type clinic name here"
                                 className="w-full bg-surface-container-lowest border border-error/50 rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-error focus:border-transparent font-bold mb-6 text-center"
                             />
-                            
+
                             <div className="flex gap-3 justify-end">
-                                <button 
+                                <button
                                     onClick={() => {
                                         setSuspendTenantId(null);
                                         setActionConfirmText('');
-                                    }} 
+                                    }}
                                     className="px-6 py-2.5 rounded-lg font-bold bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors flex-1"
                                 >
                                     Cancel
                                 </button>
-                                <button 
-                                    onClick={handleSuspend} 
+                                <button
+                                    onClick={handleSuspend}
                                     disabled={actionConfirmText !== tenants.find(t => t.id === suspendTenantId)?.organizationName || isProcessing}
                                     className="px-6 py-2.5 rounded-lg font-bold bg-error hover:bg-error/90 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 flex justify-center items-center gap-2"
                                 >
@@ -465,30 +540,30 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                             <h3 className="font-headline-md text-headline-md font-black text-green-600 mb-2">Reactivate Account</h3>
                             <p className="text-body-md text-on-surface-variant mb-6">
                                 This will restore the tenant's access to the platform.
-                                <br/><br/>
+                                <br /><br />
                                 To proceed, please type <strong className="text-on-surface select-none font-bold">{tenants.find(t => t.id === reactivateTenantId)?.organizationName}</strong> below:
                             </p>
-                            
-                            <input 
+
+                            <input
                                 type="text"
                                 value={actionConfirmText}
                                 onChange={(e) => setActionConfirmText(e.target.value)}
                                 placeholder="Type clinic name here"
                                 className="w-full bg-surface-container-lowest border border-green-500/50 rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-bold mb-6 text-center"
                             />
-                            
+
                             <div className="flex gap-3 justify-end">
-                                <button 
+                                <button
                                     onClick={() => {
                                         setReactivateTenantId(null);
                                         setActionConfirmText('');
-                                    }} 
+                                    }}
                                     className="px-6 py-2.5 rounded-lg font-bold bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors flex-1"
                                 >
                                     Cancel
                                 </button>
-                                <button 
-                                    onClick={handleReactivate} 
+                                <button
+                                    onClick={handleReactivate}
                                     disabled={actionConfirmText !== tenants.find(t => t.id === reactivateTenantId)?.organizationName || isProcessing}
                                     className="px-6 py-2.5 rounded-lg font-bold bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-1 flex justify-center items-center gap-2"
                                 >

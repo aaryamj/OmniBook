@@ -107,7 +107,7 @@ export default function GlobalEmergencyStop() {
                             {/* Page Header & Action */}
                             <div className="flex flex-col md:flex-row justify-between md:items-end gap-6 pb-4">
                                 <div>
-                                    <h1 className="text-2xl sm:text-headline-lg font-headline-lg text-primary flex items-center gap-3">
+                                    <h1 className="text-2xl sm:text-headline-lg font-headline-lg font-bold text-primary flex items-center gap-3">
                                         Global Emergency Stop & System Lockdown
                                     </h1>
                                     <p className="text-on-surface-variant font-body-md mt-1 max-w-2xl">

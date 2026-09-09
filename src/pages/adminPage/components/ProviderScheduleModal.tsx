@@ -48,13 +48,19 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
             setTimezone(data.timezone);
             
             // Format time strings from HH:mm:ss to HH:mm
-            const formattedSchedules = data.schedules.map(schedule => ({
-                ...schedule,
-                openingTime: schedule.openingTime ? schedule.openingTime.substring(0, 5) : "09:00",
-                closingTime: schedule.closingTime ? schedule.closingTime.substring(0, 5) : "17:00",
-                breakStartTime: schedule.breakStartTime ? schedule.breakStartTime.substring(0, 5) : "13:00",
-                breakEndTime: schedule.breakEndTime ? schedule.breakEndTime.substring(0, 5) : "14:00"
-            }));
+            const formattedSchedules = data.schedules.map(schedule => {
+                const activeVal = (schedule as any).isActive !== undefined 
+                    ? (schedule as any).isActive 
+                    : (schedule as any).active;
+                return {
+                    ...schedule,
+                    isActive: Boolean(activeVal),
+                    openingTime: schedule.openingTime ? schedule.openingTime.substring(0, 5) : "09:00",
+                    closingTime: schedule.closingTime ? schedule.closingTime.substring(0, 5) : "17:00",
+                    breakStartTime: schedule.breakStartTime ? schedule.breakStartTime.substring(0, 5) : "13:00",
+                    breakEndTime: schedule.breakEndTime ? schedule.breakEndTime.substring(0, 5) : "14:00"
+                };
+            });
             
             // Sort schedules properly
             const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -92,11 +98,13 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
                 }
             }
             
-            const payload: ScheduleSettings = {
+            const payload: any = {
                 timezone,
                 slotDuration: 30,
                 schedules: schedules.map(s => ({
                     ...s,
+                    isActive: Boolean(s.isActive),
+                    active: Boolean(s.isActive),
                     openingTime: s.openingTime.length === 5 ? `${s.openingTime}:00` : s.openingTime,
                     closingTime: s.closingTime.length === 5 ? `${s.closingTime}:00` : s.closingTime,
                     breakStartTime: s.breakStartTime.length === 5 ? `${s.breakStartTime}:00` : s.breakStartTime,

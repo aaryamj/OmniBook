@@ -54,68 +54,78 @@
   font-family: 'Inter', sans-serif;
 }
 
-.superadmin-theme .font-headline-md { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-headline-md { font-size: 20px; line-height: 28px; letter-spacing: -0.01em; font-weight: 600; }
+.superadmin-theme .font-headline-md, .tenant-theme .font-headline-md, .font-headline-md { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-headline-md, .tenant-theme .text-headline-md, .text-headline-md { font-size: 20px; line-height: 28px; letter-spacing: -0.01em; font-weight: 600; }
 
-.superadmin-theme .font-body-md { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-body-md { font-size: 14px; line-height: 20px; font-weight: 400; }
+.superadmin-theme .font-body-md, .tenant-theme .font-body-md, .font-body-md { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-body-md, .tenant-theme .text-body-md, .text-body-md { font-size: 14px; line-height: 20px; font-weight: 400; }
 
-.superadmin-theme .font-mono-data { font-family: 'JetBrains Mono', monospace; }
-.superadmin-theme .text-mono-data { font-size: 13px; line-height: 18px; font-weight: 500; }
+.superadmin-theme .font-mono-data, .tenant-theme .font-mono-data, .font-mono-data { font-family: 'JetBrains Mono', monospace; }
+.superadmin-theme .text-mono-data, .tenant-theme .text-mono-data, .text-mono-data { font-size: 13px; line-height: 18px; font-weight: 500; }
 
-.superadmin-theme .font-headline-lg-mobile { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-headline-lg-mobile { font-size: 24px; line-height: 32px; letter-spacing: -0.02em; font-weight: 700; }
+.superadmin-theme .font-headline-lg-mobile, .tenant-theme .font-headline-lg-mobile, .font-headline-lg-mobile { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-headline-lg-mobile, .tenant-theme .text-headline-lg-mobile, .text-headline-lg-mobile { font-size: 24px; line-height: 32px; letter-spacing: -0.02em; font-weight: 700; }
 
-.superadmin-theme .font-label-md { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-label-md { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 600; }
+.superadmin-theme .font-label-md, .tenant-theme .font-label-md, .font-label-md { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-label-md, .tenant-theme .text-label-md, .text-label-md { font-size: 12px; line-height: 16px; letter-spacing: 0.05em; font-weight: 600; }
 
-.superadmin-theme .font-body-lg { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; }
+.superadmin-theme .font-body-lg, .tenant-theme .font-body-lg, .font-body-lg { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-body-lg, .tenant-theme .text-body-lg, .text-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; }
 
-.superadmin-theme .font-headline-lg { font-family: 'Inter', sans-serif; }
-.superadmin-theme .text-headline-lg { font-size: 30px; line-height: 38px; letter-spacing: -0.02em; font-weight: 700; }
+.superadmin-theme .font-headline-lg, .tenant-theme .font-headline-lg, .font-headline-lg { font-family: 'Inter', sans-serif; }
+.superadmin-theme .text-headline-lg, .tenant-theme .text-headline-lg, .text-headline-lg { font-size: 30px; line-height: 38px; letter-spacing: -0.02em; font-weight: 700; }
 
 /* Responsive Spacing and Sizing */
-.superadmin-theme .w-sidebar-width { width: 280px; }
-.superadmin-theme .ml-sidebar-width { margin-left: 0; }
-.superadmin-theme .w-\[calc\(100\%-280px\)\] { width: 100%; }
-.superadmin-theme .max-w-container-max { max-width: 1440px; }
-.superadmin-theme .p-gutter { padding: 1rem; }
-.superadmin-theme .px-gutter { padding-left: 1rem; padding-right: 1rem; }
-.superadmin-theme .py-gutter { padding-top: 1rem; padding-bottom: 1rem; }
-.superadmin-theme .pt-gutter { padding-top: 1rem; }
-.superadmin-theme .pb-gutter { padding-bottom: 1rem; }
-.superadmin-theme .mt-gutter { margin-top: 1rem; }
-.superadmin-theme .mb-gutter { margin-bottom: 1rem; }
-.superadmin-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(1rem * var(--tw-space-y-reverse)); }
-.superadmin-theme .gap-gutter { gap: 1rem; }
+.superadmin-theme .w-sidebar-width, .tenant-theme .w-sidebar-width, .w-sidebar-width { width: 280px; }
+.superadmin-theme .ml-sidebar-width, .tenant-theme .ml-sidebar-width, .ml-sidebar-width { margin-left: 0; }
+.superadmin-theme .w-\[calc\(100\%-280px\)\], .tenant-theme .w-\[calc\(100\%-280px\)\], .w-\[calc\(100\%-280px\)\] { width: 100%; }
+.superadmin-theme .max-w-container-max, .tenant-theme .max-w-container-max, .max-w-container-max { max-width: 1440px; }
+.superadmin-theme .p-gutter, .tenant-theme .p-gutter, .p-gutter { padding: 1rem; }
+.superadmin-theme .px-gutter, .tenant-theme .px-gutter, .px-gutter { padding-left: 1rem; padding-right: 1rem; }
+.superadmin-theme .py-gutter, .tenant-theme .py-gutter, .py-gutter { padding-top: 1rem; padding-bottom: 1rem; }
+.superadmin-theme .pt-gutter, .tenant-theme .pt-gutter, .pt-gutter { padding-top: 1rem; }
+.superadmin-theme .pb-gutter, .tenant-theme .pb-gutter, .pb-gutter { padding-bottom: 1rem; }
+.superadmin-theme .mt-gutter, .tenant-theme .mt-gutter, .mt-gutter { margin-top: 1rem; }
+.superadmin-theme .mb-gutter, .tenant-theme .mb-gutter, .mb-gutter { margin-bottom: 1rem; }
+.superadmin-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]),
+.tenant-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]),
+.space-y-gutter > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(1rem * var(--tw-space-y-reverse)); }
+.superadmin-theme .gap-gutter, .tenant-theme .gap-gutter, .gap-gutter { gap: 1rem; }
 
 @media (min-width: 1024px) {
-  .superadmin-theme .ml-sidebar-width { margin-left: 280px; }
-  .superadmin-theme .w-\[calc\(100\%-280px\)\] { width: calc(100% - 280px); }
-  .superadmin-theme .p-gutter { padding: 1.5rem; }
-  .superadmin-theme .px-gutter { padding-left: 1.5rem; padding-right: 1.5rem; }
-  .superadmin-theme .py-gutter { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-  .superadmin-theme .pt-gutter { padding-top: 1.5rem; }
-  .superadmin-theme .pb-gutter { padding-bottom: 1.5rem; }
-  .superadmin-theme .mt-gutter { margin-top: 1.5rem; }
-  .superadmin-theme .mb-gutter { margin-bottom: 1.5rem; }
-  .superadmin-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(1.5rem * var(--tw-space-y-reverse)); }
-  .superadmin-theme .gap-gutter { gap: 1.5rem; }
+  .superadmin-theme .ml-sidebar-width, .tenant-theme .ml-sidebar-width, .ml-sidebar-width { margin-left: 280px; }
+  .superadmin-theme .w-\[calc\(100\%-280px\)\], .tenant-theme .w-\[calc\(100\%-280px\)\], .w-\[calc\(100\%-280px\)\] { width: calc(100% - 280px); }
+  .superadmin-theme .p-gutter, .tenant-theme .p-gutter, .p-gutter { padding: 1.5rem; }
+  .superadmin-theme .px-gutter, .tenant-theme .px-gutter, .px-gutter { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .superadmin-theme .py-gutter, .tenant-theme .py-gutter, .py-gutter { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .superadmin-theme .pt-gutter, .tenant-theme .pt-gutter, .pt-gutter { padding-top: 1.5rem; }
+  .superadmin-theme .pb-gutter, .tenant-theme .pb-gutter, .pb-gutter { padding-bottom: 1.5rem; }
+  .superadmin-theme .mt-gutter, .tenant-theme .mt-gutter, .mt-gutter { margin-top: 1.5rem; }
+  .superadmin-theme .mb-gutter, .tenant-theme .mb-gutter, .mb-gutter { margin-bottom: 1.5rem; }
+  .superadmin-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]),
+  .tenant-theme .space-y-gutter > :not([hidden]) ~ :not([hidden]),
+  .space-y-gutter > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse))); margin-bottom: calc(1.5rem * var(--tw-space-y-reverse)); }
+  .superadmin-theme .gap-gutter, .tenant-theme .gap-gutter, .gap-gutter { gap: 1.5rem; }
 }
 
 /* Custom styles */
-.superadmin-theme .sidebar-active {
+.superadmin-theme .sidebar-active, .tenant-theme .sidebar-active, .sidebar-active {
   box-shadow: inset 4px 0 0 0 var(--color-secondary-container);
 }
 
-.superadmin-theme .custom-scrollbar::-webkit-scrollbar {
+.superadmin-theme .custom-scrollbar::-webkit-scrollbar,
+.tenant-theme .custom-scrollbar::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
-.superadmin-theme .custom-scrollbar::-webkit-scrollbar-track {
+.superadmin-theme .custom-scrollbar::-webkit-scrollbar-track,
+.tenant-theme .custom-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-.superadmin-theme .custom-scrollbar::-webkit-scrollbar-thumb {
+.superadmin-theme .custom-scrollbar::-webkit-scrollbar-thumb,
+.tenant-theme .custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 10px;
 }

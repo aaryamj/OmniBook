@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { SocialLogin } from '../../components/SocialLogin';
+import { applyTheme } from '../../utils/themeUtils';
+import { setAndBroadcastOrgType } from '../../utils/organizationTerms';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   // Form states
   const [identity, setIdentity] = useState('');
@@ -21,6 +25,49 @@ const LoginPage: React.FC = () => {
   const [is2FA, setIs2FA] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [authEmail, setAuthEmail] = useState('');
+
+  // Forgot password modal states
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState('');
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError('');
+    if (!forgotEmail.trim()) {
+      setForgotError('Please enter your email address.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail.trim())) {
+      setForgotError('Please enter a valid email address.');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const response = await axios.post('http://localhost:8080/api/auth/forgot-password', {
+        email: forgotEmail.trim()
+      });
+
+      if (response.data.success) {
+        setForgotSuccess(true);
+        setForgotSuccessMessage(response.data.message || 'Password reset link sent to your email.');
+      } else {
+        setForgotError(response.data.message || 'Failed to send reset link.');
+      }
+    } catch (err: any) {
+      if (err.response?.data?.message) {
+        setForgotError(err.response.data.message);
+      } else {
+        setForgotError('Failed to process request. Please try again.');
+      }
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Lightweight entrance animation
@@ -67,14 +114,7 @@ const LoginPage: React.FC = () => {
       }
 
       if (response.data.success && response.data.token) {
-        // Persist token in local storage
-        localStorage.setItem('token', response.data.token);
-        if (response.data.role) {
-          localStorage.setItem('role', response.data.role);
-        }
-        if (response.data.fullName) {
-          localStorage.setItem('fullName', response.data.fullName);
-        }
+        await login(response.data.token, response.data);
         
         // Optionally save identity if remember me is checked
         if (remember) {
@@ -84,11 +124,17 @@ const LoginPage: React.FC = () => {
         }
 
         // Redirect based on role
-        if (response.data.role === 'service_provider') {
+        const role = (response.data.role || '').toLowerCase();
+        if (role === 'service_provider' || role === 'provider' || role === 'role_provider') {
           navigate('/provider-dashboard');
-        } else if (response.data.role === 'super_admin') {
+        } else if (role === 'super_admin' || role === 'superadmin' || role === 'role_super_admin') {
+          localStorage.removeItem('organizationName');
+          localStorage.removeItem('organizationType');
+          localStorage.removeItem('adminFullName');
+          localStorage.removeItem('logoUrl');
+          localStorage.setItem('superAdminFullName', response.data.fullName || 'System Admin');
           navigate('/superadmin/dashboard');
-        } else if (response.data.role === 'admin') {
+        } else if (role === 'admin' || role === 'role_admin') {
           navigate('/admin/dashboard');
         } else {
           navigate('/dashboard');
@@ -125,21 +171,15 @@ const LoginPage: React.FC = () => {
       });
 
       if (response.data.success && response.data.token) {
-        // Persist token in local storage
-        localStorage.setItem('token', response.data.token);
-        if (response.data.role) {
-          localStorage.setItem('role', response.data.role);
-        }
-        if (response.data.fullName) {
-          localStorage.setItem('fullName', response.data.fullName);
-        }
+        await login(response.data.token, response.data);
 
         // Redirect based on role
-        if (response.data.role === 'service_provider') {
+        const role = (response.data.role || '').toLowerCase();
+        if (role === 'service_provider' || role === 'provider' || role === 'role_provider') {
           navigate('/provider-dashboard');
-        } else if (response.data.role === 'super_admin') {
+        } else if (role === 'super_admin' || role === 'superadmin' || role === 'role_super_admin') {
           navigate('/superadmin/dashboard');
-        } else if (response.data.role === 'admin') {
+        } else if (role === 'admin' || role === 'role_admin') {
           navigate('/admin/dashboard');
         } else {
           navigate('/dashboard');
@@ -159,16 +199,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleOAuthSuccess = (data: any) => {
+  const handleOAuthSuccess = async (data: any) => {
     if (data.success && data.token) {
-      localStorage.setItem('token', data.token);
-      if (data.role) localStorage.setItem('role', data.role);
-      if (data.fullName) localStorage.setItem('fullName', data.fullName);
-      if (data.role === 'service_provider') {
+      await login(data.token, data);
+      const role = (data.role || '').toLowerCase();
+      if (role === 'service_provider' || role === 'provider' || role === 'role_provider') {
         navigate('/provider-dashboard');
-      } else if (data.role === 'super_admin') {
+      } else if (role === 'super_admin' || role === 'superadmin' || role === 'role_super_admin') {
         navigate('/superadmin/dashboard');
-      } else if (data.role === 'admin') {
+      } else if (role === 'admin' || role === 'role_admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
@@ -270,7 +309,18 @@ const LoginPage: React.FC = () => {
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <label className="block text-[14px] font-medium text-[#151c27]" htmlFor="password">Password</label>
-                      <a className="text-[#1853d9] text-[12px] font-medium hover:underline" href="#">Forgot password?</a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForgotEmail(identity.includes('@') ? identity : '');
+                          setForgotError('');
+                          setForgotSuccess(false);
+                          setShowForgotModal(true);
+                        }}
+                        className="text-[#1853d9] text-[12px] font-medium hover:underline focus:outline-none transition-colors"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                     <div className="relative group">
                       <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#737686] text-[20px] group-focus-within:text-[#1853d9] transition-colors">
@@ -386,6 +436,108 @@ const LoginPage: React.FC = () => {
         <a className="hover:text-[#1853d9] transition-colors" href="#">Terms of Service</a>
         <a className="hover:text-[#1853d9] transition-colors" href="#">Help Center</a>
       </footer>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative animate-scaleUp">
+            <button
+              onClick={() => setShowForgotModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+
+            {!forgotSuccess ? (
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1853d9] flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-[26px]">lock_reset</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-1.5">Forgot Password?</h3>
+                <p className="text-sm text-slate-500 mb-5 leading-relaxed">
+                  Enter your registered account email, and we’ll send you a secure link to reset your password.
+                </p>
+
+                {forgotError && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                    <span>{forgotError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5" htmlFor="forgot-email">
+                      Account Email
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+                        mail
+                      </span>
+                      <input
+                        id="forgot-email"
+                        type="email"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        placeholder="name@example.com"
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-600 outline-none transition-all text-slate-900"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(false)}
+                      className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#1853d9] hover:bg-[#1342b0] disabled:bg-blue-300 text-white text-sm font-semibold shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      {forgotLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <span>Send Reset Link</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="text-center py-2">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+                  <span className="material-symbols-outlined text-[32px]">mark_email_read</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Check Your Email</h3>
+                <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                  {forgotSuccessMessage}
+                </p>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 text-xs text-slate-500 mb-6 text-left">
+                  <div className="font-semibold text-slate-700 mb-0.5">Dispatched to:</div>
+                  <div className="text-slate-800 font-mono break-all">{forgotEmail}</div>
+                  <div className="mt-2 text-[11px] text-slate-400">Valid for 2 hours. If not received in a minute, please verify your spam / junk folder.</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-md"
+                >
+                  Return to Login
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

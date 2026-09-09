@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import GlobalAuditLogs from './GlobalAuditLogs';
 
-export default function RecentOnboardingActivity() {
+export default function RecentOnboardingActivity({ timeFilter }: { timeFilter?: string }) {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [showAll, setShowAll] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -21,6 +21,8 @@ export default function RecentOnboardingActivity() {
     const [requireHIPAA, setRequireHIPAA] = useState(true);
     const [currentStep, setCurrentStep] = useState(1);
     const [isDispatching, setIsDispatching] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     
     const fetchActivities = async () => {
         try {
@@ -30,7 +32,8 @@ export default function RecentOnboardingActivity() {
             const response = await axios.get('http://localhost:8080/api/v1/superadmin/tenants', {
                 headers: {
                     Authorization: `Bearer ${token}`
-                }
+                },
+                params: timeFilter ? { timeFilter } : undefined
             });
             
             const tenants = response.data;
@@ -44,15 +47,41 @@ export default function RecentOnboardingActivity() {
                 else if (diffMins < 1440) timeAgo = `${Math.round(diffMins/60)}h ago`;
                 else timeAgo = `${Math.round(diffMins/1440)}d ago`;
                 
+                const isActive = tenant.status === 'ACTIVE';
+                const isPendingVerification = tenant.status === 'PENDING_VERIFICATION';
+                const isPendingSetup = tenant.status === 'PENDING_SETUP' || tenant.status === 'PENDING';
+
+                let statusLabel = 'Suspended';
+                let icon = 'block';
+                let bgClass = 'bg-red-50 text-red-600';
+                let textHover = 'group-hover:text-red-700';
+
+                if (isActive) {
+                    statusLabel = 'Account Activated';
+                    icon = 'domain';
+                    bgClass = 'bg-green-50 text-green-600';
+                    textHover = 'group-hover:text-green-700';
+                } else if (isPendingVerification) {
+                    statusLabel = 'Awaiting Approval';
+                    icon = 'verified_user';
+                    bgClass = 'bg-amber-50 text-amber-600';
+                    textHover = 'group-hover:text-amber-700';
+                } else if (isPendingSetup) {
+                    statusLabel = 'Invite Sent (Pending Setup)';
+                    icon = 'mark_email_read';
+                    bgClass = 'bg-blue-50 text-blue-600';
+                    textHover = 'group-hover:text-blue-700';
+                }
+                
                 return {
                     id: tenant.id,
                     name: tenant.organizationName,
-                    status: tenant.status === 'ACTIVE' ? 'Account Activated' : 'Pending',
+                    status: statusLabel,
                     location: tenant.address || 'Location not provided',
                     time: timeAgo,
-                    icon: tenant.status === 'ACTIVE' ? 'domain' : 'pending_actions',
-                    bgClass: tenant.status === 'ACTIVE' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600',
-                    textHover: tenant.status === 'ACTIVE' ? 'group-hover:text-blue-700' : 'group-hover:text-orange-700'
+                    icon: icon,
+                    bgClass: bgClass,
+                    textHover: textHover
                 };
             });
             
@@ -65,14 +94,17 @@ export default function RecentOnboardingActivity() {
 
     useEffect(() => {
         fetchActivities();
-    }, []);
+    }, [timeFilter]);
     
     // Form State
     const [formData, setFormData] = useState({
+        organizationType: 'Clinic',
+        customOrganizationType: '',
         organizationName: '',
         registrationNumber: '',
         adminEmail: '',
         adminFullName: '',
+        adminPhoneCode: '+1',
         adminPhone: '',
         address: '',
         subscriptionTier: 'Enterprise (Unlimited Providers)'
@@ -81,7 +113,10 @@ export default function RecentOnboardingActivity() {
     
     const validateStep1 = () => {
         const errors: Record<string, string> = {};
-        if (!formData.organizationName.trim()) errors.organizationName = 'Clinic / Hospital Name is required';
+        if (formData.organizationType === 'Other Organization' && !formData.customOrganizationType.trim()) {
+            errors.customOrganizationType = 'Organization Type is required';
+        }
+        if (!formData.organizationName.trim()) errors.organizationName = 'Organization Name is required';
         if (!formData.registrationNumber.trim()) errors.registrationNumber = 'Registration Number is required';
         if (!formData.adminFullName.trim()) errors.adminFullName = 'Admin Full Name is required';
         if (!formData.adminEmail.trim()) {
@@ -156,7 +191,7 @@ export default function RecentOnboardingActivity() {
                     >
                         <div className="flex items-center">
                             <span className="material-symbols-outlined mr-3">add_business</span>
-                            <span className="font-body-md font-semibold">Invite New Clinic</span>
+                            <span className="font-body-md font-semibold">Invite New Organization</span>
                         </div>
                         <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">chevron_right</span>
                     </button>
@@ -242,7 +277,38 @@ export default function RecentOnboardingActivity() {
                                         <h3 className="text-sm font-bold text-primary border-b border-surface-container pb-2">Organization & Access</h3>
                                         
                                         <div>
-                                            <label className="block text-sm font-bold text-on-surface mb-2">Clinic / Hospital Name</label>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Organization Type</label>
+                                            <div className="relative">
+                                                <select 
+                                                    value={formData.organizationType}
+                                                    onChange={(e) => setFormData({...formData, organizationType: e.target.value})}
+                                                    className="w-full appearance-none bg-surface border border-outline-variant px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow cursor-pointer"
+                                                >
+                                                    <option value="Clinic">Clinic</option>
+                                                    <option value="College">College</option>
+                                                    <option value="Saloon">Saloon</option>
+                                                    <option value="Other Organization">Other Organization</option>
+                                                </select>
+                                                <span className="material-symbols-outlined absolute right-4 top-2.5 pointer-events-none text-on-surface-variant">expand_more</span>
+                                            </div>
+                                        </div>
+
+                                        {formData.organizationType === 'Other Organization' && (
+                                            <div>
+                                                <label className="block text-sm font-bold text-on-surface mb-2">Specify Organization Type</label>
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="e.g., Government Organization"
+                                                    value={formData.customOrganizationType}
+                                                    onChange={(e) => setFormData({...formData, customOrganizationType: e.target.value})}
+                                                    className={`w-full bg-surface border px-4 py-2.5 rounded-lg text-body-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow ${formErrors.customOrganizationType ? 'border-error' : 'border-outline-variant'}`}
+                                                />
+                                                {formErrors.customOrganizationType && <p className="text-error text-xs mt-1">{formErrors.customOrganizationType}</p>}
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-on-surface mb-2">Organization Name</label>
                                             <input 
                                                 type="text" 
                                                 placeholder="e.g., Mediciti Core"
@@ -311,7 +377,11 @@ export default function RecentOnboardingActivity() {
                                             <label className="block text-sm font-bold text-on-surface mb-2">Admin Phone</label>
                                             <div className="relative group">
                                                 <div className="absolute left-[1px] top-[1px] bottom-[1px] flex items-center border-r border-outline-variant pr-2 pl-3 bg-surface-container-low rounded-l-[11px] pointer-events-auto z-10">
-                                                    <select className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-on-surface-variant font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}}>
+                                                    <select 
+                                                        value={formData.adminPhoneCode}
+                                                        onChange={(e) => setFormData({...formData, adminPhoneCode: e.target.value})}
+                                                        className="bg-transparent border-none outline-none p-0 pr-4 text-[14px] text-on-surface-variant font-medium cursor-pointer appearance-none focus:ring-0" style={{backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23737686' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0 center", backgroundRepeat: "no-repeat", backgroundSize: "1.2em 1.2em"}}
+                                                    >
                                                         <option value="+1">🇺🇸 +1</option>
                                                         <option value="+44">🇬🇧 +44</option>
                                                         <option value="+91">🇮🇳 +91</option>
@@ -364,7 +434,7 @@ export default function RecentOnboardingActivity() {
                                                 className="flex items-center justify-between p-4 border border-outline-variant rounded-lg bg-surface hover:bg-surface-variant/20 transition-colors cursor-pointer"
                                                 onClick={() => setEnforce2FA(!enforce2FA)}
                                             >
-                                                <span className="text-sm font-semibold text-primary">Enforce 2FA for Clinic Admin</span>
+                                                <span className="text-sm font-semibold text-primary">Enforce 2FA for Organization Admin</span>
                                                 <div className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-inner ${enforce2FA ? 'bg-emerald-500' : 'bg-outline-variant/30'}`}>
                                                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enforce2FA ? 'translate-x-5' : 'translate-x-0'}`}></span>
                                                 </div>
@@ -420,7 +490,7 @@ export default function RecentOnboardingActivity() {
                                         <div>
                                             <label className="block text-sm font-bold text-primary mb-2">Optional Custom Note</label>
                                             <textarea 
-                                                placeholder="Add a personalized message for the clinic director..."
+                                                placeholder="Add a personalized message for the organization director..."
                                                 className="w-full bg-surface border border-outline-variant px-4 py-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow resize-none h-24"
                                             ></textarea>
                                         </div>
@@ -467,12 +537,14 @@ export default function RecentOnboardingActivity() {
                                         setIsDispatching(true);
                                         try {
                                             const token = localStorage.getItem('token');
+                                            const finalOrgType = formData.organizationType === 'Other Organization' ? formData.customOrganizationType : formData.organizationType;
                                             const response = await axios.post('http://localhost:8080/api/v1/superadmin/tenants', {
+                                                organizationType: finalOrgType,
                                                 organizationName: formData.organizationName,
                                                 registrationNumber: formData.registrationNumber,
                                                 adminEmail: formData.adminEmail,
                                                 adminFullName: formData.adminFullName,
-                                                adminPhone: formData.adminPhone,
+                                                adminPhone: formData.adminPhoneCode + formData.adminPhone,
                                                 address: formData.address,
                                                 subscriptionTier: formData.subscriptionTier.split(' ')[0],
                                                 enforce2FA: enforce2FA,
@@ -483,16 +555,16 @@ export default function RecentOnboardingActivity() {
                                                 }
                                             });
                                             if (response.status === 200) {
-                                                alert('Secure Invite Dispatched to root admin! Tenant provisioned successfully.');
+                                                setSuccessMessage('Secure Invite Dispatched to root admin! Tenant provisioned successfully.');
                                                 setIsDrawerOpen(false);
                                                 setCurrentStep(1);
-                                                setFormData({ organizationName: '', registrationNumber: '', adminFullName: '', adminEmail: '', adminPhone: '', address: '', subscriptionTier: 'ENTERPRISE' });
+                                                setFormData({ organizationType: 'Clinic', customOrganizationType: '', organizationName: '', registrationNumber: '', adminFullName: '', adminEmail: '', adminPhoneCode: '+1', adminPhone: '', address: '', subscriptionTier: 'Enterprise (Unlimited Providers)' });
                                                 fetchActivities(); // Refresh list after adding
                                             } else {
-                                                alert('Failed to dispatch invite.');
+                                                setErrorMessage('Failed to dispatch invite.');
                                             }
                                         } catch (error: any) {
-                                            alert(error.response?.data?.message || 'Error communicating with server.');
+                                            setErrorMessage(error.response?.data?.message || 'Error communicating with server.');
                                         } finally {
                                             setIsDispatching(false);
                                         }
@@ -695,6 +767,50 @@ export default function RecentOnboardingActivity() {
                         <div className="flex-1 overflow-y-auto p-6 bg-surface custom-scrollbar">
                             <GlobalAuditLogs />
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Modal */}
+            {successMessage && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-surface p-8 rounded-3xl shadow-2xl max-w-md w-full border border-green-500/30 text-center flex flex-col relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-2 bg-green-500"></div>
+                        <div className="w-20 h-20 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                            <span className="material-symbols-outlined text-[40px]">check_circle</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-on-surface mb-2">Success!</h3>
+                        <p className="text-on-surface-variant font-medium text-base mb-8 leading-relaxed">
+                            {successMessage}
+                        </p>
+                        <button 
+                            className="w-full py-3.5 rounded-xl bg-green-500 text-white font-bold tracking-wide shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-[0.98]"
+                            onClick={() => setSuccessMessage('')}
+                        >
+                            Continue
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Error Modal */}
+            {errorMessage && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-surface p-8 rounded-3xl shadow-2xl max-w-md w-full border border-error/30 text-center flex flex-col relative overflow-hidden">
+                        <div className="absolute top-0 left-0 right-0 h-2 bg-error"></div>
+                        <div className="w-20 h-20 bg-error/10 text-error rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-error/20 shadow-[0_0_20px_rgba(220,38,38,0.3)]">
+                            <span className="material-symbols-outlined text-[40px]">error</span>
+                        </div>
+                        <h3 className="text-2xl font-black text-on-surface mb-2">Operation Failed</h3>
+                        <p className="text-on-surface-variant font-medium text-base mb-8 leading-relaxed">
+                            {errorMessage}
+                        </p>
+                        <button 
+                            className="w-full py-3.5 rounded-xl bg-error text-white font-bold tracking-wide shadow-lg shadow-error/20 hover:bg-red-600 transition-all active:scale-[0.98]"
+                            onClick={() => setErrorMessage('')}
+                        >
+                            Dismiss
+                        </button>
                     </div>
                 </div>
             )}
