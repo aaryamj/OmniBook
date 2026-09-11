@@ -21,6 +21,7 @@ export default function Ledger() {
     // Transaction Details State
     const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
 
+    const [commissionRate, setCommissionRate] = useState<number>(10);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [chartData, setChartData] = useState<any[]>([]);
     const [kpis, setKpis] = useState({
@@ -41,6 +42,9 @@ export default function Ledger() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = response.data;
+            if (data.commissionRate !== undefined && data.commissionRate !== null) {
+                setCommissionRate(data.commissionRate);
+            }
             setTransactions(data.transactions || []);
             setChartData(data.chartData || []);
             setKpis({
@@ -197,11 +201,11 @@ export default function Ledger() {
                                 </div>
                             </div>
                             <div className="bg-white p-6 border border-outline-variant rounded shadow-sm hover:border-secondary transition-colors group">
-                                <p className="font-label-md text-label-md text-on-surface-variant uppercase mb-2">Platform Fees (2%)</p>
+                                <p className="font-label-md text-label-md text-on-surface-variant uppercase mb-2">Platform Fees ({commissionRate}%)</p>
                                 <p className="font-headline-md text-headline-md text-error">-${kpis.platformFeesUSD.toFixed(2)} | Rs. {kpis.platformFeesNPR.toFixed(2)}</p>
                                 <div className="mt-4 flex items-center text-on-surface-variant gap-1">
                                     <span className="material-symbols-outlined text-sm">info</span>
-                                    <span className="font-mono-data text-label-md">Flat 2% rate applied</span>
+                                    <span className="font-mono-data text-label-md">Flat {commissionRate}% rate applied</span>
                                 </div>
                             </div>
                         </div>
@@ -474,21 +478,84 @@ export default function Ledger() {
                                 </div>
                             </div>
 
-                            <div className="bg-surface-container-low p-4 rounded border border-outline-variant mt-6 space-y-2">
+                            <div className="bg-surface-container-low p-5 rounded-lg border border-outline-variant mt-6 space-y-2.5">
                                 <div className="flex justify-between items-center text-body-md text-on-surface-variant">
-                                    <span>Subtotal</span>
-                                    <span className="font-mono-data">{selectedTransaction.amount}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-body-md text-error">
-                                    <span>Platform Fee (2%)</span>
-                                    <span className="font-mono-data">-{selectedTransaction.amount.replace(/[^0-9.]/g, '') * 0.02 > 0 ? (selectedTransaction.amount.includes('$') ? '$' : 'Rs. ') + (parseFloat(selectedTransaction.amount.replace(/[^0-9.]/g, '')) * 0.02).toFixed(2) : '0.00'}</span>
-                                </div>
-                                <div className="border-t border-outline-variant pt-2 mt-2 flex justify-between items-center text-headline-sm text-primary font-bold">
-                                    <span>Net Amount</span>
-                                    <span className="font-mono-data">
-                                        {selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}{(parseFloat(selectedTransaction.amount.replace(/[^0-9.]/g, '')) * 0.98).toFixed(2)}
+                                    <span>Gross Booking Amount</span>
+                                    <span className="font-mono-data font-semibold">
+                                        {selectedTransaction.grossAmount !== undefined && selectedTransaction.grossAmount !== null
+                                            ? `${selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}${selectedTransaction.grossAmount.toFixed(2)}`
+                                            : selectedTransaction.amount}
                                     </span>
                                 </div>
+
+                                {selectedTransaction.refundAmount !== undefined && selectedTransaction.refundAmount !== null && selectedTransaction.refundAmount > 0 && (
+                                    <div className="flex justify-between items-center text-body-md text-amber-700 font-medium">
+                                        <span>Customer Refund Deducted</span>
+                                        <span className="font-mono-data">
+                                            -{selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}{selectedTransaction.refundAmount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {selectedTransaction.netRetainedAmount !== undefined && selectedTransaction.netRetainedAmount !== null && (
+                                    <div className="flex justify-between items-center text-body-md font-semibold text-primary border-t border-dashed border-outline-variant pt-2">
+                                        <span>Net Retained Amount</span>
+                                        <span className="font-mono-data">
+                                            {selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}{selectedTransaction.netRetainedAmount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between items-center text-body-md text-error">
+                                    <span>Platform Commission ({selectedTransaction.commissionRate ?? commissionRate}%)</span>
+                                    <span className="font-mono-data">
+                                        -{selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}
+                                        {(selectedTransaction.platformFee !== undefined && selectedTransaction.platformFee !== null)
+                                            ? selectedTransaction.platformFee.toFixed(2)
+                                            : (((parseFloat(selectedTransaction.amount.replace(/[^0-9.]/g, '')) || 0) * ((selectedTransaction.commissionRate ?? commissionRate) / 100)).toFixed(2))}
+                                    </span>
+                                </div>
+
+                                {selectedTransaction.gatewayFee !== undefined && selectedTransaction.gatewayFee !== null && selectedTransaction.gatewayFee > 0 && (
+                                    <div className="flex justify-between items-center text-body-md text-purple-700">
+                                        <span>Applicable Gateway Fee ({selectedTransaction.gateway})</span>
+                                        <span className="font-mono-data">
+                                            -{selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}{selectedTransaction.gatewayFee.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {selectedTransaction.remainingOrgAmount !== undefined && selectedTransaction.remainingOrgAmount !== null && (
+                                    <div className="flex justify-between items-center text-body-md text-purple-700 font-semibold border-t border-dashed border-outline-variant pt-2 mt-2">
+                                        <span>Gross Remaining Org Amount</span>
+                                        <span className="font-mono-data">
+                                            {selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}
+                                            {selectedTransaction.remainingOrgAmount.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="border-t border-outline-variant pt-2.5 mt-2 flex justify-between items-center text-headline-sm text-primary font-bold">
+                                    <span>Net Service Provider</span>
+                                    <span className="font-mono-data text-emerald-700">
+                                        {selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}
+                                        {(selectedTransaction.providerSettlement !== undefined && selectedTransaction.providerSettlement !== null)
+                                            ? selectedTransaction.providerSettlement.toFixed(2)
+                                            : (selectedTransaction.netAmount !== undefined && selectedTransaction.netAmount !== null
+                                                ? selectedTransaction.netAmount.toFixed(2)
+                                                : (((parseFloat(selectedTransaction.amount.replace(/[^0-9.]/g, '')) || 0) * (1 - ((selectedTransaction.commissionRate ?? commissionRate) / 100))).toFixed(2)))}
+                                    </span>
+                                </div>
+
+                                {selectedTransaction.orgAdminSettlement !== undefined && selectedTransaction.orgAdminSettlement !== null && (
+                                    <div className="flex justify-between items-center text-body-md text-blue-700 font-bold pt-1">
+                                        <span>Net Organization Admin</span>
+                                        <span className="font-mono-data text-blue-700">
+                                            {selectedTransaction.amount.includes('$') ? '$' : 'Rs. '}
+                                            {selectedTransaction.orgAdminSettlement.toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

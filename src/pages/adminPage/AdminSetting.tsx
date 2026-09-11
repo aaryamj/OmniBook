@@ -5,6 +5,7 @@ import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
 import DepartmentsConfig from './components/DepartmentsConfig';
 import ClinicScheduleMatrix, { type ClinicScheduleMatrixHandle } from './components/ClinicScheduleMatrix';
+import CancellationPolicyConfig from './components/CancellationPolicyConfig';
 import { useTheme } from '../../context/ThemeContext';
 import { useOrganizationTerms, useDepartmentTerms } from '../../utils/organizationTerms';
 
@@ -562,11 +563,11 @@ export default function AdminSetting() {
                                 <span className="font-label-md text-label-md uppercase tracking-widest cursor-pointer hover:text-primary transition-colors" onClick={() => navigate('/admin/settings')}>Settings</span>
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
                                 <span className="font-label-md text-label-md uppercase tracking-widest text-secondary font-bold">
-                                    {activeTab === 'profile' ? 'General Profile' : activeTab === 'gateways' ? 'Payment Gateways' : activeTab === 'hours' ? 'Operating Hours' : activeTab === 'security' ? 'Security & Permissions' : activeTab === 'departments' ? deptTerms.badgeLabel + 's' : 'Configuration'}
+                                    {activeTab === 'profile' ? 'General Profile' : activeTab === 'gateways' ? 'Payment Gateways' : activeTab === 'hours' ? 'Operating Hours' : activeTab === 'security' ? 'Security & Permissions' : activeTab === 'departments' ? deptTerms.badgeLabel + 's' : activeTab === 'policy' ? 'Cancellation & Refund Policy' : 'Configuration'}
                                 </span>
                             </div>
                             <h2 className="font-headline-lg text-headline-lg font-bold text-primary tracking-tight">
-                                {activeTab === 'profile' ? `${terms.facilityLabel} Identity & Compliance` : activeTab === 'gateways' ? 'Financial Integrations' : activeTab === 'hours' ? `${terms.facilityLabel} Schedule Matrix` : activeTab === 'security' ? 'Security & Access Control' : activeTab === 'departments' ? deptTerms.entityTitle : 'Tenant Configuration'}
+                                {activeTab === 'profile' ? `${terms.facilityLabel} Identity & Compliance` : activeTab === 'gateways' ? 'Financial Integrations' : activeTab === 'hours' ? `${terms.facilityLabel} Schedule Matrix` : activeTab === 'security' ? 'Security & Access Control' : activeTab === 'departments' ? deptTerms.entityTitle : activeTab === 'policy' ? 'Cancellation, Rescheduling & Refund Rules' : 'Tenant Configuration'}
                             </h2>
                             <p className="text-on-surface-variant mt-1">
                                 {activeTab === 'profile' 
@@ -579,10 +580,12 @@ export default function AdminSetting() {
                                     ? 'Manage global authentication rules, active roles, and system activity.'
                                     : activeTab === 'departments'
                                     ? `Define structural departments to categorize ${terms.providerPlural.toLowerCase()} and ${terms.servicePlural.toLowerCase()}.`
+                                    : activeTab === 'policy'
+                                    ? 'Configure cancellation deadlines, tiered refund percentages, rescheduling limits, and auto-refund processing.'
                                     : 'Manage global enterprise settings, white-label assets, and financial integrations.'}
                             </p>
                         </div>
-                        {activeTab === 'gateways' ? (
+                        {activeTab === 'policy' ? null : activeTab === 'gateways' ? (
                             <div className="flex gap-3">
                                 <button className="px-5 py-2.5 border border-outline-variant bg-white text-on-surface font-label-md text-label-md rounded shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-2">
                                     <span className="material-symbols-outlined text-sm">terminal</span>
@@ -686,6 +689,15 @@ export default function AdminSetting() {
                                             {deptTerms.badgeLabel + 's'}
                                         </span>
                                     </button>
+                                    <button 
+                                        onClick={() => setActiveTab('policy')}
+                                        className={`flex items-center justify-between px-5 py-4 transition-colors font-body-md text-body-md ${activeTab === 'policy' ? 'bg-secondary-container/10 border-r-4 border-secondary text-secondary font-bold' : 'hover:bg-surface-container-low text-on-surface-variant'}`}
+                                    >
+                                        <span className="flex items-center gap-3">
+                                            <span className="material-symbols-outlined" style={{fontVariationSettings: activeTab === 'policy' ? "'FILL' 1" : ""}}>rule</span>
+                                            Cancellation &amp; Refund Policy
+                                        </span>
+                                    </button>
                                 </nav>
                             </div>
                             <div className="mt-6 p-4 bg-tertiary-container rounded-xl text-white">
@@ -704,6 +716,11 @@ export default function AdminSetting() {
                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
                                 
+                                {/* CANCELLATION & REFUND POLICY TAB CONTENT */}
+                                {activeTab === 'policy' && (
+                                    <CancellationPolicyConfig showToast={showToast} />
+                                )}
+
                                 {/* DEPARTMENTS TAB CONTENT */}
                                 {activeTab === 'departments' && (
                                     <DepartmentsConfig />
@@ -938,7 +955,7 @@ export default function AdminSetting() {
                                             {/* Live Button Test Swatch */}
                                             <div className="pt-2">
                                                 <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant/70 block mb-1.5">Interactive Preview</span>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 flex-wrap">
                                                     <button 
                                                         type="button"
                                                         className="bg-primary text-on-primary px-4 py-2 rounded-lg font-bold text-xs shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all"
@@ -951,6 +968,10 @@ export default function AdminSetting() {
                                                     >
                                                         Secondary Button
                                                     </button>
+                                                    <div className="bg-primary-container text-on-primary-container px-3 py-1.5 rounded-lg font-semibold text-xs border border-on-primary-container/20 flex items-center gap-1.5 shadow-sm">
+                                                        <span className="material-symbols-outlined text-sm text-secondary-container">navigation</span>
+                                                        Sidebar Contrast Active
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>

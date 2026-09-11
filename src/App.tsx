@@ -37,6 +37,7 @@ import ManageProviders from './pages/adminPage/ManageProviders';
 import CRM from './pages/adminPage/CRM';
 import Ledger from './pages/adminPage/Ledger';
 import AdminSetting from './pages/adminPage/AdminSetting';
+import AdminSubscriptionPage from './pages/adminPage/AdminSubscriptionPage';
 import AcceptInvite from './pages/acceptInvite/AcceptInvite';
 import ProgressiveProfiling from './pages/adminPage/setup/ProgressiveProfiling';
 import FinancialActivation from './pages/adminPage/setup/FinancialActivation';
@@ -89,6 +90,7 @@ function App() {
       <Route path="/admin/manage-providers" element={<ManageProviders />} />
       <Route path="/admin/crm" element={<CRM />} />
       <Route path="/admin/ledger" element={<Ledger />} />
+      <Route path="/admin/subscription" element={<AdminSubscriptionPage />} />
       <Route path="/admin/settings" element={<AdminSetting />} />
       <Route path="/admin/setup/profiling" element={<ProgressiveProfiling />} />
       <Route path="/admin/setup/financials" element={<FinancialActivation />} />

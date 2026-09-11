@@ -8,7 +8,7 @@ import Footer from '../components/Footer';
 import { getOrganizationTerms, normalizeOrgType } from '../utils/organizationTerms';
 
 interface PlanConfig {
-  id: 'Starter' | 'Professional' | 'Enterprise';
+  id: string;
   title: string;
   monthlyPrice: number;
   annualPrice: number;
@@ -17,7 +17,7 @@ interface PlanConfig {
   isPopular?: boolean;
 }
 
-const PLANS: PlanConfig[] = [
+const DEFAULT_PLANS: PlanConfig[] = [
   {
     id: 'Starter',
     title: 'Starter',
@@ -93,14 +93,38 @@ interface PurchaseSuccessData {
 const PricingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [billingCycle, setBillingCycle] = useState<'Monthly' | 'Annual'>('Monthly');
+  const [plans, setPlans] = useState<PlanConfig[]>(DEFAULT_PLANS);
   
   // Checkout Modal States
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanConfig>(PLANS[1]);
+  const [selectedPlan, setSelectedPlan] = useState<PlanConfig>(DEFAULT_PLANS[1]);
   const [modalStep, setModalStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [purchaseResult, setPurchaseResult] = useState<PurchaseSuccessData | null>(null);
+
+  // Fetch dynamic plans from database catalog
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/v1/subscriptions/plans')
+      .then(res => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          const mapped: PlanConfig[] = res.data.map((p: any) => ({
+            id: p.name,
+            title: p.displayName || p.name,
+            monthlyPrice: p.monthlyPrice,
+            annualPrice: p.annualPrice,
+            description: p.description,
+            features: p.features || [],
+            isPopular: p.isPopular
+          }));
+          setPlans(mapped);
+          setSelectedPlan(prev => mapped.find(m => m.id === prev.id) || mapped[0]);
+        }
+      })
+      .catch(err => {
+        console.warn('Using default plans catalog fallback:', err);
+      });
+  }, []);
 
   // Form state - universal for Clinic, College, Saloon, Other Organization
   const [form, setForm] = useState({
@@ -477,7 +501,7 @@ const PricingPage: React.FC = () => {
 
         {/* Pricing Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch mb-24">
-          {PLANS.map((plan) => {
+          {plans.map((plan) => {
             const price = billingCycle === 'Monthly' ? plan.monthlyPrice : plan.annualPrice;
             const isPro = plan.isPopular;
 

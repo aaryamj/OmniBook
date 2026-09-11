@@ -52,9 +52,13 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
                 const activeVal = (schedule as any).isActive !== undefined 
                     ? (schedule as any).isActive 
                     : (schedule as any).active;
+                const tenantActiveVal = (schedule as any).isTenantActive !== undefined 
+                    ? Boolean((schedule as any).isTenantActive) 
+                    : true;
                 return {
                     ...schedule,
-                    isActive: Boolean(activeVal),
+                    isTenantActive: tenantActiveVal,
+                    isActive: tenantActiveVal ? Boolean(activeVal) : false,
                     openingTime: schedule.openingTime ? schedule.openingTime.substring(0, 5) : "09:00",
                     closingTime: schedule.closingTime ? schedule.closingTime.substring(0, 5) : "17:00",
                     breakStartTime: schedule.breakStartTime ? schedule.breakStartTime.substring(0, 5) : "13:00",
@@ -118,9 +122,10 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
             
             setSuccessMessage('Schedule saved successfully!');
             setTimeout(() => setSuccessMessage(''), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to save provider schedule settings", error);
-            setErrorMessage("Failed to save schedule settings.");
+            const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Failed to save schedule settings.";
+            setErrorMessage(msg);
         } finally {
             setSaving(false);
         }
@@ -170,87 +175,90 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {schedules.map((schedule, index) => (
-                                <div key={schedule.dayOfWeek} className={`flex flex-col lg:flex-row lg:items-center py-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low/50 px-4 rounded-lg transition-colors group ${!schedule.isActive ? 'opacity-60 bg-surface-container-lowest' : 'bg-white'}`}>
-                                    <div className="w-32 flex-shrink-0 mb-4 lg:mb-0">
-                                        <span className={`font-bold text-body-lg ${schedule.isActive ? 'text-on-surface' : 'text-outline'}`}>{schedule.dayOfWeek}</span>
-                                    </div>
-                                    <div className="flex items-center gap-4 flex-1 flex-wrap">
-                                        <label className={`relative inline-flex items-center ${schedule.isTenantActive !== false ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                                            <input 
-                                                type="checkbox" 
-                                                className="sr-only peer" 
-                                                checked={schedule.isActive}
-                                                disabled={schedule.isTenantActive === false}
-                                                onChange={(e) => updateSchedule(index, 'isActive', e.target.checked)}
-                                            />
-                                            <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${schedule.isTenantActive === false ? 'bg-outline-variant/50' : 'bg-outline-variant peer-checked:bg-secondary'}`}></div>
-                                            <span className={`ml-3 text-body-md font-medium w-16 ${schedule.isActive ? 'text-emerald-600' : 'text-outline'} ${schedule.isTenantActive === false ? 'opacity-50' : ''}`}>
-                                                {schedule.isActive ? 'Active' : 'Closed'}
-                                            </span>
-                                        </label>
-                                        
-                                        {schedule.isTenantActive === false && !schedule.isActive && (
-                                            <div className="flex items-center gap-2 text-red-600 text-xs font-medium ml-2 bg-red-50 px-2 py-1 rounded">
-                                                <span className="material-symbols-outlined text-[16px]">domain_disabled</span>
-                                                Clinic is closed
-                                            </div>
-                                        )}
-                                        
-                                        {schedule.isActive ? (
-                                            <>
-                                                <div className="flex items-center gap-4 text-body-md ml-4">
-                                                    <input 
-                                                        type="time" 
-                                                        className="bg-surface-container-lowest px-4 py-2 rounded-lg border border-outline-variant font-mono-data outline-none focus:border-secondary shadow-sm" 
-                                                        value={schedule.openingTime} 
-                                                        onChange={(e) => updateSchedule(index, 'openingTime', e.target.value)} 
-                                                    />
-                                                    <span className="text-outline font-medium">to</span>
-                                                    <input 
-                                                        type="time" 
-                                                        className="bg-surface-container-lowest px-4 py-2 rounded-lg border border-outline-variant font-mono-data outline-none focus:border-secondary shadow-sm" 
-                                                        value={schedule.closingTime} 
-                                                        onChange={(e) => updateSchedule(index, 'closingTime', e.target.value)} 
-                                                    />
-                                                </div>
-                                                <div className="flex items-center gap-2 text-on-surface-variant text-body-md bg-amber-50 px-4 py-2 rounded-lg border border-amber-100 ml-auto">
-                                                    <span className="material-symbols-outlined text-[18px] text-amber-600">coffee</span>
-                                                    <span className="flex items-center gap-2 text-amber-900 font-medium">Break: 
+                            {schedules.map((schedule, index) => {
+                                const isFacilityClosed = schedule.isTenantActive === false;
+
+                                return (
+                                    <div key={schedule.dayOfWeek} className={`flex flex-col lg:flex-row lg:items-center py-4 border-b border-surface-variant last:border-0 hover:bg-surface-container-low/30 px-2 rounded-lg transition-colors group ${!schedule.isActive || isFacilityClosed ? 'opacity-70 bg-surface-container-low/20' : ''}`}>
+                                        <div className="w-28 flex-shrink-0 mb-4 lg:mb-0">
+                                            <span className={`font-bold text-body-md ${schedule.isActive && !isFacilityClosed ? 'text-on-surface' : 'text-outline'}`}>{schedule.dayOfWeek}</span>
+                                        </div>
+                                        <div className="flex items-center gap-4 flex-1 flex-wrap">
+                                            <label 
+                                                className={`relative inline-flex items-center ${isFacilityClosed ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                                                title={isFacilityClosed ? "This day is closed in Salon Operating Hours." : ""}
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="sr-only peer" 
+                                                    checked={isFacilityClosed ? false : schedule.isActive}
+                                                    disabled={isFacilityClosed}
+                                                    onChange={(e) => {
+                                                        if (isFacilityClosed) return;
+                                                        updateSchedule(index, 'isActive', e.target.checked);
+                                                    }}
+                                                />
+                                                <div className="w-11 h-6 bg-outline-variant rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary peer-disabled:opacity-40"></div>
+                                                <span className={`ml-3 text-body-md font-medium ${schedule.isActive && !isFacilityClosed ? 'text-emerald-600' : 'text-outline'}`}>
+                                                    {schedule.isActive && !isFacilityClosed ? 'Active' : 'Closed'}
+                                                </span>
+                                            </label>
+                                            
+                                            {schedule.isActive && !isFacilityClosed ? (
+                                                <>
+                                                    <div className="flex items-center gap-4 text-body-md">
                                                         <input 
                                                             type="time" 
-                                                            className="bg-white px-2 py-1 rounded border border-amber-200 focus:border-amber-500 outline-none w-[120px] font-mono-data" 
-                                                            value={schedule.breakStartTime}
-                                                            onChange={(e) => updateSchedule(index, 'breakStartTime', e.target.value)}
+                                                            className="bg-surface-container-low px-4 py-1.5 rounded-lg border border-outline-variant font-mono-data outline-none focus:border-secondary" 
+                                                            value={schedule.openingTime} 
+                                                            onChange={(e) => updateSchedule(index, 'openingTime', e.target.value)} 
                                                         />
-                                                        -
+                                                        <span className="text-outline">to</span>
                                                         <input 
                                                             type="time" 
-                                                            className="bg-white px-2 py-1 rounded border border-amber-200 focus:border-amber-500 outline-none w-[120px] font-mono-data" 
-                                                            value={schedule.breakEndTime}
-                                                            onChange={(e) => updateSchedule(index, 'breakEndTime', e.target.value)}
+                                                            className="bg-surface-container-low px-4 py-1.5 rounded-lg border border-outline-variant font-mono-data outline-none focus:border-secondary" 
+                                                            value={schedule.closingTime} 
+                                                            onChange={(e) => updateSchedule(index, 'closingTime', e.target.value)} 
                                                         />
-                                                    </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-on-surface-variant text-body-md bg-amber-50 px-3 py-1 rounded border border-amber-100">
+                                                        <span className="material-symbols-outlined text-[18px]">coffee</span>
+                                                        <span className="flex items-center gap-2">Break: 
+                                                            <input 
+                                                                type="time" 
+                                                                className="bg-transparent border-b border-amber-200 focus:border-amber-500 outline-none w-32 font-mono-data" 
+                                                                value={schedule.breakStartTime}
+                                                                onChange={(e) => updateSchedule(index, 'breakStartTime', e.target.value)}
+                                                            />
+                                                            -
+                                                            <input 
+                                                                type="time" 
+                                                                className="bg-transparent border-b border-amber-200 focus:border-amber-500 outline-none w-32 font-mono-data" 
+                                                                value={schedule.breakEndTime}
+                                                                onChange={(e) => updateSchedule(index, 'breakEndTime', e.target.value)}
+                                                            />
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center gap-4 text-body-md w-full">
+                                                    <div className="flex-1 bg-surface-container-low px-4 py-2 rounded-lg border border-outline-variant flex items-center gap-2">
+                                                        <span className="material-symbols-outlined text-[18px] text-outline">info</span>
+                                                        <input 
+                                                            type="text" 
+                                                            placeholder="Reason for closure (e.g. Weekend, Holiday)" 
+                                                            className={`bg-transparent outline-none w-full text-on-surface-variant italic ${isFacilityClosed ? 'cursor-not-allowed opacity-75' : ''}`}
+                                                            value={schedule.closedMessage || ''}
+                                                            disabled={isFacilityClosed}
+                                                            onChange={(e) => updateSchedule(index, 'closedMessage', e.target.value)}
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex items-center gap-4 text-body-md w-full ml-4">
-                                                <div className="flex-1 bg-surface-container-low px-4 py-2.5 rounded-lg border border-outline-variant flex items-center gap-3">
-                                                    <span className="material-symbols-outlined text-[20px] text-outline">info</span>
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder="Reason for closure (e.g. Vacation, Holiday)" 
-                                                        className={`bg-transparent outline-none w-full text-on-surface-variant italic ${schedule.isTenantActive === false ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        value={schedule.closedMessage || ''}
-                                                        disabled={schedule.isTenantActive === false}
-                                                        onChange={(e) => updateSchedule(index, 'closedMessage', e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

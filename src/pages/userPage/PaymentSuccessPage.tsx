@@ -18,6 +18,12 @@ interface BookingConfirmation {
   appointmentType?: string;
   price?: number;
   totalAmount?: number;
+  baseCurrency?: string;
+  basePriceNpr?: number;
+  chargedCurrency?: string;
+  chargedAmount?: number;
+  exchangeRate?: number;
+  conversionTimestamp?: string;
   paymentStatus?: string;
   paymentMethod?: string;
   meetingLink?: string;
@@ -278,15 +284,33 @@ const PaymentSuccessPage: React.FC = () => {
                 <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
                   Total Paid
                 </span>
-                <span className="font-bold text-xs sm:text-sm text-emerald-700 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[16px]">payments</span>
-                  Rs. {booking.totalAmount.toLocaleString()}
-                  {booking.paymentMethod && (
-                    <span className="text-[10px] px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 rounded font-semibold text-emerald-800 uppercase">
-                      {booking.paymentMethod}
+                <div className="flex flex-col gap-1">
+                  <span className="font-bold text-xs sm:text-sm text-emerald-700 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px]">payments</span>
+                    {booking.chargedCurrency === 'USD' && booking.chargedAmount ? (
+                      <>
+                        <span>${booking.chargedAmount.toFixed(2)} USD</span>
+                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 border border-blue-200 rounded font-semibold text-blue-800 uppercase">
+                          Stripe (USD Forex)
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Rs. {booking.totalAmount.toLocaleString()} NPR</span>
+                        {booking.paymentMethod && (
+                          <span className="text-[10px] px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 rounded font-semibold text-emerald-800 uppercase">
+                            {booking.paymentMethod}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </span>
+                  {booking.chargedCurrency === 'USD' && (
+                    <span className="text-[11px] text-slate-500 font-medium pl-6">
+                      Base: Rs. {(booking.basePriceNpr || booking.totalAmount).toLocaleString()} NPR • Rate: 1 USD = {booking.exchangeRate || 135.0} NPR
                     </span>
                   )}
-                </span>
+                </div>
               </div>
             )}
           </div>

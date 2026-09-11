@@ -113,15 +113,26 @@ export function calculateLuminance(hex: string): number {
     return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
 }
 
-// Calculate WCAG compliant text color (#ffffff or #0f172a)
-export function getAccessibleTextColor(backgroundHex: string): string {
-    const luminance = calculateLuminance(backgroundHex);
-    // Contrast with white: (1.05) / (lum + 0.05)
-    // Contrast with black: (lum + 0.05) / (0.05)
-    const whiteRatio = 1.05 / (luminance + 0.05);
-    const darkRatio = (luminance + 0.05) / 0.05;
+// Calculate WCAG contrast ratio between two hex colors (1.0 to 21.0)
+export function getContrastRatio(hex1: string, hex2: string): number {
+    const lum1 = calculateLuminance(hex1);
+    const lum2 = calculateLuminance(hex2);
+    const lighter = Math.max(lum1, lum2);
+    const darker = Math.min(lum1, lum2);
+    return (lighter + 0.05) / (darker + 0.05);
+}
 
-    return whiteRatio >= 4.5 || whiteRatio >= darkRatio ? '#ffffff' : '#0f172a';
+// Calculate WCAG compliant text color (#ffffff or #0f172a)
+export function getAccessibleTextColor(backgroundHex: string, minRatio: number = 4.5): string {
+    const whiteRatio = getContrastRatio(backgroundHex, '#ffffff');
+    const darkRatio = getContrastRatio(backgroundHex, '#0f172a');
+
+    // Prefer white if it satisfies the minimum ratio and provides superior or equal contrast
+    if (whiteRatio >= minRatio && whiteRatio >= darkRatio) return '#ffffff';
+    // Otherwise, if dark text meets the target contrast
+    if (darkRatio >= minRatio && darkRatio >= whiteRatio) return '#0f172a';
+    // Fallback to highest contrast option
+    return whiteRatio >= darkRatio ? '#ffffff' : '#0f172a';
 }
 
 /**
@@ -135,11 +146,23 @@ export function generateThemeTokens(primaryHex: string): ThemeTokens {
     const primary = primaryHex;
     const primaryHover = hslToHex(h, s, Math.max(0, l - 8));
     const primaryActive = hslToHex(h, s, Math.max(0, l - 15));
-    // Deep, premium brand container for sidebars and brand surfaces
-    const primaryContainer = hslToHex(h, Math.min(80, Math.max(40, s)), Math.max(14, Math.min(24, l * 0.45)));
-    const onPrimary = getAccessibleTextColor(primary);
-    // High-contrast soft illuminated text for the deep brand container
-    const onPrimaryContainer = hslToHex(h, Math.min(60, s), 88);
+    
+    // WCAG AA compliant text for primary button backgrounds
+    const onPrimary = getAccessibleTextColor(primary, 4.5);
+
+    // Deep, premium brand container for sidebars and header navigation
+    // Keep container lightness rich (12% to 20%) derived from the brand hue
+    const containerL = Math.max(12, Math.min(22, l * 0.42));
+    const primaryContainer = hslToHex(h, Math.min(80, Math.max(35, s)), containerL);
+
+    // Calculate dynamic contrast-compliant onPrimaryContainer:
+    // First candidate: illuminated soft-tinted tone (90% lightness) for a refined aesthetic
+    let candidateOnContainer = hslToHex(h, Math.min(30, s * 0.35), 90);
+    // Guarantee WCAG AA minimum 4.5:1 contrast against primaryContainer
+    const onContainerContrast = getContrastRatio(primaryContainer, candidateOnContainer);
+    const onPrimaryContainer = onContainerContrast >= 4.5 
+        ? candidateOnContainer 
+        : getAccessibleTextColor(primaryContainer, 4.5);
 
     const primaryFixed = hslToHex(h, Math.min(60, s), 90);
     const primaryFixedDim = hslToHex(h, Math.min(50, s), 80);
@@ -150,7 +173,10 @@ export function generateThemeTokens(primaryHex: string): ThemeTokens {
     const secondaryH = (h + 15) % 360;
     const secondary = hslToHex(secondaryH, Math.min(25, s * 0.35), 40);
     const secondaryHover = hslToHex(secondaryH, Math.min(25, s * 0.35), 32);
-    const secondaryContainer = hslToHex(secondaryH, Math.min(30, s * 0.4), 92);
+    
+    // secondaryContainer is used for active indicator bars, tags, and badges
+    // Vivid saturation and brightness ensure it pops against the dark primary container
+    const secondaryContainer = hslToHex(h, Math.min(90, Math.max(55, s)), 68);
     const onSecondary = '#ffffff';
     const onSecondaryContainer = hslToHex(secondaryH, Math.min(35, s * 0.45), 20);
 

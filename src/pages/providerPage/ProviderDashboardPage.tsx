@@ -433,9 +433,12 @@ const ProviderDashboardPage: React.FC = () => {
   const day = String(selectedDate.getDate()).padStart(2, '0');
   const dateString = `${year}-${month}-${day}`;
   const todayAppointments = appointments.filter(a => a.appointmentDate === dateString && a.appointmentStatus !== 'PENDING_APPROVAL');
-  const todayRevenue = todayAppointments
-    .filter(a => a.appointmentStatus !== 'CANCELLED')
-    .reduce((sum, a) => sum + (a.price || 0), 0);
+  const todayRevenue = todayAppointments.reduce((sum, a) => {
+    if (a.appointmentStatus === 'CANCELLED' || a.appointmentStatus === 'NO_SHOW') {
+      return sum + (a.settlementAmount || 0);
+    }
+    return sum + (a.settlementAmount !== undefined && a.settlementAmount !== null ? a.settlementAmount : (a.price || 0));
+  }, 0);
   
   const newRequestsCount = appointments.filter(
     a => a.appointmentStatus === 'PENDING_APPROVAL'
@@ -934,12 +937,18 @@ const ProviderDashboardPage: React.FC = () => {
                         <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold flex items-center gap-2 ${
                           appointment.appointmentStatus === 'CHECKED_IN' ? 'bg-[#10B981]/10 text-[#10B981]' : 
                           appointment.appointmentStatus === 'COMPLETED' ? 'bg-[#003fb1]/10 text-[#003fb1]' : 
+                          appointment.appointmentStatus === 'CANCELLED' ? 'bg-[#fee2e2] text-[#ba1a1a]' :
                           'bg-[#f0f3ff] text-[#3b4854]'
                         }`}>
                           {appointment.appointmentStatus === 'CHECKED_IN' && (
                             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
                           )}
                           {appointment.appointmentStatus}
+                          {appointment.appointmentStatus === 'CANCELLED' && appointment.settlementAmount !== undefined && appointment.settlementAmount !== null && appointment.settlementAmount > 0 && (
+                            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 border border-emerald-200 px-1.5 py-0.5 rounded ml-1">
+                              Retained: रू {appointment.settlementAmount.toLocaleString()}
+                            </span>
+                          )}
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {/* Video Consultation Toggle & Launch - only visible if the service has virtual/video enabled */}

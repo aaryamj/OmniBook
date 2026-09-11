@@ -9,6 +9,8 @@ interface Clinic {
   organizationType?: string;
   address: string;
   logoUrl?: string;
+  subscriptionTier?: string;
+  hasAiBooking?: boolean;
 }
 
 interface Provider {
@@ -50,6 +52,23 @@ const BookAppointmentPage: React.FC = () => {
   const [userRemainingCapacity, setUserRemainingCapacity] = useState<number>(3);
   const [userLimitReached, setUserLimitReached] = useState<boolean>(false);
 
+  // Gated AI Booking feature based on selected organization's subscription plan
+  const selectedClinicObj = clinics.find(c => c.id.toString() === selectedClinic);
+  const isAiBookingSupported = selectedClinicObj 
+    ? Boolean(selectedClinicObj.hasAiBooking) 
+    : (clinics.length === 0 || clinics.some(c => c.hasAiBooking));
+
+  // Automatically switch away from smart_ai if the selected organization only supports classic calendar
+  useEffect(() => {
+    if (selectedClinic) {
+      const cur = clinics.find(c => c.id.toString() === selectedClinic);
+      if (cur && !cur.hasAiBooking && activeTab === 'smart_ai') {
+        setActiveTab('classic');
+        showNotification(`${cur.organizationName} is on the ${cur.subscriptionTier || 'Starter'} plan (Classic Calendar only). Switched to Classic Calendar.`, 'info');
+      }
+    }
+  }, [selectedClinic, clinics, activeTab]);
+
   // Floating Toast Notification state
   const [notification, setNotification] = useState<{
     show: boolean;
@@ -70,6 +89,21 @@ const BookAppointmentPage: React.FC = () => {
       setNotification(prev => ({ ...prev, show: false }));
     }, 4500);
   };
+
+  const [exchangeRate, setExchangeRate] = useState<number>(135.0);
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/v1/public/booking/exchange-rate')
+      .then(res => {
+        const rate = res.data?.rate || res.data?.data?.nprPerUsd;
+        if (rate && typeof rate === 'number' && rate > 0) {
+          setExchangeRate(Math.round(rate * 100) / 100);
+        }
+      })
+      .catch(err => {
+        console.warn("Could not fetch live exchange rate, using fallback 135.0", err);
+      });
+  }, []);
 
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [patientDetails, setPatientDetails] = useState(() => {
@@ -792,17 +826,19 @@ const BookAppointmentPage: React.FC = () => {
         </header>
 
         {/* Hybrid Toggle */}
-        <section className="py-6 sm:py-10 flex justify-center px-4">
+        <section className="py-6 sm:py-10 flex flex-col items-center justify-center px-4 gap-2.5">
           <div className="inline-flex p-1 bg-[#e2e8f8] rounded-full shadow-inner max-w-full overflow-x-auto">
-            <button 
-              onClick={() => setActiveTab('smart_ai')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 sm:py-2.5 rounded-full text-xs sm:text-[14px] transition-all duration-200 cursor-pointer ${
-                activeTab === 'smart_ai' ? 'bg-[#1a56db] text-white font-bold shadow-sm' : 'text-[#53606c] hover:text-[#003fb1] font-medium'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
-              Smart AI Booking
-            </button>
+            {isAiBookingSupported && (
+              <button 
+                onClick={() => setActiveTab('smart_ai')}
+                className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 sm:py-2.5 rounded-full text-xs sm:text-[14px] transition-all duration-200 cursor-pointer ${
+                  activeTab === 'smart_ai' ? 'bg-[#1a56db] text-white font-bold shadow-sm' : 'text-[#53606c] hover:text-[#003fb1] font-medium'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                Smart AI Booking
+              </button>
+            )}
             <button 
               onClick={() => setActiveTab('classic')}
               className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 sm:py-2.5 rounded-full text-xs sm:text-[14px] transition-all duration-200 cursor-pointer ${
@@ -813,6 +849,15 @@ const BookAppointmentPage: React.FC = () => {
               Classic Calendar
             </button>
           </div>
+
+          {selectedClinicObj && !selectedClinicObj.hasAiBooking && (
+            <div className="inline-flex items-center gap-2 text-xs text-[#53606c] bg-amber-50/80 px-4 py-1.5 rounded-full border border-amber-200/80 animate-in fade-in shadow-xs">
+              <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0">info</span>
+              <span>
+                <strong className="text-amber-950">{selectedClinicObj.organizationName}</strong> operates on the <strong className="text-amber-950">{selectedClinicObj.subscriptionTier || 'Starter'} Plan</strong> (Calendar only). Smart AI Booking is enabled for Pro & Enterprise tiers.
+              </span>
+            </div>
+          )}
         </section>
 
         {/* Active Appointments Capacity Status Bar */}
@@ -1632,124 +1677,191 @@ const BookAppointmentPage: React.FC = () => {
       </footer>
 
       {/* Patient Details Modal */}
-      {showPatientModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-fade-in-up">
-            <div className="px-8 py-6 border-b border-[#c3c5d7]/30 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-2xl font-bold text-[#151c27]">Patient Details</h2>
-              <button 
-                onClick={() => setShowPatientModal(false)}
-                className="p-2 hover:bg-[#f0f3ff] rounded-full transition-colors text-[#53606c]"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            
-            <div className="p-8 space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-[#151c27] mb-2">Full Name *</label>
-                <input 
-                  type="text" 
-                  value={patientDetails.name}
-                  onChange={(e) => setPatientDetails({...patientDetails, name: e.target.value})}
-                  className="w-full px-5 py-3 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all"
-                  placeholder="E.g., Ram Bahadur"
-                />
+      {/* Patient Details & Payment Modal */}
+      {showPatientModal && (() => {
+        const slotsArray = activeTab === 'classic' ? dynamicSlots : [
+          { id: '1', price: 'रू 1,500' }, { id: '2', price: 'रू 1,500' }, { id: '3', price: 'रू 1,500' }, { id: '4', price: 'रू 1,500' }, { id: '5', price: 'रू 1,500' }
+        ];
+        const modalTotal = selectedSlots.reduce((sum, id) => {
+          const slot = slotsArray.find(s => s.id === id);
+          if (slot) {
+            const priceNum = parseInt(slot.price.replace(/[^\d]/g, ''), 10);
+            return sum + priceNum;
+          }
+          return sum;
+        }, 0);
+        const usdAmount = modalTotal > 0 ? Math.max(0.50, Math.round((modalTotal / exchangeRate) * 100) / 100) : 0;
+
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto animate-fade-in-up border border-slate-100">
+              {/* Pinned Header */}
+              <div className="shrink-0 px-6 py-4 sm:px-7 sm:py-4.5 border-b border-[#c3c5d7]/30 flex justify-between items-center bg-gray-50/80">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#151c27]">Patient Details & Payment</h2>
+                  <p className="text-xs text-[#53606c] mt-0.5">Fill patient details and select payment gateway</p>
+                </div>
+                <button 
+                  onClick={() => setShowPatientModal(false)}
+                  className="p-2 hover:bg-gray-200/70 rounded-full transition-colors text-[#53606c]"
+                  aria-label="Close"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-[#151c27] mb-2">Phone Number *</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-[#151c27] mb-1.5">Full Name *</label>
                   <input 
-                    type="tel" 
-                    value={patientDetails.phone}
-                    onChange={(e) => setPatientDetails({...patientDetails, phone: e.target.value})}
-                    className="w-full px-5 py-3 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all"
-                    placeholder="98XXXXXXXX"
+                    type="text" 
+                    value={patientDetails.name}
+                    onChange={(e) => setPatientDetails({...patientDetails, name: e.target.value})}
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all text-sm"
+                    placeholder="E.g., Ram Bahadur"
                   />
                 </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-[#151c27] mb-1.5">Phone Number *</label>
+                    <input 
+                      type="tel" 
+                      value={patientDetails.phone}
+                      onChange={(e) => setPatientDetails({...patientDetails, phone: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all text-sm"
+                      placeholder="98XXXXXXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-[#151c27] mb-1.5">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={patientDetails.email}
+                      onChange={(e) => setPatientDetails({...patientDetails, email: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all text-sm"
+                      placeholder="Optional"
+                    />
+                  </div>
+                </div>
+                
                 <div>
-                  <label className="block text-sm font-semibold text-[#151c27] mb-2">Email Address</label>
-                  <input 
-                    type="email" 
-                    value={patientDetails.email}
-                    onChange={(e) => setPatientDetails({...patientDetails, email: e.target.value})}
-                    className="w-full px-5 py-3 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all"
-                    placeholder="Optional"
-                  />
+                  <label className="block text-xs sm:text-sm font-semibold text-[#151c27] mb-1.5">Reason for Visit</label>
+                  <textarea 
+                    value={patientDetails.reason}
+                    onChange={(e) => setPatientDetails({...patientDetails, reason: e.target.value})}
+                    className="w-full px-4 py-2 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all resize-none text-sm"
+                    rows={2}
+                    placeholder="Briefly describe your symptoms or reason for visit..."
+                  ></textarea>
+                </div>
+
+                {/* Payment Method Selection */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-[#151c27] mb-2">Select Payment Method</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Stripe Card */}
+                    <div 
+                      onClick={() => setSelectedPaymentMethod('STRIPE')}
+                      className={`cursor-pointer rounded-xl border-2 p-3 sm:p-3.5 flex flex-col items-center justify-center gap-1.5 transition-all ${
+                        selectedPaymentMethod === 'STRIPE' 
+                          ? 'border-[#635BFF] bg-[#635BFF]/5 shadow-[0_4px_12px_rgba(99,91,255,0.2)]' 
+                          : 'border-[#c3c5d7] hover:border-[#635BFF]/50 bg-white'
+                      }`}
+                    >
+                      <div className="h-7 flex items-center justify-center">
+                        <span className="text-[#635BFF] font-black text-xl tracking-tight">stripe</span>
+                      </div>
+                      <span className={`text-xs font-semibold ${selectedPaymentMethod === 'STRIPE' ? 'text-[#635BFF]' : 'text-[#53606c]'}`}>
+                        Card (USD Forex)
+                      </span>
+                      <span className="text-[11px] text-[#635BFF] font-semibold bg-[#635BFF]/10 px-2 py-0.5 rounded-full text-center">
+                        ~${usdAmount.toFixed(2)} USD
+                      </span>
+                    </div>
+
+                    {/* eSewa Card */}
+                    <div 
+                      onClick={() => setSelectedPaymentMethod('ESEWA')}
+                      className={`cursor-pointer rounded-xl border-2 p-3 sm:p-3.5 flex flex-col items-center justify-center gap-1.5 transition-all ${
+                        selectedPaymentMethod === 'ESEWA' 
+                          ? 'border-[#61b846] bg-[#61b846]/5 shadow-[0_4px_12px_rgba(97,184,70,0.2)]' 
+                          : 'border-[#c3c5d7] hover:border-[#61b846]/50 bg-white'
+                      }`}
+                    >
+                      <div className="h-7 flex items-center justify-center">
+                        <span className="text-[#61b846] font-black text-xl italic">eSewa</span>
+                      </div>
+                      <span className={`text-xs font-semibold ${selectedPaymentMethod === 'ESEWA' ? 'text-[#61b846]' : 'text-[#53606c]'}`}>
+                        eSewa Wallet (NPR)
+                      </span>
+                      <span className="text-[11px] text-[#61b846] font-semibold bg-[#61b846]/10 px-2 py-0.5 rounded-full text-center">
+                        रू {modalTotal.toLocaleString()} NPR
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Forex Transparency Banner */}
+                  {selectedPaymentMethod === 'STRIPE' ? (
+                    <div className="mt-2.5 p-2.5 bg-[#635BFF]/5 border border-[#635BFF]/20 rounded-xl flex items-start gap-2 text-xs text-[#201d4a]">
+                      <span className="material-symbols-outlined text-[16px] text-[#635BFF] shrink-0 mt-0.5">currency_exchange</span>
+                      <div className="text-[11px] leading-relaxed">
+                        <p className="font-bold text-[#1a1740]">Dynamic Forex Conversion</p>
+                        <p className="text-[#45426e] mt-0.5">
+                          Base: <strong className="text-[#1a1740]">रू {modalTotal.toLocaleString()} NPR</strong>. Rate <strong className="text-[#1a1740]">1 USD = {exchangeRate} NPR</strong> &rarr; <strong className="text-[#635BFF]">${usdAmount.toFixed(2)} USD</strong> for checkout.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-2.5 p-2.5 bg-[#61b846]/10 border border-[#61b846]/30 rounded-xl flex items-start gap-2 text-xs text-[#1e3b15]">
+                      <span className="material-symbols-outlined text-[16px] text-[#61b846] shrink-0 mt-0.5">verified_user</span>
+                      <div className="text-[11px] leading-relaxed">
+                        <p className="font-bold text-[#142e0d]">Direct Domestic Payment</p>
+                        <p className="text-[#2b4c22] mt-0.5">
+                          Directly charged <strong className="text-[#142e0d]">रू {modalTotal.toLocaleString()} NPR</strong> through eSewa without currency conversion.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
-              <div>
-                <label className="block text-sm font-semibold text-[#151c27] mb-2">Reason for Visit</label>
-                <textarea 
-                  value={patientDetails.reason}
-                  onChange={(e) => setPatientDetails({...patientDetails, reason: e.target.value})}
-                  className="w-full px-5 py-3 rounded-xl border border-[#c3c5d7] focus:ring-2 focus:ring-[#005438] focus:border-transparent outline-none transition-all resize-none"
-                  rows={3}
-                  placeholder="Briefly describe your symptoms or reason for visit..."
-                ></textarea>
-              </div>
-
-              {/* Payment Method Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-[#151c27] mb-3">Select Payment Method</label>
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Stripe Card */}
-                  <div 
-                    onClick={() => setSelectedPaymentMethod('STRIPE')}
-                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${
-                      selectedPaymentMethod === 'STRIPE' 
-                        ? 'border-[#635BFF] bg-[#635BFF]/5 shadow-[0_4px_12px_rgba(99,91,255,0.2)]' 
-                        : 'border-[#c3c5d7] hover:border-[#635BFF]/50 bg-white'
-                    }`}
-                  >
-                    <div className="h-8 flex items-center justify-center">
-                      <span className="text-[#635BFF] font-black text-xl tracking-tight">stripe</span>
-                    </div>
-                    <span className={`text-sm font-semibold ${selectedPaymentMethod === 'STRIPE' ? 'text-[#635BFF]' : 'text-[#53606c]'}`}>
-                      Credit/Debit Card
-                    </span>
-                  </div>
-
-                  {/* eSewa Card */}
-                  <div 
-                    onClick={() => setSelectedPaymentMethod('ESEWA')}
-                    className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${
-                      selectedPaymentMethod === 'ESEWA' 
-                        ? 'border-[#61b846] bg-[#61b846]/5 shadow-[0_4px_12px_rgba(97,184,70,0.2)]' 
-                        : 'border-[#c3c5d7] hover:border-[#61b846]/50 bg-white'
-                    }`}
-                  >
-                    <div className="h-8 flex items-center justify-center">
-                      <span className="text-[#61b846] font-black text-xl italic">eSewa</span>
-                    </div>
-                    <span className={`text-sm font-semibold ${selectedPaymentMethod === 'ESEWA' ? 'text-[#61b846]' : 'text-[#53606c]'}`}>
-                      Digital Wallet
-                    </span>
+              {/* Pinned Sticky Footer */}
+              <div className="shrink-0 px-6 py-3.5 sm:px-7 sm:py-4 border-t border-[#c3c5d7]/30 bg-gray-50/90 flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-[#53606c] uppercase tracking-wider">Total Payable</span>
+                  <div className="flex items-baseline gap-1.5">
+                    {selectedPaymentMethod === 'STRIPE' ? (
+                      <>
+                        <span className="text-base sm:text-lg font-black text-[#635BFF]">${usdAmount.toFixed(2)} USD</span>
+                        <span className="text-xs text-[#53606c] font-medium">(रू {modalTotal.toLocaleString()})</span>
+                      </>
+                    ) : (
+                      <span className="text-base sm:text-lg font-black text-[#61b846]">रू {modalTotal.toLocaleString()} NPR</span>
+                    )}
                   </div>
                 </div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button 
+                    onClick={() => setShowPatientModal(false)}
+                    className="px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-[#53606c] hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handlePaymentInitiate}
+                    className="px-4 sm:px-6 py-2 sm:py-2.5 bg-[#005438] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#00412b] hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5 shadow-[0_4px_14px_rgba(0,84,56,0.3)]"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">lock</span>
+                    Proceed to Payment
+                  </button>
+                </div>
               </div>
-            </div>
-            
-            <div className="px-8 py-5 border-t border-[#c3c5d7]/30 bg-gray-50/50 flex justify-end gap-4">
-              <button 
-                onClick={() => setShowPatientModal(false)}
-                className="px-6 py-2.5 rounded-xl font-semibold text-[#53606c] hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handlePaymentInitiate}
-                className="px-8 py-2.5 bg-[#005438] text-white rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 shadow-[0_4px_14px_rgba(0,84,56,0.3)]"
-              >
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-                Proceed to Payment
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

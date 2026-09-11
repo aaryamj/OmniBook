@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ProviderScheduleModal from './ProviderScheduleModal';
+import SetProviderCommissionModal from './SetProviderCommissionModal';
 import { useOrganizationTerms } from '../../../utils/organizationTerms';
 
 interface Provider {
@@ -16,6 +17,8 @@ interface Provider {
     profilePictureUrl: string;
     licenseImageUrl?: string;
     credentials?: string;
+    commissionRate?: number | null;
+    effectiveCommissionRate?: number | null;
 }
 
 export default function ProviderManagementHub() {
@@ -34,6 +37,8 @@ export default function ProviderManagementHub() {
 
     const [scheduleProviderId, setScheduleProviderId] = useState<number | null>(null);
     const [scheduleProviderName, setScheduleProviderName] = useState<string>('');
+
+    const [commissionProvider, setCommissionProvider] = useState<Provider | null>(null);
     
     const actionMenuRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -201,13 +206,14 @@ export default function ProviderManagementHub() {
                             <th className="px-6 py-4 font-semibold">{terms.specialtyLabel} & {terms.licenseLabel}</th>
                             <th className="px-6 py-4 font-semibold">Tier</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
+                            <th className="px-6 py-4 font-semibold">Commission</th>
                             <th className="px-6 py-4 font-semibold text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-container font-body-md text-body-md relative">
                         {filteredProviders.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-on-surface-variant">
+                                <td colSpan={7} className="px-6 py-12 text-center text-on-surface-variant">
                                     No {terms.providerPlural.toLowerCase()} found matching "{filter}".
                                 </td>
                             </tr>
@@ -281,6 +287,21 @@ export default function ProviderManagementHub() {
                                             <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`}></span> {displayStatus}
                                         </span>
                                     </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                            provider.commissionRate !== null && provider.commissionRate !== undefined
+                                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                                : 'bg-primary/10 text-primary border border-primary/20'
+                                        }`}>
+                                            <span className="material-symbols-outlined text-[14px]">percent</span>
+                                            {provider.effectiveCommissionRate != null 
+                                                ? `${provider.effectiveCommissionRate}%` 
+                                                : (provider.commissionRate != null ? `${provider.commissionRate}%` : '10%')}
+                                            <span className="text-[10px] opacity-75 font-normal">
+                                                {provider.commissionRate !== null && provider.commissionRate !== undefined ? 'Custom' : 'Org Default'}
+                                            </span>
+                                        </span>
+                                    </td>
                                     <td className="px-6 py-4 text-right relative">
                                         <button 
                                             onClick={(e) => toggleActionMenu(provider.id, e)}
@@ -337,6 +358,17 @@ export default function ProviderManagementHub() {
                                                     >
                                                         <span className="material-symbols-outlined text-[18px]">calendar_clock</span>
                                                         Manage Schedule
+                                                    </button>
+                                                    <button 
+                                                        className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCommissionProvider(provider);
+                                                            setOpenActionId(null);
+                                                        }}
+                                                    >
+                                                        <span className="material-symbols-outlined text-[18px] text-primary">percent</span>
+                                                        Set Commission
                                                     </button>
                                                     <button 
                                                         onClick={() => window.location.href = `mailto:${provider.email}`}
@@ -599,6 +631,18 @@ export default function ProviderManagementHub() {
                     onClose={() => {
                         setScheduleProviderId(null);
                         setScheduleProviderName('');
+                    }} 
+                />
+            )}
+
+            {/* Provider Commission Modal */}
+            {commissionProvider && (
+                <SetProviderCommissionModal 
+                    provider={commissionProvider} 
+                    onClose={() => setCommissionProvider(null)} 
+                    onSuccess={() => {
+                        setCommissionProvider(null);
+                        fetchProviders();
                     }} 
                 />
             )}

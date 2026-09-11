@@ -11,6 +11,23 @@ export default function AdminSidebar() {
     // Helper function to determine if a path is active
     const isActive = (path: string) => location.pathname === path;
 
+    const getNavItemClasses = (path: string) => {
+        const active = isActive(path);
+        return `flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg group ${
+            active 
+                ? 'bg-on-primary-container/15 text-on-primary-container font-semibold border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
+                : 'text-on-primary-container/75 hover:text-on-primary-container hover:bg-on-primary-container/10 font-medium'
+        }`;
+    };
+
+    const getNavIconClasses = (path: string) => {
+        return `material-symbols-outlined transition-colors ${
+            isActive(path) 
+                ? 'text-on-primary-container' 
+                : 'text-on-primary-container/70 group-hover:text-on-primary-container'
+        }`;
+    };
+
     useEffect(() => {
         const handleToggle = () => setIsMobileOpen(prev => !prev);
         const handleClose = () => setIsMobileOpen(false);
@@ -53,8 +70,10 @@ export default function AdminSidebar() {
                             />
                         </div>
                         <div>
-                            <p className="font-label-md text-label-md text-on-primary-container opacity-80">{localStorage.getItem('organizationName') ? `${localStorage.getItem('organizationName')} Console` : 'Admin Console'}</p>
-                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                            <p className="font-label-md text-label-md text-on-primary-container font-semibold opacity-95">
+                                {localStorage.getItem('organizationName') ? `${localStorage.getItem('organizationName')} Console` : 'Admin Console'}
+                            </p>
+                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-on-primary-container/10 text-on-primary-container border border-on-primary-container/20">
                                 {terms.facilityLabel}
                             </span>
                         </div>
@@ -62,7 +81,7 @@ export default function AdminSidebar() {
                     {/* Mobile Close Button */}
                     <button 
                         onClick={() => setIsMobileOpen(false)}
-                        className="lg:hidden p-1.5 rounded-lg text-on-primary-container hover:bg-white/10 transition-colors cursor-pointer"
+                        className="lg:hidden p-1.5 rounded-lg text-on-primary-container hover:bg-on-primary-container/10 transition-colors cursor-pointer"
                         aria-label="Close sidebar"
                     >
                         <span className="material-symbols-outlined text-[20px]">close</span>
@@ -71,79 +90,65 @@ export default function AdminSidebar() {
                 
                 <nav className="flex-1 mt-4 px-2 space-y-1 overflow-y-auto custom-scrollbar">
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/dashboard') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/dashboard')}
                         onClick={() => navigate('/admin/dashboard')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/dashboard') ? "'FILL' 1" : "" }}>dashboard</span>
+                        <span className={getNavIconClasses('/admin/dashboard')} style={{ fontVariationSettings: isActive('/admin/dashboard') ? "'FILL' 1" : "" }}>dashboard</span>
                         <span className="font-body-md">Dashboard</span>
                     </a>
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/appointments') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/appointments')}
                         onClick={() => navigate('/admin/appointments')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/appointments') ? "'FILL' 1" : "" }}>{terms.appointmentsNavIcon}</span>
+                        <span className={getNavIconClasses('/admin/appointments')} style={{ fontVariationSettings: isActive('/admin/appointments') ? "'FILL' 1" : "" }}>{terms.appointmentsNavIcon}</span>
                         <span className="font-body-md">{terms.appointmentsNavLabel}</span>
                     </a>
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/providers') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/providers')}
                         onClick={() => navigate('/admin/providers')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/providers') ? "'FILL' 1" : "" }}>{terms.providersNavIcon}</span>
+                        <span className={getNavIconClasses('/admin/providers')} style={{ fontVariationSettings: isActive('/admin/providers') ? "'FILL' 1" : "" }}>{terms.providersNavIcon}</span>
                         <span className="font-body-md">{terms.providersNavLabel}</span>
                     </a>
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/crm') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/crm')}
                         onClick={() => navigate('/admin/crm')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/crm') ? "'FILL' 1" : "" }}>{terms.customersNavIcon}</span>
+                        <span className={getNavIconClasses('/admin/crm')} style={{ fontVariationSettings: isActive('/admin/crm') ? "'FILL' 1" : "" }}>{terms.customersNavIcon}</span>
                         <span className="font-body-md">{terms.customerPlural} CRM</span>
                     </a>
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/ledger') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/ledger')}
                         onClick={() => navigate('/admin/ledger')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/ledger') ? "'FILL' 1" : "" }}>account_balance_wallet</span>
+                        <span className={getNavIconClasses('/admin/ledger')} style={{ fontVariationSettings: isActive('/admin/ledger') ? "'FILL' 1" : "" }}>account_balance_wallet</span>
                         <span className="font-body-md">Ledger</span>
                     </a>
                     <a 
-                        className={`flex items-center gap-3 px-4 py-3 transition-all cursor-pointer rounded-lg ${
-                            isActive('/admin/settings') 
-                            ? 'bg-on-primary-container/10 text-on-primary border-l-4 border-secondary-container sidebar-active-indicator shadow-sm' 
-                            : 'text-on-surface-variant hover:bg-on-primary-container/5'
-                        }`}
+                        className={getNavItemClasses('/admin/subscription')}
+                        onClick={() => navigate('/admin/subscription')}
+                    >
+                        <span className={getNavIconClasses('/admin/subscription')} style={{ fontVariationSettings: isActive('/admin/subscription') ? "'FILL' 1" : "" }}>loyalty</span>
+                        <span className="font-body-md">Subscription & Billing</span>
+                    </a>
+                    <a 
+                        className={getNavItemClasses('/admin/settings')}
                         onClick={() => navigate('/admin/settings')}
                     >
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isActive('/admin/settings') ? "'FILL' 1" : "" }}>settings</span>
+                        <span className={getNavIconClasses('/admin/settings')} style={{ fontVariationSettings: isActive('/admin/settings') ? "'FILL' 1" : "" }}>settings</span>
                         <span className="font-body-md">Settings</span>
                     </a>
                 </nav>
 
                 <div className="mt-auto border-t border-on-primary-container/10 p-2">
-                    <a className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-on-primary-container/5 transition-colors cursor-pointer rounded-lg" onClick={() => {
-                        localStorage.clear();
-                        navigate('/login');
-                    }}>
-                        <span className="material-symbols-outlined">logout</span>
+                    <a 
+                        className="flex items-center gap-3 px-4 py-3 text-on-primary-container/75 hover:text-on-primary-container hover:bg-on-primary-container/10 transition-colors cursor-pointer rounded-lg font-medium group" 
+                        onClick={() => {
+                            localStorage.clear();
+                            navigate('/login');
+                        }}
+                    >
+                        <span className="material-symbols-outlined text-on-primary-container/70 group-hover:text-on-primary-container transition-colors">logout</span>
                         <span className="font-body-md">Logout</span>
                     </a>
                 </div>
