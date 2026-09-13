@@ -59,7 +59,6 @@ export default function CRM() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState(() => searchParams.get('search') || '');
-    const [demoFilter, setDemoFilter] = useState('All Demographics');
     const [financialFilter, setFinancialFilter] = useState('Financial Status: All');
 
     useEffect(() => {
@@ -149,19 +148,46 @@ export default function CRM() {
             (p.email && p.email.toLowerCase().includes(searchLower)) ||
             p.id.toLowerCase().includes(searchLower);
         
-        let matchesDemo = true;
-        if (demoFilter === 'Pediatric') matchesDemo = p.age !== null && p.age < 18;
-        else if (demoFilter === 'Adult') matchesDemo = p.age !== null && p.age >= 18 && p.age < 65;
-        else if (demoFilter === 'Geriatric') matchesDemo = p.age !== null && p.age >= 65;
-        
         let matchesFin = true;
         const balValue = parseFloat(p.balance.replace(/[^0-9.]/g, ''));
         const hasBalance = balValue > 0;
         if (financialFilter === 'Payment Pending' || financialFilter === 'Overdue') matchesFin = hasBalance;
         else if (financialFilter === 'Cleared') matchesFin = !hasBalance;
         
-        return matchesSearch && matchesDemo && matchesFin;
+        return matchesSearch && matchesFin;
     });
+
+    // --- Pagination State & Dynamic Calculations ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination to page 1 whenever any filter or search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, financialFilter, pageSize]);
+
+    const totalEntries = filteredPatients.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const paginatedPatients = filteredPatients.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     const handleExportCSV = () => {
         const headers = ['ID', 'Name', 'Phone', 'Email', 'Age', 'Blood Group', 'Last Visit', 'Provider', 'Balance', 'Status'];
@@ -556,16 +582,6 @@ export default function CRM() {
                         </div>
                         <div className="flex gap-2">
                             <select 
-                                className="border-none bg-surface-container-low rounded px-4 py-2 text-sm font-semibold focus:ring-0 cursor-pointer min-w-[180px] outline-none"
-                                value={demoFilter}
-                                onChange={(e) => setDemoFilter(e.target.value)}
-                            >
-                                <option>All Demographics</option>
-                                <option>Pediatric</option>
-                                <option>Adult</option>
-                                <option>Geriatric</option>
-                            </select>
-                            <select 
                                 className="border-none bg-surface-container-low rounded px-4 py-2 text-sm font-semibold focus:ring-0 cursor-pointer min-w-[200px] outline-none"
                                 value={financialFilter}
                                 onChange={(e) => setFinancialFilter(e.target.value)}
@@ -602,7 +618,7 @@ export default function CRM() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredPatients.map((patient) => (
+                                    paginatedPatients.map((patient) => (
                                         <tr key={patient.id} className="hover:bg-surface-bright transition-colors group">
                                             <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -675,21 +691,67 @@ export default function CRM() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex justify-between items-center mt-2 mb-4">
-                        <p className="text-xs text-on-surface-variant font-mono-data">Showing <span className="font-bold text-primary">{filteredPatients.length}</span> of <span className="font-bold text-primary">{patients.length}</span> active medical records</p>
-                        <div className="flex items-center gap-1">
-                            <button className="p-2 border border-outline-variant bg-white rounded text-on-surface-variant hover:bg-surface-container-low disabled:opacity-30" disabled>
-                                <span className="material-symbols-outlined text-sm">chevron_left</span>
-                            </button>
-                            <div className="flex items-center gap-1 px-2">
-                                <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">1</button>
-                                <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low text-xs font-bold text-on-surface">2</button>
-                                <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low text-xs font-bold text-on-surface">3</button>
-                                <span className="px-1 text-on-surface-variant">...</span>
-                                <button className="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-low text-xs font-bold text-on-surface">12</button>
+                    <div className="bg-white px-6 py-4 border border-outline-variant rounded flex flex-wrap items-center justify-between gap-4 mt-2 mb-4 shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <div className="text-xs text-on-surface-variant font-mono-data">
+                                Showing <span className="font-bold text-primary">{totalEntries > 0 ? startIndex + 1 : 0} - {endIndex}</span> of <span className="font-bold text-primary">{totalEntries}</span> active {terms.customerPlural.toLowerCase()} records
+                                {totalEntries !== patients.length && (
+                                    <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                        (filtered from {patients.length} total)
+                                    </span>
+                                )}
                             </div>
-                            <button className="p-2 border border-outline-variant bg-white rounded text-on-surface-variant hover:bg-surface-container-low">
-                                <span className="material-symbols-outlined text-sm">chevron_right</span>
+                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                <span>Rows:</span>
+                                <select
+                                    value={pageSize}
+                                    onChange={(e) => setPageSize(Number(e.target.value))}
+                                    className="bg-surface py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={safeCurrentPage <= 1}
+                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                aria-label="Previous Page"
+                            >
+                                <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                Previous
+                            </button>
+                            <div className="flex items-center gap-1">
+                                {getPageNumbers().map(page => (
+                                    <button 
+                                        key={page}
+                                        type="button"
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                            safeCurrentPage === page
+                                                ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                : 'border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                        }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                aria-label="Next Page"
+                            >
+                                Next
+                                <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
                             </button>
                         </div>
                     </div>

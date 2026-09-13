@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../superAdminPage/superAdmin.css';
@@ -21,8 +21,10 @@ interface DashboardData {
     inConsultPatients: number;
     esewaSettled: number;
     stripeConnect: number;
+    cashSettled?: number;
     esewaWeeklyVolume: number;
     stripeWeeklyVolume: number;
+    cashWeeklyVolume?: number;
     livePatientFlow: any[];
     weeklyAppointments: number[];
     providerMatrix: any[];
@@ -47,15 +49,31 @@ export default function AdminDashboard() {
     const [subOverview, setSubOverview] = useState<SubscriptionOverview | null>(null);
     const [loading, setLoading] = useState(true);
     const [isNewAppointmentModalOpen, setIsNewAppointmentModalOpen] = useState(false);
+    const [timeFilter, setTimeFilter] = useState('All Time');
+    const [showDateMenu, setShowDateMenu] = useState(false);
+    const dateMenuRef = useRef<HTMLDivElement>(null);
     const terms = useOrganizationTerms();
 
-    const fetchDashboardData = async () => {
+    // Close dropdown on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
+                setShowDateMenu(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const timeOptions = ['Today', 'Last 7 days', 'Last 30 days', 'This Quarter', 'This Year', 'All Time'];
+
+    const fetchDashboardData = async (selectedFilter = timeFilter) => {
         try {
             const token = localStorage.getItem('token');
             const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
             
             const [dashRes, subRes] = await Promise.allSettled([
-                axios.get('http://localhost:8080/api/v1/admin/dashboard', authHeaders),
+                axios.get(`http://localhost:8080/api/v1/admin/dashboard?timeFilter=${encodeURIComponent(selectedFilter)}`, authHeaders),
                 axios.get('http://localhost:8080/api/v1/subscriptions/my-overview', authHeaders)
             ]);
 
@@ -83,8 +101,8 @@ export default function AdminDashboard() {
     };
 
     useEffect(() => {
-        fetchDashboardData();
-    }, []);
+        fetchDashboardData(timeFilter);
+    }, [timeFilter]);
 
     if (loading || !data) {
         return (
@@ -130,30 +148,76 @@ export default function AdminDashboard() {
                             </div>
                         )}
 
-                        {/* Page Heading */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        {/* Page Heading & Actions */}
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative">
                             <div className="flex flex-col space-y-1">
                                 <h1 className="text-2xl sm:text-headline-lg font-headline-lg font-black text-primary tracking-tight">Welcome back, Admin</h1>
-                                <p className="font-body-md text-body-md text-on-surface-variant">Here is what is happening across {data?.organizationName || 'your workspace'} today.</p>
+                                <p className="font-body-md text-body-md text-on-surface-variant">
+                                    Here is what is happening across {data?.organizationName || 'your workspace'} {timeFilter === 'All Time' ? 'across all time' : (timeFilter === 'Today' ? 'today' : `over the ${timeFilter.toLowerCase()}`)}.
+                                </p>
                             </div>
-                            <button 
-                                onClick={() => {
-                                    if (subOverview?.isGated) {
-                                        navigate('/admin/subscription');
-                                    } else {
-                                        setIsNewAppointmentModalOpen(true);
-                                    }
-                                }}
-                                disabled={subOverview?.isGated}
-                                className={`flex items-center justify-center gap-2 px-6 py-3 rounded font-bold transition-all shadow-md w-full sm:w-auto ${
-                                    subOverview?.isGated
-                                        ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed'
-                                        : 'bg-primary text-on-primary hover:brightness-110 active:scale-95 shadow-primary/20 cursor-pointer'
-                                }`}
-                            >
-                                <span className="material-symbols-outlined">add</span>
-                                New {terms.appointmentSingular}
-                            </button>
+
+                            {/* Dropdown Filter & Action Button */}
+                            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                {/* Date Filter Dropdown */}
+                                <div className="relative" ref={dateMenuRef}>
+                                    <button 
+                                        type="button"
+                                        id="admin-dashboard-time-dropdown-btn"
+                                        onClick={() => setShowDateMenu(!showDateMenu)}
+                                        className="px-4 py-2.5 bg-surface-container-lowest border border-outline-variant hover:border-primary text-primary font-label-md text-label-md rounded-xl flex items-center gap-2 hover:bg-primary/5 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px] text-primary">calendar_today</span>
+                                        <span className="font-semibold text-on-surface">{timeFilter}</span>
+                                        <span className={`material-symbols-outlined text-[18px] text-primary transition-transform duration-200 ${showDateMenu ? 'rotate-180' : ''}`}>arrow_drop_down</span>
+                                    </button>
+                                    
+                                    {showDateMenu && (
+                                        <div className="absolute top-full right-0 mt-2 w-48 bg-surface-container-lowest border border-outline-variant/70 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 backdrop-blur-sm">
+                                            <ul className="py-1.5">
+                                                {timeOptions.map(option => (
+                                                    <li 
+                                                        key={option} 
+                                                        onClick={() => {
+                                                            setTimeFilter(option);
+                                                            setShowDateMenu(false);
+                                                        }}
+                                                        className={`px-4 py-2.5 text-body-md cursor-pointer transition-colors flex items-center justify-between ${
+                                                            timeFilter === option 
+                                                                ? 'bg-primary/10 text-primary font-bold' 
+                                                                : 'text-on-surface hover:bg-surface-container-low hover:text-primary'
+                                                        }`}
+                                                    >
+                                                        <span>{option}</span>
+                                                        {timeFilter === option && (
+                                                            <span className="material-symbols-outlined text-[16px] text-primary">check</span>
+                                                        )}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button 
+                                    onClick={() => {
+                                        if (subOverview?.isGated) {
+                                            navigate('/admin/subscription');
+                                        } else {
+                                            setIsNewAppointmentModalOpen(true);
+                                        }
+                                    }}
+                                    disabled={subOverview?.isGated}
+                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all shadow-md w-full sm:w-auto ${
+                                        subOverview?.isGated
+                                            ? 'bg-zinc-300 text-zinc-500 cursor-not-allowed'
+                                            : 'bg-primary text-on-primary hover:brightness-110 active:scale-95 shadow-primary/20 cursor-pointer'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined">add</span>
+                                    New {terms.appointmentSingular}
+                                </button>
+                            </div>
                         </div>
 
                         {/* KPI ROW */}
@@ -165,6 +229,8 @@ export default function AdminDashboard() {
                             inConsultPatients={data.inConsultPatients}
                             esewaSettled={data.esewaSettled}
                             stripeConnect={data.stripeConnect}
+                            cashSettled={data.cashSettled || 0}
+                            timeFilter={timeFilter}
                         />
 
                         {/* MAIN GRID CONTENT */}
@@ -173,7 +239,7 @@ export default function AdminDashboard() {
                             <div className="w-full">
                                 <LivePatientFlowTracker
                                     flows={data.livePatientFlow}
-                                    onRefresh={fetchDashboardData}
+                                    onRefresh={() => fetchDashboardData(timeFilter)}
                                 />
                             </div>
 
@@ -198,7 +264,7 @@ export default function AdminDashboard() {
                 <NewAppointmentModal
                     isOpen={isNewAppointmentModalOpen}
                     onClose={() => setIsNewAppointmentModalOpen(false)}
-                    onSuccess={fetchDashboardData}
+                    onSuccess={() => fetchDashboardData(timeFilter)}
                 />
 
                 {/* ============================================================ */}

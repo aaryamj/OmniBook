@@ -16,6 +16,8 @@ export default function AdminSetting() {
     const { primaryAccentColor, setPrimaryAccentColor, saveTheme, isSaving: isSavingTheme } = useTheme();
     const [brandColor, setBrandColor] = useState(primaryAccentColor || '#003fb1');
     const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const scheduleMatrixRef = React.useRef<ClinicScheduleMatrixHandle>(null);
     const [scheduleBanner, setScheduleBanner] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -149,17 +151,99 @@ export default function AdminSetting() {
                 setBrandColor(tenantData.primaryAccentColor);
                 setPrimaryAccentColor(tenantData.primaryAccentColor);
             }
+            if (tenantData.logoUrl && !logoFile) {
+                setLogoPreview(tenantData.logoUrl);
+            }
         }
     }, [tenantData]);
 
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            showToast("Logo file size exceeds 2MB limit", "error");
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            showToast("Please upload a valid image file (SVG, PNG, JPG or WEBP)", "error");
+            return;
+        }
+        setLogoFile(file);
+        const previewUrl = URL.createObjectURL(file);
+        setLogoPreview(previewUrl);
+    };
+
+    const handleLogoDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            showToast("Logo file size exceeds 2MB limit", "error");
+            return;
+        }
+        if (!file.type.startsWith('image/')) {
+            showToast("Please upload a valid image file (SVG, PNG, JPG or WEBP)", "error");
+            return;
+        }
+        setLogoFile(file);
+        const previewUrl = URL.createObjectURL(file);
+        setLogoPreview(previewUrl);
+    };
+
     const handleSaveBranding = async () => {
-        const success = await saveTheme(brandColor);
-        if (success) {
-            setSaveSuccessMsg("Institutional branding updated successfully!");
-            setTimeout(() => setSaveSuccessMsg(''), 4000);
-            fetchTenantData();
-        } else {
-            alert("Failed to update institutional branding. Please check your connection.");
+        setIsSaving(true);
+        try {
+            const token = localStorage.getItem('token');
+            let updatedLogoUrl: string | null = null;
+
+            // If a new logo file was selected, upload via multipart/form-data
+            if (logoFile) {
+                const formData = new FormData();
+                formData.append('logo', logoFile);
+                if (brandColor) {
+                    formData.append('primaryAccentColor', brandColor);
+                }
+
+                const uploadRes = await axios.put('http://localhost:8080/api/v1/tenant/profile', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                if (uploadRes.data?.success) {
+                    const newLogo = uploadRes.data.tenant?.logoUrl || uploadRes.data.profilePicture;
+                    if (newLogo) {
+                        updatedLogoUrl = newLogo;
+                        localStorage.setItem('logoUrl', newLogo);
+                        localStorage.setItem('profilePicture', newLogo);
+                        window.dispatchEvent(new CustomEvent('userProfileUpdated', {
+                            detail: { profilePicture: newLogo }
+                        }));
+                    }
+                    if (uploadRes.data.tenant) {
+                        setTenantData(uploadRes.data.tenant);
+                    }
+                }
+            }
+
+            // Save theme color
+            const themeSuccess = await saveTheme(brandColor);
+
+            if (themeSuccess || updatedLogoUrl) {
+                setSaveSuccessMsg("Branding & white-label configuration saved successfully!");
+                showToast("Branding & configuration saved successfully!", "success");
+                setTimeout(() => setSaveSuccessMsg(''), 4000);
+                fetchTenantData();
+                setLogoFile(null);
+            } else {
+                showToast("Failed to update branding settings. Please check your connection.", "error");
+            }
+        } catch (error: any) {
+            console.error("Failed to save branding settings", error);
+            showToast(error.response?.data?.message || "Failed to update branding settings", "error");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -754,6 +838,34 @@ export default function AdminSetting() {
                                                     <span className="w-1.5 h-6 bg-secondary rounded-full"></span>
                                                     <h3 className="font-headline-md text-headline-md">Official Identity</h3>
                                                 </div>
+
+                                                {/* Official Brand & Profile Logo Card */}
+                                                <div className="mb-6 p-4 rounded-xl border border-outline-variant bg-surface-container-low flex flex-col sm:flex-row items-center gap-5">
+                                                    <div className="w-20 h-20 rounded-xl bg-white border border-outline-variant/60 shadow-sm flex items-center justify-center p-2 shrink-0 overflow-hidden">
+                                                        {logoPreview ? (
+                                                            <img 
+                                                                src={logoPreview.startsWith('blob:') || logoPreview.startsWith('http') || logoPreview.startsWith('data:') ? logoPreview : `http://localhost:8080${logoPreview.startsWith('/') ? '' : '/'}${logoPreview}`}
+                                                                alt="Official Logo"
+                                                                className="w-full h-full object-contain"
+                                                            />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-4xl text-outline">apartment</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 text-center sm:text-left">
+                                                        <h4 className="font-bold text-on-surface text-sm">{tenantData?.organizationName || 'Facility'} Official Brand & Profile Logo</h4>
+                                                        <p className="text-xs text-on-surface-variant mt-0.5">This logo is displayed across client booking portals, system invoices, and your admin profile navigation bar.</p>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setActiveTab('branding')}
+                                                            className="mt-2 text-xs font-semibold text-secondary hover:underline flex items-center gap-1 mx-auto sm:mx-0 cursor-pointer"
+                                                        >
+                                                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                                                            Update Logo in Branding & White-Label
+                                                        </button>
+                                                    </div>
+                                                </div>
+
                                                 <div className="grid grid-cols-2 gap-6">
                                                     <div className="flex flex-col gap-2">
                                                         <label className="font-label-md text-label-md text-on-surface-variant uppercase">Registered {terms.facilityLabel} Name</label>
@@ -863,15 +975,44 @@ export default function AdminSetting() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                         <div>
                                             <label className="block font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-3">Enterprise Logo</label>
-                                            <div className="relative group cursor-pointer border-2 border-dashed border-outline-variant rounded-lg p-10 flex flex-col items-center justify-center bg-[#F8FAFC] hover:bg-surface-container-low transition-all">
-                                                <div className="mb-4 bg-white p-4 rounded shadow-sm">
-                                                    <div className="w-32 h-12 flex items-center justify-center font-bold text-primary italic border-2 border-primary/10">
-                                                        MediGlobal
-                                                    </div>
+                                            <div 
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={handleLogoDrop}
+                                                className="relative group cursor-pointer border-2 border-dashed border-outline-variant hover:border-primary rounded-lg p-8 flex flex-col items-center justify-center bg-[#F8FAFC] hover:bg-surface-container-low transition-all"
+                                            >
+                                                <div className="mb-4 bg-white p-3 rounded-lg shadow-sm border border-outline-variant/30 flex items-center justify-center min-w-[140px] min-h-[64px] max-w-[220px] overflow-hidden">
+                                                    {logoPreview ? (
+                                                        <img 
+                                                            src={logoPreview.startsWith('blob:') || logoPreview.startsWith('http') || logoPreview.startsWith('data:') ? logoPreview : `http://localhost:8080${logoPreview.startsWith('/') ? '' : '/'}${logoPreview}`} 
+                                                            alt="Enterprise Logo Preview" 
+                                                            className="max-h-14 max-w-[170px] object-contain"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-32 h-12 flex items-center justify-center font-bold text-primary italic border-2 border-primary/10 rounded">
+                                                            {tenantData?.organizationName || 'MediGlobal'}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <p className="text-on-surface-variant font-label-md text-label-md">Drag & Drop Logo Here</p>
-                                                <p className="text-on-surface-variant/60 text-[11px] mt-1">SVG, PNG or JPEG (Max 2MB)</p>
-                                                <input className="absolute inset-0 opacity-0 cursor-pointer" type="file" />
+                                                <p className="text-on-surface font-label-md text-label-md font-semibold text-center">
+                                                    {logoFile ? logoFile.name : (logoPreview ? 'Click or drag to replace logo' : 'Drag & Drop Logo Here')}
+                                                </p>
+                                                <p className="text-on-surface-variant/60 text-[11px] mt-1">SVG, PNG, JPG or WEBP (Max 2MB)</p>
+                                                {logoFile ? (
+                                                    <span className="mt-3 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                                                        <span className="material-symbols-outlined text-[13px]">check_circle</span>
+                                                        Ready to save ({Math.round(logoFile.size / 1024)} KB)
+                                                    </span>
+                                                ) : logoPreview ? (
+                                                    <span className="mt-3 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                                                        Active Enterprise Logo
+                                                    </span>
+                                                ) : null}
+                                                <input 
+                                                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                                                    type="file" 
+                                                    accept="image/png, image/jpeg, image/jpg, image/svg+xml, image/webp"
+                                                    onChange={handleLogoChange}
+                                                />
                                             </div>
                                         </div>
                                         <div className="flex flex-col justify-center space-y-4">

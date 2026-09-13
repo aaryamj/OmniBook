@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import AdminSidebar from './components/AdminSidebar';
 import TopNavigation from '../superAdminPage/components/TopNavigation';
 import ProviderManagementHub from './components/ProviderManagementHub';
+import ProviderScheduleModal from './components/ProviderScheduleModal';
 import { useOrganizationTerms, setAndBroadcastOrgType } from '../../utils/organizationTerms';
+import { applyTheme } from '../../utils/themeUtils';
 
 export default function ManageProviders() {
     const terms = useOrganizationTerms();
@@ -37,10 +39,7 @@ export default function ManageProviders() {
         { id: 'leave', name: 'On Leave', color: 'bg-red-100 text-red-800 border-red-200' }
     ];
     
-    const [editScheduleProviderId, setEditScheduleProviderId] = useState<string | null>(null);
-    const [editScheduleTab, setEditScheduleTab] = useState<'standard' | 'overrides'>('standard');
-    const [isSavingEdit, setIsSavingEdit] = useState(false);
-    const [overrideDateInput, setOverrideDateInput] = useState('');
+    const [scheduleModalProvider, setScheduleModalProvider] = useState<{ id: number; name: string } | null>(null);
     const [revokeProviderId, setRevokeProviderId] = useState<string | null>(null);
     const [revokeConfirmName, setRevokeConfirmName] = useState('');
     const [isRevoking, setIsRevoking] = useState(false);
@@ -48,7 +47,15 @@ export default function ManageProviders() {
     // Form states
     const [drawerForm, setDrawerForm] = useState({ name: '', email: '', specialization: '', tier: '', address: '' });
     
-    // Fetch Clinic Address
+    // Sync Tenant Dynamic Theme
+    useEffect(() => {
+        const cachedColor = localStorage.getItem('primaryAccentColor') || localStorage.getItem('tenantAccentColor');
+        if (cachedColor) {
+            applyTheme(cachedColor);
+        }
+    }, []);
+
+    // Fetch Clinic Address & Settings
     useEffect(() => {
         const fetchTenantAddress = async () => {
             try {
@@ -67,6 +74,10 @@ export default function ManageProviders() {
                     }
                     if (response.data.organizationName) {
                         localStorage.setItem('organizationName', response.data.organizationName);
+                    }
+                    if (response.data.primaryAccentColor) {
+                        localStorage.setItem('primaryAccentColor', response.data.primaryAccentColor);
+                        applyTheme(response.data.primaryAccentColor);
                     }
                 }
             } catch (error) {
@@ -165,20 +176,6 @@ export default function ManageProviders() {
         window.addEventListener('providers-updated', fetchAllProviders);
         return () => window.removeEventListener('providers-updated', fetchAllProviders);
     }, [terms.providerSingular]);
-    const initialScheduleForm = {
-        intervalMinutes: 20,
-        standardWeek: {
-            'Monday': { isActive: true, start: '09:00', end: '17:00' },
-            'Tuesday': { isActive: true, start: '09:00', end: '17:00' },
-            'Wednesday': { isActive: true, start: '09:00', end: '17:00' },
-            'Thursday': { isActive: true, start: '09:00', end: '17:00' },
-            'Friday': { isActive: true, start: '09:00', end: '17:00' },
-            'Saturday': { isActive: false, start: '10:00', end: '14:00' },
-            'Sunday': { isActive: false, start: '10:00', end: '14:00' }
-        } as Record<string, { isActive: boolean, start: string, end: string }>,
-        overrides: [] as string[]
-    };
-    const [editScheduleForm, setEditScheduleForm] = useState(initialScheduleForm);
 
     // Handlers
     
@@ -306,47 +303,26 @@ export default function ManageProviders() {
         }
     };
 
-    const handleEditSchedule = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSavingEdit(true);
-        setTimeout(() => {
-            setIsSavingEdit(false);
-            setEditScheduleProviderId(null);
-            setToastMsg('Provider schedule successfully updated.');
-            setTimeout(() => setToastMsg(''), 4000);
-        }, 1000);
-    };
-
-    const handleRevokeAccess = () => {
+    const handleRevokeAccess = async () => {
+        if (!revokeProviderId) return;
         setIsRevoking(true);
-        setTimeout(() => {
-            setProviders(providers.filter(p => p.id !== revokeProviderId));
+        try {
+            const token = localStorage.getItem('token');
+            await axios.put(`http://localhost:8080/api/v1/admin/providers/${revokeProviderId}/suspend`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            window.dispatchEvent(new Event('providers-updated'));
             setRevokeProviderId(null);
             setRevokeConfirmName('');
-            setIsRevoking(false);
-            setToastMsg('Access Revoked. Active sessions terminated.');
+            setToastMsg('Access suspended. Provider active sessions terminated.');
             setTimeout(() => setToastMsg(''), 4000);
-        }, 1000);
-    };
-
-    const calculateTotalSlots = () => {
-        let totalMinutes = 0;
-        Object.values(editScheduleForm.standardWeek).forEach(day => {
-            if (day.isActive) {
-                const [startH, startM] = day.start.split(':').map(Number);
-                const [endH, endM] = day.end.split(':').map(Number);
-                const startTotal = startH * 60 + startM;
-                const endTotal = endH * 60 + endM;
-                if (endTotal > startTotal) {
-                    totalMinutes += (endTotal - startTotal);
-                }
-            }
-        });
-        const activeDays = Object.values(editScheduleForm.standardWeek).filter(d => d.isActive).length;
-        if (activeDays === 0) return 0;
-        
-        const avgMinutesPerDay = totalMinutes / activeDays;
-        return Math.floor(avgMinutesPerDay / editScheduleForm.intervalMinutes);
+        } catch (error: any) {
+            console.error("Failed to suspend provider access", error);
+            const errMsg = error.response?.data?.message || error.message;
+            alert("Failed to suspend access: " + errMsg);
+        } finally {
+            setIsRevoking(false);
+        }
     };
 
     return (
@@ -368,17 +344,11 @@ export default function ManageProviders() {
                                 </div>
                                 <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                                     <button 
-                                        className="flex-1 sm:flex-initial justify-center flex items-center gap-2 border border-outline px-4 sm:px-6 py-2.5 rounded-full font-label-md text-label-md hover:bg-surface-variant transition-all cursor-pointer"
-                                        onClick={() => setIsManageShiftsOpen(true)}
-                                    >
-                                        <span className="material-symbols-outlined">calendar_today</span>
-                                        Manage Shifts
-                                    </button>
-                                    <button 
-                                        className="flex-1 sm:flex-initial justify-center flex items-center gap-2 bg-[#0F172A] text-white px-4 sm:px-6 py-2.5 rounded-full font-label-md text-label-md hover:bg-[#1E293B] transition-all shadow-xl shadow-primary/10 cursor-pointer"
+                                        className="flex-1 sm:flex-initial justify-center flex items-center gap-2 bg-primary text-on-primary px-4 sm:px-6 py-2.5 rounded-full font-label-md text-label-md hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-primary/25 cursor-pointer"
+                                        style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
                                         onClick={() => { setIsDrawerOpen(true); setDrawerStep(1); }}
                                     >
-                                        <span className="material-symbols-outlined">person_add</span>
+                                        <span className="material-symbols-outlined text-inherit">person_add</span>
                                         Provision New {terms.providerSingular}
                                     </button>
                                 </div>
@@ -576,9 +546,10 @@ export default function ManageProviders() {
                                                 <button 
                                                     className={`flex-1 py-3 font-bold rounded-xl text-xs transition-colors border ${provider.hasHeatmap ? 'bg-secondary-container/10 hover:bg-secondary-container/20 text-secondary-container border-secondary-container/20' : 'border-outline-variant hover:bg-slate-100'}`}
                                                     onClick={() => {
-                                                        setEditScheduleProviderId(provider.id);
-                                                        setEditScheduleForm(initialScheduleForm);
-                                                        setEditScheduleTab('standard');
+                                                        setScheduleModalProvider({
+                                                            id: Number(provider.id),
+                                                            name: provider.name
+                                                        });
                                                     }}
                                                 >
                                                     Edit Schedule
@@ -943,7 +914,8 @@ export default function ManageProviders() {
                                         <button 
                                             type="button" 
                                             onClick={handleNextStep} 
-                                            className="px-6 py-2.5 rounded-full bg-primary text-white font-label-md font-bold shadow-lg shadow-primary/20 hover:bg-[#1E293B]"
+                                            className="px-6 py-2.5 rounded-full bg-primary text-on-primary font-label-md font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+                                            style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
                                         >
                                             Next Step
                                         </button>
@@ -952,11 +924,12 @@ export default function ManageProviders() {
                                             type="button" 
                                             onClick={handleDrawerSubmit} 
                                             disabled={isProvisioning || !drawerForm.tier}
-                                            className="px-8 py-2.5 rounded-full bg-secondary-container text-white font-label-md font-bold shadow-lg shadow-secondary-container/30 hover:bg-secondary flex items-center gap-2 disabled:opacity-70"
+                                            className="px-8 py-2.5 rounded-full bg-primary text-on-primary font-label-md font-bold shadow-lg shadow-primary/25 hover:brightness-110 active:scale-95 flex items-center gap-2 disabled:opacity-70 transition-all cursor-pointer"
+                                            style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)' }}
                                         >
                                             {isProvisioning ? (
                                                 <>
-                                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                                                     Sending...
                                                 </>
                                             ) : (
@@ -973,206 +946,28 @@ export default function ManageProviders() {
                     </div>
                 )}
 
-                {/* 3. Edit Schedule Modal */}
-                {editScheduleProviderId && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                        <div className="bg-surface p-8 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col">
-                            <div className="flex justify-between items-center mb-6 shrink-0">
-                                <div>
-                                    <h3 className="font-headline-md text-headline-md font-bold text-primary">Edit Schedule</h3>
-                                    <p className="text-on-surface-variant text-sm mt-1">Configure micro-level availability & overrides.</p>
-                                </div>
-                                <button onClick={() => setEditScheduleProviderId(null)} className="text-on-surface-variant hover:text-error transition-colors w-10 h-10 flex items-center justify-center rounded-full hover:bg-error/10">
-                                    <span className="material-symbols-outlined">close</span>
-                                </button>
-                            </div>
-                            
-                            {/* Tabs */}
-                            <div className="flex border-b border-outline-variant mb-6 shrink-0">
-                                <button 
-                                    className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${editScheduleTab === 'standard' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:bg-surface-variant/50'}`}
-                                    onClick={() => setEditScheduleTab('standard')}
-                                >
-                                    Standard Week
-                                </button>
-                                <button 
-                                    className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${editScheduleTab === 'overrides' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:bg-surface-variant/50'}`}
-                                    onClick={() => setEditScheduleTab('overrides')}
-                                >
-                                    Date Overrides
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleEditSchedule} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-                                <div className="flex-1 overflow-y-auto pr-2 mb-6 space-y-6">
-                                    {editScheduleTab === 'standard' ? (
-                                        <>
-                                            {/* Interval */}
-                                            <div className="bg-slate-50 p-4 rounded-xl border border-outline-variant flex justify-between items-center">
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-primary">Appointment Interval</h4>
-                                                    <p className="text-xs text-on-surface-variant">Duration of a single patient slot.</p>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex items-center bg-white border border-outline-variant rounded-lg px-3 py-1">
-                                                        <input 
-                                                            type="number" 
-                                                            value={editScheduleForm.intervalMinutes} 
-                                                            onChange={e => setEditScheduleForm({...editScheduleForm, intervalMinutes: Number(e.target.value)})}
-                                                            className="w-16 text-center font-bold text-primary outline-none"
-                                                            min="5" max="120"
-                                                        />
-                                                        <span className="text-xs font-bold text-on-surface-variant ml-1">MINS</span>
-                                                    </div>
-                                                    <div className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg text-xs font-bold border border-green-200">
-                                                        Generates ~{calculateTotalSlots()} slots/day
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Week List */}
-                                            <div className="space-y-3">
-                                                {Object.entries(editScheduleForm.standardWeek).map(([day, config]) => (
-                                                    <div key={day} className={`flex items-center gap-4 p-3 rounded-xl border transition-colors ${config.isActive ? 'border-primary/30 bg-primary/5' : 'border-outline-variant bg-surface-container-lowest'}`}>
-                                                        <label className="flex items-center gap-3 w-32 cursor-pointer">
-                                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${config.isActive ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
-                                                                {config.isActive && <span className="material-symbols-outlined text-[14px] text-white">check</span>}
-                                                            </div>
-                                                            <input 
-                                                                type="checkbox" 
-                                                                className="hidden" 
-                                                                checked={config.isActive} 
-                                                                onChange={(e) => {
-                                                                    const newForm = {...editScheduleForm};
-                                                                    newForm.standardWeek[day].isActive = e.target.checked;
-                                                                    setEditScheduleForm(newForm);
-                                                                }}
-                                                            />
-                                                            <span className={`font-bold text-sm ${config.isActive ? 'text-primary' : 'text-on-surface-variant'}`}>{day}</span>
-                                                        </label>
-                                                        
-                                                        <div className="flex items-center gap-2 flex-1">
-                                                            <input 
-                                                                type="time" 
-                                                                value={config.start} 
-                                                                disabled={!config.isActive}
-                                                                onChange={(e) => {
-                                                                    const newForm = {...editScheduleForm};
-                                                                    newForm.standardWeek[day].start = e.target.value;
-                                                                    setEditScheduleForm(newForm);
-                                                                }}
-                                                                className={`px-3 py-1.5 rounded-lg border text-sm font-bold ${config.isActive ? 'border-outline text-primary bg-white focus:ring-2 focus:ring-secondary-container outline-none' : 'border-outline-variant text-on-surface-variant opacity-50 bg-surface-container-lowest'}`}
-                                                            />
-                                                            <span className="text-on-surface-variant font-bold text-xs">TO</span>
-                                                            <input 
-                                                                type="time" 
-                                                                value={config.end} 
-                                                                disabled={!config.isActive}
-                                                                onChange={(e) => {
-                                                                    const newForm = {...editScheduleForm};
-                                                                    newForm.standardWeek[day].end = e.target.value;
-                                                                    setEditScheduleForm(newForm);
-                                                                }}
-                                                                className={`px-3 py-1.5 rounded-lg border text-sm font-bold ${config.isActive ? 'border-outline text-primary bg-white focus:ring-2 focus:ring-secondary-container outline-none' : 'border-outline-variant text-on-surface-variant opacity-50 bg-surface-container-lowest'}`}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="space-y-6">
-                                            {/* Overrides */}
-                                            <div className="bg-orange-50 text-orange-800 p-4 rounded-xl border border-orange-200 flex items-start gap-3">
-                                                <span className="material-symbols-outlined text-orange-500">info</span>
-                                                <p className="text-sm font-medium">Use overrides to block out specific dates (e.g., vacations, sick leave, conferences). These dates will be completely unavailable for bookings.</p>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Add Blocked Date</label>
-                                                <div className="flex gap-3">
-                                                    <input 
-                                                        type="date" 
-                                                        value={overrideDateInput}
-                                                        onChange={e => setOverrideDateInput(e.target.value)}
-                                                        className="flex-1 bg-surface-container border border-outline-variant p-3 rounded-xl focus:ring-2 focus:ring-secondary-container outline-none font-bold text-primary"
-                                                    />
-                                                    <button 
-                                                        type="button"
-                                                        onClick={() => {
-                                                            if (overrideDateInput && !editScheduleForm.overrides.includes(overrideDateInput)) {
-                                                                setEditScheduleForm({...editScheduleForm, overrides: [...editScheduleForm.overrides, overrideDateInput].sort()});
-                                                                setOverrideDateInput('');
-                                                            }
-                                                        }}
-                                                        className="px-6 py-3 bg-secondary-container text-white font-bold rounded-xl hover:bg-secondary transition-colors"
-                                                    >
-                                                        Block Date
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider mb-4 border-l-4 border-error pl-3">Active Overrides</h4>
-                                                {editScheduleForm.overrides.length === 0 ? (
-                                                    <div className="p-8 border-2 border-dashed border-outline-variant rounded-2xl flex flex-col items-center justify-center text-center">
-                                                        <span className="material-symbols-outlined text-4xl text-outline mb-2">event_available</span>
-                                                        <p className="font-bold text-on-surface-variant">No date overrides configured.</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {editScheduleForm.overrides.map(date => (
-                                                            <div key={date} className="flex justify-between items-center p-3 border border-outline-variant rounded-xl bg-surface-container-lowest">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="material-symbols-outlined text-error text-[18px]">event_busy</span>
-                                                                    <span className="font-bold text-sm text-primary">{new Date(date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                                                </div>
-                                                                <button 
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setEditScheduleForm({...editScheduleForm, overrides: editScheduleForm.overrides.filter(d => d !== date)});
-                                                                    }}
-                                                                    className="w-7 h-7 rounded-full bg-error/10 text-error flex items-center justify-center hover:bg-error hover:text-white transition-colors"
-                                                                >
-                                                                    <span className="material-symbols-outlined text-[14px]">close</span>
-                                                                </button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant shrink-0 mt-auto">
-                                    <button type="button" onClick={() => setEditScheduleProviderId(null)} className="px-6 py-2 rounded-full border border-outline font-label-md font-bold hover:bg-surface-variant text-on-surface">Cancel</button>
-                                    <button type="submit" disabled={isSavingEdit} className="px-6 py-2 flex items-center gap-2 rounded-full bg-secondary-container text-white font-label-md font-bold hover:bg-secondary shadow-lg shadow-secondary-container/30 disabled:opacity-70">
-                                        {isSavingEdit ? (
-                                            <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                Saving...
-                                            </>
-                                        ) : (
-                                            <>Save Configuration</>
-                                        )}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                {/* 3. Provider Schedule Modal (Same as Manage Schedule) */}
+                {scheduleModalProvider && (
+                    <ProviderScheduleModal 
+                        providerId={scheduleModalProvider.id} 
+                        providerName={scheduleModalProvider.name}
+                        onClose={() => {
+                            setScheduleModalProvider(null);
+                            window.dispatchEvent(new Event('providers-updated'));
+                        }} 
+                    />
                 )}
 
-                {/* 4. Revoke Access Modal */}
+                {/* 4. Revoke / Suspend Access Modal */}
                 {revokeProviderId && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                         <div className="bg-surface p-8 rounded-3xl shadow-2xl max-w-md w-full border-2 border-error text-center flex flex-col">
                             <div className="w-16 h-16 bg-error/10 text-error rounded-full flex items-center justify-center mx-auto mb-4 border border-error/20 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
                                 <span className="material-symbols-outlined text-[32px]">warning</span>
                             </div>
-                            <h3 className="font-headline-md text-headline-md font-black text-error mb-2">Danger Zone: Revoke Access</h3>
+                            <h3 className="font-headline-md text-headline-md font-black text-error mb-2">Danger Zone: Suspend Access</h3>
                             <p className="text-on-surface-variant text-sm mb-6">
-                                This will instantly terminate all active sessions, invalidate their JWT, and remove them from the active schedule. 
+                                This will instantly suspend the provider's access, terminate all active sessions, and remove them from active bookings. 
                                 <br/><br/>
                                 To proceed, please type <strong className="text-on-surface select-none">{providers.find(p => p.id === revokeProviderId)?.name}</strong> below:
                             </p>

@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getOrganizationTerms, normalizeOrgType } from '../utils/organizationTerms';
+import { useAuth } from '../context/AuthContext';
 
 interface PlanConfig {
   id: string;
@@ -91,6 +92,7 @@ interface PurchaseSuccessData {
 }
 
 const PricingPage: React.FC = () => {
+  const { user, refreshUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [billingCycle, setBillingCycle] = useState<'Monthly' | 'Annual'>('Monthly');
   const [plans, setPlans] = useState<PlanConfig[]>(DEFAULT_PLANS);
@@ -102,6 +104,53 @@ const PricingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [purchaseResult, setPurchaseResult] = useState<PurchaseSuccessData | null>(null);
+
+  // Form state - universal for Clinic, College, Saloon, Other Organization
+  const [form, setForm] = useState({
+    organizationName: '',
+    organizationType: 'Clinic',
+    customOrganizationType: '',
+    registrationNumber: '',
+    address: '',
+    adminFullName: '',
+    adminEmail: '',
+    adminPhone: '',
+    paymentMethod: 'eSewa',
+    bankRef: 'NIMB-NPR-984210',
+    termsAgreed: true
+  });
+
+  // Prefill form if admin user is logged in
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        organizationName: prev.organizationName || user.organizationName || '',
+        organizationType: prev.organizationType || user.organizationType || 'Clinic',
+        adminFullName: prev.adminFullName || user.fullName || '',
+        adminEmail: prev.adminEmail || user.email || '',
+        adminPhone: prev.adminPhone || user.phone || ''
+      }));
+
+      // If user is admin, fetch overview to auto-fill registration number and address
+      const token = localStorage.getItem('token');
+      if (token && user.role === 'admin') {
+        axios.get('http://localhost:8080/api/v1/subscriptions/my-overview', {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => {
+          if (res.data) {
+            setForm(prev => ({
+              ...prev,
+              organizationName: res.data.organizationName || prev.organizationName,
+              organizationType: res.data.organizationType || prev.organizationType,
+              registrationNumber: res.data.registrationNumber || prev.registrationNumber,
+              address: res.data.address || prev.address
+            }));
+          }
+        }).catch(() => {});
+      }
+    }
+  }, [user]);
 
   // Fetch dynamic plans from database catalog
   useEffect(() => {
@@ -126,21 +175,6 @@ const PricingPage: React.FC = () => {
       });
   }, []);
 
-  // Form state - universal for Clinic, College, Saloon, Other Organization
-  const [form, setForm] = useState({
-    organizationName: '',
-    organizationType: 'Clinic',
-    customOrganizationType: '',
-    registrationNumber: '',
-    address: '',
-    adminFullName: '',
-    adminEmail: '',
-    adminPhone: '',
-    paymentMethod: 'eSewa',
-    bankRef: 'NIMB-NPR-984210',
-    termsAgreed: true
-  });
-
   // Check for returning payment redirect parameters (eSewa / Stripe callbacks)
   useEffect(() => {
     const isSuccess = searchParams.get('subscription_success') === 'true';
@@ -154,6 +188,9 @@ const PricingPage: React.FC = () => {
             setPurchaseResult(res.data);
             setIsModalOpen(true);
             setModalStep(4); // Success step with verified invoice
+            if (refreshUser) {
+              refreshUser();
+            }
           }
         })
         .catch(err => {
@@ -171,7 +208,7 @@ const PricingPage: React.FC = () => {
       setIsModalOpen(true);
       setModalStep(3);
     }
-  }, [searchParams]);
+  }, [searchParams, refreshUser]);
 
   useEffect(() => {
     const observerOptions = {

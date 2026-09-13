@@ -747,6 +747,7 @@ export default function NewAppointmentModal({
                                     <option value="CASH">Cash</option>
                                     <option value="CARD">Card / POS</option>
                                     <option value="ESEWA">eSewa</option>
+                                    <option value="STRIPE">Stripe</option>
                                     <option value="COMPLIMENTARY">Complimentary / Free</option>
                                 </select>
                             </div>

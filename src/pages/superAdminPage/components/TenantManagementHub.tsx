@@ -132,15 +132,50 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
 
         let searchMatch = true;
         if (searchFilter.trim() !== '') {
-            const q = searchFilter.toLowerCase();
+            const q = searchFilter.trim().toLowerCase();
             searchMatch = (t.organizationName && t.organizationName.toLowerCase().includes(q)) ||
                           (t.adminEmail && t.adminEmail.toLowerCase().includes(q)) ||
                           (t.registrationNumber && t.registrationNumber.toLowerCase().includes(q)) ||
+                          (t.subscriptionTier && t.subscriptionTier.toLowerCase().includes(q)) ||
+                          (t.address && t.address.toLowerCase().includes(q)) ||
+                          (t.phoneContact && t.phoneContact.toLowerCase().includes(q)) ||
                           String(t.id).includes(q);
         }
 
         return statusMatch && searchMatch;
     });
+
+    // --- Pagination State & Dynamic Calculations ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination to page 1 whenever any filter, search or pageSize changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchFilter, filter, pageSize, timeFilter]);
+
+    const totalEntries = filteredTenants.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const paginatedTenants = filteredTenants.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     // Close action menu on outside click
     useEffect(() => {
@@ -167,8 +202,8 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
 
     return (
         <section className="bg-surface-container-lowest rounded-xl border border-surface-container shadow-sm overflow-hidden">
-            <div className="p-4 sm:p-6 border-b border-surface-container flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-bright">
-                <div className="flex items-center gap-3">
+            <div className="p-4 sm:p-5 border-b border-surface-container flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 bg-surface-bright">
+                <div className="flex items-center gap-3 flex-wrap">
                     <h3 className="font-headline-md text-headline-md text-primary flex items-center gap-2">
                         Tenant Management Hub
                         <span className="flex h-2 w-2 relative">
@@ -176,25 +211,53 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
                     </h3>
-                    {searchFilter && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
-                            <span>Filter: "{searchFilter}"</span>
-                            <button 
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant">
+                        {filteredTenants.length} of {tenants.length} {tenants.length === 1 ? 'tenant' : 'tenants'}
+                    </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Search Filter Input */}
+                    <div className="relative w-full sm:w-72 md:w-80">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            placeholder="Search name, email, PAN, plan, ID..."
+                            value={searchFilter}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setSearchFilter(val);
+                                const next = new URLSearchParams(searchParams);
+                                if (val.trim()) {
+                                    next.set('search', val);
+                                } else {
+                                    next.delete('search');
+                                }
+                                setSearchParams(next, { replace: true });
+                            }}
+                            className="w-full pl-9 pr-8 py-1.5 text-xs bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-xs"
+                        />
+                        {searchFilter && (
+                            <button
+                                type="button"
                                 onClick={() => {
                                     setSearchFilter('');
                                     const next = new URLSearchParams(searchParams);
                                     next.delete('search');
                                     setSearchParams(next, { replace: true });
                                 }}
-                                className="hover:text-error ml-1"
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-error transition-colors cursor-pointer"
+                                title="Clear search"
                             >
-                                <span className="material-symbols-outlined text-[14px]">close</span>
+                                <span className="material-symbols-outlined text-[15px]">close</span>
                             </button>
-                        </div>
-                    )}
-                </div>
-                <div className="flex gap-2 w-full sm:w-auto overflow-x-auto">
-                    <div className="flex border border-outline-variant rounded p-1 bg-surface-container-low w-full sm:w-auto justify-around sm:justify-start">
+                        )}
+                    </div>
+
+                    {/* Status Tabs */}
+                    <div className="flex border border-outline-variant rounded-lg p-1 bg-surface-container-low shrink-0 justify-around sm:justify-start">
                         <button onClick={() => setFilter('All')} className={getFilterClass('All')}>All</button>
                         <button onClick={() => setFilter('Active')} className={getFilterClass('Active')}>Active</button>
                         <button onClick={() => setFilter('Pending')} className={getFilterClass('Pending')}>Pending</button>
@@ -218,11 +281,34 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                         {filteredTenants.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="px-6 py-12 text-center text-on-surface-variant">
-                                    No tenants found matching "{filter}".
+                                    <div className="flex flex-col items-center justify-center gap-2">
+                                        <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">
+                                            search_off
+                                        </span>
+                                        <p className="font-medium text-sm text-on-surface">No tenants found</p>
+                                        <p className="text-xs text-on-surface-variant">
+                                            {searchFilter 
+                                                ? `No results matching "${searchFilter}" in ${filter} tab.` 
+                                                : `No tenants found in ${filter} status.`}
+                                        </p>
+                                        {searchFilter && (
+                                            <button
+                                                onClick={() => {
+                                                    setSearchFilter('');
+                                                    const next = new URLSearchParams(searchParams);
+                                                    next.delete('search');
+                                                    setSearchParams(next, { replace: true });
+                                                }}
+                                                className="mt-2 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                                            >
+                                                Clear search filter
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
-                            filteredTenants.map((tenant) => {
+                            paginatedTenants.map((tenant) => {
                                 const isPendingVerification = tenant.status === 'PENDING_VERIFICATION';
                                 const isPendingSetup = tenant.status === 'PENDING_SETUP' || tenant.status === 'PENDING';
                                 const isActive = tenant.status === 'ACTIVE';
@@ -326,11 +412,69 @@ export default function TenantManagementHub({ timeFilter }: { timeFilter?: strin
                 </table>
             </div>
 
-            <div className="p-4 border-t border-surface-container bg-surface-container-low flex justify-between items-center">
-                <p className="font-label-md text-label-md text-on-surface-variant">Showing {filteredTenants.length} of {tenants.length} Tenants</p>
-                <div className="flex gap-2">
-                    <button className="p-1 border border-outline-variant rounded hover:bg-surface-container-lowest transition-colors active:scale-95"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
-                    <button className="p-1 border border-outline-variant rounded hover:bg-surface-container-lowest transition-colors active:scale-95"><span className="material-symbols-outlined text-[18px]">chevron_right</span></button>
+            {/* Dynamic Pagination Bar matching CRM */}
+            <div className="p-4 border-t border-surface-container bg-surface-container-low flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="text-xs text-on-surface-variant font-mono-data">
+                        Showing <span className="font-bold text-primary">{totalEntries > 0 ? startIndex + 1 : 0} - {endIndex}</span> of <span className="font-bold text-primary">{totalEntries}</span> tenants
+                        {totalEntries !== tenants.length && (
+                            <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                (filtered from {tenants.length} total)
+                            </span>
+                        )}
+                    </div>
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                        <span>Rows:</span>
+                        <select
+                            value={pageSize}
+                            onChange={(e) => setPageSize(Number(e.target.value))}
+                            className="bg-surface py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                        >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                    <button 
+                        type="button"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={safeCurrentPage <= 1}
+                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                        aria-label="Previous Page"
+                    >
+                        <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                        Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                        {getPageNumbers().map(page => (
+                            <button 
+                                key={page}
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                    safeCurrentPage === page
+                                        ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                        : 'border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                    <button 
+                        type="button"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                        aria-label="Next Page"
+                    >
+                        Next
+                        <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                    </button>
                 </div>
             </div>
 

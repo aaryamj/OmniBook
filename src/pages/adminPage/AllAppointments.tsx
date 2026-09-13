@@ -219,6 +219,38 @@ export default function AllAppointments() {
         return exactMatchStatus && matchesProvider && matchesSearch && matchesDate;
     });
 
+    // --- Pagination State & Dynamic Calculations ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination to page 1 whenever any filter or search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [statusFilter, providerFilter, searchQuery, selectedDate, pageSize]);
+
+    const totalEntries = filteredAppointments.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const paginatedAppointments = filteredAppointments.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
     const getStatusTabClass = (status: string) => {
         return statusFilter === status 
             ? "px-3 py-1 bg-primary text-white rounded font-label-md text-label-md whitespace-nowrap transition-colors"
@@ -396,7 +428,7 @@ export default function AllAppointments() {
                                         </thead>
                                         <tbody className="divide-y divide-[#F1F5F9]">
                                             {filteredAppointments.length > 0 ? (
-                                                filteredAppointments.map((app) => (
+                                                paginatedAppointments.map((app) => (
                                                     <tr key={app.id} className={`hover:bg-background transition-colors group ${app.status === 'Completed' ? 'opacity-60' : ''}`}>
                                                         <td className="px-6 py-4">
                                                             <div className="font-mono-data text-on-surface font-semibold">{app.date}</div>
@@ -510,21 +542,67 @@ export default function AllAppointments() {
                                 </div>
                                 
                                 {/* Pagination */}
-                                <div className="bg-white px-6 py-4 border-t border-outline-variant flex items-center justify-between mt-auto">
-                                    <div className="text-xs text-on-surface-variant">
-                                        Showing <span className="font-bold text-primary">{filteredAppointments.length > 0 ? 1 : 0} - {filteredAppointments.length}</span> of <span className="font-bold text-primary">{appointments.length}</span> entries
+                                <div className="bg-white px-6 py-4 border-t border-outline-variant flex flex-wrap items-center justify-between gap-4 mt-auto">
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-xs text-on-surface-variant font-mono-data">
+                                            Showing <span className="font-bold text-primary">{totalEntries > 0 ? startIndex + 1 : 0} - {endIndex}</span> of <span className="font-bold text-primary">{totalEntries}</span> entries
+                                            {totalEntries !== appointments.length && (
+                                                <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                    (filtered from {appointments.length} total)
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                            <span>Rows:</span>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => setPageSize(Number(e.target.value))}
+                                                className="bg-surface py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                                            >
+                                                <option value={10}>10</option>
+                                                <option value={20}>20</option>
+                                                <option value={50}>50</option>
+                                                <option value={100}>100</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/30 flex items-center gap-1 opacity-50 cursor-not-allowed">
-                                            <span className="material-symbols-outlined text-sm">chevron_left</span>
+
+                                    <div className="flex items-center gap-1.5">
+                                        <button 
+                                            type="button"
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={safeCurrentPage <= 1}
+                                            className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                            aria-label="Previous Page"
+                                        >
+                                            <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
                                             Previous
                                         </button>
                                         <div className="flex items-center gap-1">
-                                            <button className="w-8 h-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">1</button>
+                                            {getPageNumbers().map(page => (
+                                                <button 
+                                                    key={page}
+                                                    type="button"
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                        safeCurrentPage === page
+                                                            ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                            : 'border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
                                         </div>
-                                        <button className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/30 flex items-center gap-1 opacity-50 cursor-not-allowed">
+                                        <button 
+                                            type="button"
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                                            className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                            aria-label="Next Page"
+                                        >
                                             Next
-                                            <span className="material-symbols-outlined text-sm">chevron_right</span>
+                                            <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
                                         </button>
                                     </div>
                                 </div>

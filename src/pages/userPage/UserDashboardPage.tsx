@@ -142,13 +142,14 @@ const UserDashboardPage: React.FC = () => {
                         </div>
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        (appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED' || appointment.rejectedAt) ? 'bg-rose-100 text-rose-700 border border-rose-200' :
                         appointment.appointmentStatus === 'CHECKED_IN' ? 'bg-green-100 text-green-700' :
                         appointment.appointmentStatus === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
                         appointment.appointmentStatus === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                         appointment.appointmentStatus === 'PENDING_APPROVAL' ? 'bg-blue-100 text-blue-700' :
                         'bg-orange-100 text-orange-700'
                       }`}>
-                        {appointment.appointmentStatus === 'PENDING_APPROVAL' ? 'Awaiting Approval' : appointment.appointmentStatus}
+                        {(appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED' || appointment.rejectedAt) ? 'Rejected' : appointment.appointmentStatus === 'PENDING_APPROVAL' ? 'Awaiting Approval' : appointment.appointmentStatus}
                       </span>
                     </div>
                     <div className="mb-6 bg-[#f8f9fc] rounded-2xl p-4 border border-[#e2e8f0]">
@@ -222,7 +223,7 @@ const UserDashboardPage: React.FC = () => {
              <div className="flex justify-center py-10">
                <div className="w-8 h-8 border-4 border-[#003fb1] border-t-transparent rounded-full animate-spin"></div>
              </div>
-          ) : appointments.filter(a => ['COMPLETED', 'CANCELLED'].includes(a.appointmentStatus)).length === 0 ? (
+          ) : appointments.filter(a => ['COMPLETED', 'CANCELLED', 'REJECTED'].includes(a.appointmentStatus)).length === 0 ? (
             <div className="w-full p-12 rounded-2xl border-2 border-dashed border-[#c3c5d7] bg-white/50 flex items-center justify-center transition-colors hover:bg-white/80 cursor-default">
               <div className="flex items-center gap-6 text-[#434654] opacity-60">
                 <span className="material-symbols-outlined text-[32px]">history_edu</span>
@@ -233,7 +234,7 @@ const UserDashboardPage: React.FC = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {appointments.filter(a => ['COMPLETED', 'CANCELLED'].includes(a.appointmentStatus)).slice(0, 3).map((appointment) => (
+              {appointments.filter(a => ['COMPLETED', 'CANCELLED', 'REJECTED'].includes(a.appointmentStatus)).slice(0, 3).map((appointment) => (
                 <div key={appointment.id} className="bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(0,0,0,0.03)] border border-[#e2e8f0] flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-shadow">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full overflow-hidden border border-[#e2e8f0] bg-gray-100 flex-shrink-0 flex items-center justify-center">
@@ -263,9 +264,11 @@ const UserDashboardPage: React.FC = () => {
                   <div className="flex items-center justify-between md:justify-end gap-6 md:w-auto w-full border-t md:border-t-0 border-[#e2e8f0] pt-4 md:pt-0">
                     <div className="flex flex-col md:items-end">
                       <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold mb-1 w-max ${
-                        appointment.appointmentStatus === 'COMPLETED' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
+                        appointment.appointmentStatus === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
+                        (appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED' || appointment.rejectedAt) ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                        'bg-red-100 text-red-700'
                       }`}>
-                        {appointment.appointmentStatus}
+                        {(appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED' || appointment.rejectedAt) ? 'Rejected' : appointment.appointmentStatus}
                       </span>
                       <span className="text-[14px] font-semibold text-[#151c27]">NRs. {appointment.price}</span>
                     </div>

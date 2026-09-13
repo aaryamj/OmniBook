@@ -58,7 +58,7 @@ const ProviderTopNavigation: React.FC = () => {
 
     return (
         <>
-            <header className="fixed top-0 w-full z-50 bg-[#f9f9ff]/90 backdrop-blur-md shadow-sm border-b border-[#c3c5d7]/30">
+            <header className="fixed top-0 left-0 right-0 w-full z-50 bg-[#f9f9ff]/90 backdrop-blur-md shadow-sm border-b border-[#c3c5d7]/30">
                 <div className="flex justify-between items-center px-4 md:px-10 h-20 w-full">
                     <div className="flex items-center gap-3 sm:gap-4">
                         {/* Mobile Menu Hamburger Button */}
@@ -143,6 +143,13 @@ const ProviderTopNavigation: React.FC = () => {
                             >
                                 <span className="material-symbols-outlined text-[20px]">bar_chart</span>
                                 Revenue & Analytics
+                            </NavLink>
+                            <NavLink 
+                                to="/provider/settlements" 
+                                className={({ isActive }) => `flex items-center gap-3 px-4 py-3 text-[14px] font-semibold rounded-xl transition-all ${isActive ? 'text-[#003fb1] bg-[#1a56db]/10' : 'text-[#3b4854] hover:bg-gray-100'}`}
+                            >
+                                <span className="material-symbols-outlined text-[20px]">receipt_long</span>
+                                Daily Settlements
                             </NavLink>
                             
                             <div className="h-px bg-[#e2e8f0] my-2"></div>

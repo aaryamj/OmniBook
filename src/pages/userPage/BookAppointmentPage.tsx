@@ -54,20 +54,8 @@ const BookAppointmentPage: React.FC = () => {
 
   // Gated AI Booking feature based on selected organization's subscription plan
   const selectedClinicObj = clinics.find(c => c.id.toString() === selectedClinic);
-  const isAiBookingSupported = selectedClinicObj 
-    ? Boolean(selectedClinicObj.hasAiBooking) 
-    : (clinics.length === 0 || clinics.some(c => c.hasAiBooking));
-
-  // Automatically switch away from smart_ai if the selected organization only supports classic calendar
-  useEffect(() => {
-    if (selectedClinic) {
-      const cur = clinics.find(c => c.id.toString() === selectedClinic);
-      if (cur && !cur.hasAiBooking && activeTab === 'smart_ai') {
-        setActiveTab('classic');
-        showNotification(`${cur.organizationName} is on the ${cur.subscriptionTier || 'Starter'} plan (Classic Calendar only). Switched to Classic Calendar.`, 'info');
-      }
-    }
-  }, [selectedClinic, clinics, activeTab]);
+  // Smart AI Booking is always accessible as a global assistant across all AI-enabled organizations
+  const isAiBookingSupported = true;
 
   // Floating Toast Notification state
   const [notification, setNotification] = useState<{
@@ -183,26 +171,50 @@ const BookAppointmentPage: React.FC = () => {
   const [conversationId, setConversationId] = useState<string>(() => {
     return localStorage.getItem('omni_ai_conversation_id') || '';
   });
-  const [chatMessages, setChatMessages] = useState<{sender: 'user' | 'ai', text: string, slotId?: string, actionType?: string}[]>([
-      { sender: 'ai', text: "Hello! I'm your AI Appointment Assistant powered by Gemini 3.5 Flash-Lite. How can I assist you with scheduling, checking, or managing your appointment today?" }
-  ]);
+  const initialAiGreeting = { 
+    sender: 'ai' as const, 
+    text: "Hello! 👋 Welcome to OmniBook AI Booking Assistant.\n\nPlease choose your **Organization Type** to get started:\n\n1. 🎓 **Education / College** (Academic Advising, Faculty Consultation)\n2. 🏥 **Healthcare / Clinic** (Doctors, Specialists, Medical Checkup)\n3. 💇 **Beauty / Salon & Spa** (Haircut, Styling, Spa)\n4. 🏋️ **Fitness & Gym** (Personal Training, Workouts)\n\nWhich organization type would you like to book with?",
+    currentStep: 1,
+    quickReplies: [
+      "Education / College",
+      "Healthcare / Clinic",
+      "Beauty / Salon & Spa",
+      "Fitness & Gym"
+    ]
+  };
+
+  const [chatMessages, setChatMessages] = useState<{
+    sender: 'user' | 'ai';
+    text: string;
+    slotId?: string;
+    actionType?: string;
+    currentStep?: number;
+    quickReplies?: string[];
+  }[]>([initialAiGreeting]);
+
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
 
-  // Fetch Personalized AI Recommendations & Restore Chat History on Mount
-  useEffect(() => {
-      const email = patientDetails.email || '';
-      axios.get('http://localhost:8080/api/v1/public/ai/recommend', {
-          params: { userEmail: email }
-      })
-          .then(res => {
-              if (Array.isArray(res.data) && res.data.length > 0) {
-                  setSmartAiSlots(res.data);
-              }
-          })
-          .catch(err => console.error("Failed to fetch AI recommendations", err));
+  // Clear Chat and reset session
+  const handleClearChat = async () => {
+    const activeConvId = conversationId || localStorage.getItem('omni_ai_conversation_id');
+    if (activeConvId) {
+      try {
+        await axios.delete(`http://localhost:8080/api/v1/public/ai/conversations/${activeConvId}`);
+      } catch (e) {
+        console.warn("Failed to delete backend conversation:", e);
+      }
+    }
+    localStorage.removeItem('omni_ai_conversation_id');
+    setConversationId('');
+    setChatMessages([initialAiGreeting]);
+    setSmartAiSlots([]);
+    setSelectedSlots([]);
+    setChatInput('');
+  };
 
-      // Restore previous messages if a conversation session exists
+  // Restore Chat History on Mount
+  useEffect(() => {
       const savedConvId = localStorage.getItem('omni_ai_conversation_id');
       if (savedConvId) {
           axios.get(`http://localhost:8080/api/v1/public/ai/conversations/${savedConvId}/messages`)
@@ -220,13 +232,20 @@ const BookAppointmentPage: React.FC = () => {
       }
   }, [patientDetails.email]);
 
-  const handleSendChatMessage = async () => {
-      if (!chatInput.trim()) return;
+  const handleSendChatMessage = async (overrideText?: string) => {
+      const messageText = (overrideText !== undefined ? overrideText : chatInput).trim();
+      if (!messageText) return;
+
+      if (messageText.toLowerCase() === 'clear' || messageText.toLowerCase() === 'clear chat') {
+        await handleClearChat();
+        return;
+      }
       
-      const newMessages = [...chatMessages, { sender: 'user' as const, text: chatInput }];
+      const newMessages = [...chatMessages, { sender: 'user' as const, text: messageText }];
       setChatMessages(newMessages);
-      const messageText = chatInput;
-      setChatInput('');
+      if (overrideText === undefined) {
+        setChatInput('');
+      }
       setIsChatLoading(true);
 
       try {
@@ -244,14 +263,15 @@ const BookAppointmentPage: React.FC = () => {
               localStorage.setItem('omni_ai_conversation_id', res.data.conversationId);
           }
 
-          if (res.data.recommendedSlots && res.data.recommendedSlots.length > 0) {
-              setSmartAiSlots(res.data.recommendedSlots);
-              const firstSlot = res.data.recommendedSlots[0];
-              if (firstSlot && firstSlot.organizationName) {
-                  const match = clinics.find(c => c.organizationName.toLowerCase() === firstSlot.organizationName.toLowerCase());
-                  if (match && match.id.toString() !== selectedClinic) {
-                      setSelectedClinic(match.id.toString());
-                  }
+          if (res.data.recommendedSlots !== undefined) {
+              setSmartAiSlots(res.data.recommendedSlots || []);
+          }
+
+          // If actionType is SELECT_SLOT and actionSlotId is provided, auto-select it
+          if (res.data.actionType === 'SELECT_SLOT' && res.data.actionSlotId) {
+              const targetId = res.data.actionSlotId.toString();
+              if (!selectedSlots.includes(targetId)) {
+                  setSelectedSlots([targetId]);
               }
           }
 
@@ -259,7 +279,9 @@ const BookAppointmentPage: React.FC = () => {
               sender: 'ai', 
               text: res.data.responseText, 
               slotId: res.data.actionSlotId,
-              actionType: res.data.actionType 
+              actionType: res.data.actionType,
+              currentStep: res.data.currentStep,
+              quickReplies: res.data.quickReplies || []
           }]);
       } catch (err) {
           setChatMessages([...newMessages, { sender: 'ai', text: "Sorry, I'm having trouble connecting to my servers right now." }]);
@@ -291,9 +313,7 @@ const BookAppointmentPage: React.FC = () => {
       localStorage.setItem('phone', patientDetails.phone);
     }
 
-    const slotsArray = activeTab === 'classic' ? dynamicSlots : [
-      { id: '1', price: 'रू 1,500' }, { id: '2', price: 'रू 1,500' }, { id: '3', price: 'रू 1,500' }, { id: '4', price: 'रू 1,500' }, { id: '5', price: 'रू 1,500' }
-    ];
+    const slotsArray = [...smartAiSlots, ...dynamicSlots];
 
     const total = selectedSlots.reduce((sum, id) => {
       const slot = slotsArray.find(s => s.id === id);
@@ -305,53 +325,43 @@ const BookAppointmentPage: React.FC = () => {
     }, 0);
     
     try {
+      const firstAiSlot = selectedSlots.map(id => smartAiSlots.find(s => s.id === id)).find(Boolean);
+
       const translatedSlots = selectedSlots.map(id => {
         if (!id.includes('-')) {
             const aiSlot = smartAiSlots.find(s => s.id === id);
-            if (aiSlot) {
-                try {
-                    const dateObj = new Date(aiSlot.date);
-                    const year = dateObj.getFullYear();
-                    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-                    const day = dateObj.getDate().toString().padStart(2, '0');
-                    
-                    const isPM = aiSlot.time.includes('PM');
-                    const timeParts = aiSlot.time.split(' ')[0].split(':');
-                    let hours = parseInt(timeParts[0]);
-                    if (isPM && hours !== 12) hours += 12;
-                    if (!isPM && hours === 12) hours = 0;
-                    const timeStr = `${hours.toString().padStart(2, '0')}:${timeParts[1]}`;
-                    
-                    return `${selectedProvider || '68'}-${year}-${month}-${day}-${timeStr}`;
-                } catch(e) {
-                    console.error("Failed to parse AI slot date/time", e);
-                }
+            if (aiSlot && aiSlot.providerId && aiSlot.rawDate && aiSlot.rawTime) {
+                return `${aiSlot.providerId}-${aiSlot.rawDate}-${aiSlot.rawTime}`;
             }
         }
         return id;
       });
 
-      const selectedClinicObj = clinics.find(c => c.id.toString() === (selectedClinic || '9'));
+      const effectiveTenantId = firstAiSlot?.tenantId?.toString() || selectedClinic || '9';
+      const effectiveProviderId = firstAiSlot?.providerId?.toString() || selectedProvider || '68';
+      const effectiveServiceName = firstAiSlot?.serviceName || selectedService || 'Consultation';
+
+      const selectedClinicObj = clinics.find(c => c.id.toString() === effectiveTenantId);
       if (selectedClinicObj) {
         localStorage.setItem('last_booked_org', JSON.stringify({
           id: selectedClinicObj.id,
           name: selectedClinicObj.organizationName,
           type: selectedClinicObj.organizationType || 'Clinic',
           address: selectedClinicObj.address,
-          serviceName: selectedService,
-          providerId: selectedProvider
+          serviceName: effectiveServiceName,
+          providerId: effectiveProviderId
         }));
       }
 
       const res = await axios.post('http://localhost:8080/api/v1/public/booking/initiate', {
-        tenantId: selectedClinic || '9', // Fallback to 9 if empty
-        providerId: selectedProvider || '68',
+        tenantId: effectiveTenantId,
+        providerId: effectiveProviderId,
         patientName: patientDetails.name,
         patientPhone: patientDetails.phone,
         patientEmail: patientDetails.email,
         reasonForVisit: patientDetails.reason,
-        serviceName: selectedService || 'Consultation',
-        appointmentType: (selectedService || '').toLowerCase().includes('telemedicine') || (selectedService || '').toLowerCase().includes('virtual') || (selectedService || '').toLowerCase().includes('video') ? 'VIRTUAL' : 'IN_PERSON',
+        serviceName: effectiveServiceName,
+        appointmentType: (effectiveServiceName || '').toLowerCase().includes('telemedicine') || (effectiveServiceName || '').toLowerCase().includes('virtual') || (effectiveServiceName || '').toLowerCase().includes('video') ? 'VIRTUAL' : 'IN_PERSON',
         selectedSlots: translatedSlots,
         totalAmount: total,
         paymentMethod: selectedPaymentMethod,
@@ -850,11 +860,11 @@ const BookAppointmentPage: React.FC = () => {
             </button>
           </div>
 
-          {selectedClinicObj && !selectedClinicObj.hasAiBooking && (
+          {selectedClinicObj && !selectedClinicObj.hasAiBooking && activeTab === 'classic' && (
             <div className="inline-flex items-center gap-2 text-xs text-[#53606c] bg-amber-50/80 px-4 py-1.5 rounded-full border border-amber-200/80 animate-in fade-in shadow-xs">
               <span className="material-symbols-outlined text-[16px] text-amber-600 shrink-0">info</span>
               <span>
-                <strong className="text-amber-950">{selectedClinicObj.organizationName}</strong> operates on the <strong className="text-amber-950">{selectedClinicObj.subscriptionTier || 'Starter'} Plan</strong> (Calendar only). Smart AI Booking is enabled for Pro & Enterprise tiers.
+                <strong className="text-amber-950">{selectedClinicObj.organizationName}</strong> operates on the <strong className="text-amber-950">{selectedClinicObj.subscriptionTier || 'Starter'} Plan</strong> (Classic Calendar only).
               </span>
             </div>
           )}
@@ -929,143 +939,243 @@ const BookAppointmentPage: React.FC = () => {
         {/* Main Arena */}
         {activeTab === 'smart_ai' ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 grid grid-cols-1 lg:grid-cols-10 gap-8 lg:gap-12 pb-12">
-          {/* Left: Recommended Time Slots (60%) */}
+          {/* Left: Recommended Time Slots or 5-Step Visual Guide (60%) */}
           <div className="lg:col-span-6 space-y-6">
             <div className="flex justify-between items-end mb-4">
-              <h2 className="text-[24px] font-bold text-[#151c27]">Recommended Time Slots</h2>
-              <span className="text-[#1a56db] text-[14px] font-medium cursor-pointer hover:underline">View More</span>
+              <div>
+                <h2 className="text-[24px] font-bold text-[#151c27]">
+                  {smartAiSlots.length > 0 ? "Available Verified Slots" : "5-Step Smart AI Booking Guide"}
+                </h2>
+                <p className="text-xs text-[#53606c] mt-0.5">
+                  {smartAiSlots.length > 0
+                    ? "Real-time verified provider availability strictly for your selected organization"
+                    : "Follow the sequential steps below or use the AI Assistant on the right"}
+                </p>
+              </div>
+              {smartAiSlots.length > 0 && (
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                  {smartAiSlots.length} Slots Available
+                </span>
+              )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {slots.slice(0, 3).map((slot) => (
-                <div 
-                  key={slot.id}
-                  className={`rounded-xl p-6 transition-all ${
-                    selectedSlots.includes(slot.id)
-                      ? 'bg-white border-2 border-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-[1.02]' 
-                      : 'bg-[#f0f3ff] border border-[#c3c5d7] hover:shadow-xl hover:bg-white group'
-                  } relative`}
-                >
-                  {slot.topMatch && (
-                    <div className="absolute top-4 right-4 bg-[#6ffbbe] text-[#002113] px-2 py-1 rounded-md flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                      <span className="text-[12px] font-medium">Top Match</span>
-                    </div>
-                  )}
-                  {slot.matchReason && (
-                    <div className="mb-2 mr-20 px-2.5 py-1 rounded-md bg-[#e2e8f8] border border-[#1a56db]/20 flex items-center gap-1.5 text-[#003fb1] text-[11px] font-semibold">
-                      <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                      <span>{slot.matchReason}</span>
-                    </div>
-                  )}
-                  <h3 className={`text-[20px] font-semibold mb-4 pr-12 ${selectedSlots.includes(slot.id) ? 'text-[#151c27]' : 'text-[#53606c] group-hover:text-[#151c27] transition-colors'}`}>
-                    {slot.title}
-                  </h3>
-                  
-                  <div className="flex flex-col gap-3 py-4 border-y border-[#c3c5d7]/30 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>calendar_month</span>
-                        <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.date}</span>
+            {smartAiSlots.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {smartAiSlots.map((slot) => (
+                  <div 
+                    key={slot.id}
+                    className={`rounded-xl p-6 transition-all ${
+                      selectedSlots.includes(slot.id)
+                        ? 'bg-white border-2 border-[#10B981] shadow-[0_0_20px_rgba(16,185,129,0.3)] scale-[1.02]' 
+                        : 'bg-[#f0f3ff] border border-[#c3c5d7] hover:shadow-xl hover:bg-white group'
+                    } relative`}
+                  >
+                    {slot.topMatch && (
+                      <div className="absolute top-4 right-4 bg-[#6ffbbe] text-[#002113] px-2 py-1 rounded-md flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                        <span className="text-[12px] font-medium">Top Match</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>schedule</span>
-                        <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.time}</span>
+                    )}
+                    {slot.matchReason && (
+                      <div className="mb-2 mr-20 px-2.5 py-1 rounded-md bg-[#e2e8f8] border border-[#1a56db]/20 flex items-center gap-1.5 text-[#003fb1] text-[11px] font-semibold">
+                        <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                        <span>{slot.matchReason}</span>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>payments</span>
-                        <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.price}</span>
-                      </div>
-                      {slot.maxCapacity !== undefined && (
-                        <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                          slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
-                            ? 'bg-rose-100 text-rose-800 border border-rose-200'
-                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        }`}>
-                          <span className="material-symbols-outlined text-[13px]">event_seat</span>
-                          <span>
-                            {slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
-                              ? 'FULL'
-                              : `${slot.availableSeats ?? 1} / ${slot.maxCapacity} Left`}
-                          </span>
+                    )}
+                    <h3 className={`text-[20px] font-semibold mb-4 pr-12 ${selectedSlots.includes(slot.id) ? 'text-[#151c27]' : 'text-[#53606c] group-hover:text-[#151c27] transition-colors'}`}>
+                      {slot.title}
+                    </h3>
+                    
+                    <div className="flex flex-col gap-3 py-4 border-y border-[#c3c5d7]/30 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>calendar_month</span>
+                          <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.date}</span>
                         </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>schedule</span>
+                          <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.time}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`material-symbols-outlined ${selectedSlots.includes(slot.id) ? 'text-[#1a56db]' : 'text-[#53606c]'}`}>payments</span>
+                          <span className={`text-[16px] ${selectedSlots.includes(slot.id) ? 'font-semibold' : ''}`}>{slot.price}</span>
+                        </div>
+                        {slot.maxCapacity !== undefined && (
+                          <div className={`flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
+                              ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          }`}>
+                            <span className="material-symbols-outlined text-[13px]">event_seat</span>
+                            <span>
+                              {slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0)
+                                ? 'FULL'
+                                : `${slot.availableSeats ?? 1} / ${slot.maxCapacity} Left`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedSlots.includes(slot.id) ? 'bg-[#005438]/10 text-[#005438]' : 'bg-[#d6e4f3] text-[#53606c]'}`}>
+                        {(() => {
+                          const orgType = (slot.organizationType || '').toLowerCase();
+                          if (orgType.includes('college') || orgType.includes('school') || orgType.includes('acad')) {
+                            return <span className="material-symbols-outlined">school</span>;
+                          }
+                          if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa') || orgType.includes('beauty')) {
+                            return <span className="material-symbols-outlined">spa</span>;
+                          }
+                          if (orgType.includes('fitness') || orgType.includes('gym')) {
+                            return <span className="material-symbols-outlined">fitness_center</span>;
+                          }
+                          if (orgType.includes('clinic') || orgType.includes('hosp') || orgType.includes('medic')) {
+                            return <span className="material-symbols-outlined">medical_services</span>;
+                          }
+                          if (orgType.includes('consult') || orgType.includes('law')) {
+                            return <span className="material-symbols-outlined">business</span>;
+                          }
+                          return <span className="material-symbols-outlined">event_seat</span>;
+                        })()}
+                      </div>
+                      <div>
+                        {(() => {
+                          const orgType = (slot.organizationType || '').toLowerCase();
+                          let label = "Provider / Staff:";
+                          if (orgType.includes('college') || orgType.includes('school')) label = "Instructor / Faculty:";
+                          else if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa')) label = "Stylist / Specialist:";
+                          else if (orgType.includes('fitness') || orgType.includes('gym')) label = "Trainer / Coach:";
+                          else if (orgType.includes('clinic') || orgType.includes('hosp')) label = "Doctor / Specialist:";
+                          else if (orgType.includes('consult') || orgType.includes('law')) label = "Consultant / Advisor:";
+                          return <p className="text-[#53606c] text-[12px] font-medium">{label}</p>;
+                        })()}
+                        <p className="text-[16px] font-medium">{slot.provider}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {selectedSlots.includes(slot.id) && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); toggleSlot(slot.id); }}
+                          className="px-4 py-3 rounded-xl font-bold transition-all active:scale-95 bg-[#ffdad6] text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                      {slot.alreadyBookedByUser ? (
+                        <div className="flex-1 py-3 rounded-xl font-bold text-center bg-indigo-50 text-indigo-700 border border-indigo-200 cursor-not-allowed text-[14px] flex items-center justify-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px]">person_check</span>
+                          Booked by You
+                        </div>
+                      ) : slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0) ? (
+                        <div className="flex-1 py-3 rounded-xl font-bold text-center bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed text-[14px]">
+                          Slot Full
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (!selectedSlots.includes(slot.id)) toggleSlot(slot.id);
+                            handleOpenPatientModal();
+                          }}
+                          className={`flex-1 py-3 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                            selectedSlots.includes(slot.id) 
+                              ? 'bg-emerald-600 text-white shadow-md hover:bg-emerald-700' 
+                              : 'bg-[#dbe1ff] text-[#1a56db] hover:bg-[#1a56db] hover:text-white'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">
+                            {selectedSlots.includes(slot.id) ? 'check_circle' : 'calendar_add_on'}
+                          </span>
+                          <span>{selectedSlots.includes(slot.id) ? 'Book & Pay Now' : 'Select Slot'}</span>
+                        </button>
                       )}
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedSlots.includes(slot.id) ? 'bg-[#005438]/10 text-[#005438]' : 'bg-[#d6e4f3] text-[#53606c]'}`}>
-                      {(() => {
-                        const orgType = (slot.organizationType || '').toLowerCase();
-                        if (orgType.includes('college') || orgType.includes('school') || orgType.includes('acad')) {
-                          return <span className="material-symbols-outlined">school</span>;
-                        }
-                        if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa') || orgType.includes('beauty')) {
-                          return <span className="material-symbols-outlined">spa</span>;
-                        }
-                        if (orgType.includes('fitness') || orgType.includes('gym')) {
-                          return <span className="material-symbols-outlined">fitness_center</span>;
-                        }
-                        if (orgType.includes('clinic') || orgType.includes('hosp') || orgType.includes('medic')) {
-                          return <span className="material-symbols-outlined">medical_services</span>;
-                        }
-                        if (orgType.includes('consult') || orgType.includes('law')) {
-                          return <span className="material-symbols-outlined">business</span>;
-                        }
-                        return <span className="material-symbols-outlined">event_seat</span>;
-                      })()}
+                ))}
+              </div>
+            ) : (() => {
+              const latestAi = [...chatMessages].reverse().find(m => m.sender === 'ai');
+              const activeStep = latestAi?.currentStep || 1;
+              const steps = [
+                { num: 1, title: "Select Organization Category", desc: "Choose Education, Healthcare, Beauty, or Fitness", icon: "category" },
+                { num: 2, title: "Pick Organization or Location", desc: "Select from matching verified organizations", icon: "domain" },
+                { num: 3, title: "Choose Service", desc: "Select your desired appointment or advising service", icon: "medical_services" },
+                { num: 4, title: "Select Available Date & Time", desc: "Live verified slots generated directly from provider schedules", icon: "event_available" },
+                { num: 5, title: "Instant Booking & Payment", desc: "Confirm booking and pay securely via eSewa or Stripe", icon: "payments" }
+              ];
+              return (
+                <div className="bg-white rounded-2xl p-6 border border-[#c3c5d7]/30 shadow-md space-y-4">
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1a56db] flex items-center justify-center">
+                      <span className="material-symbols-outlined">route</span>
                     </div>
                     <div>
-                      {(() => {
-                        const orgType = (slot.organizationType || '').toLowerCase();
-                        let label = "Provider / Staff:";
-                        if (orgType.includes('college') || orgType.includes('school')) label = "Instructor / Faculty:";
-                        else if (orgType.includes('saloon') || orgType.includes('salon') || orgType.includes('spa')) label = "Stylist / Specialist:";
-                        else if (orgType.includes('fitness') || orgType.includes('gym')) label = "Trainer / Coach:";
-                        else if (orgType.includes('clinic') || orgType.includes('hosp')) label = "Doctor / Specialist:";
-                        else if (orgType.includes('consult') || orgType.includes('law')) label = "Consultant / Advisor:";
-                        return <p className="text-[#53606c] text-[12px] font-medium">{label}</p>;
-                      })()}
-                      <p className="text-[16px] font-medium">{slot.provider}</p>
+                      <h3 className="font-bold text-slate-800 text-base">Booking Roadmap (Zero-Interference)</h3>
+                      <p className="text-xs text-slate-500">Currently on Step {activeStep} of 5. Select your options in the chat!</p>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    {selectedSlots.includes(slot.id) && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); toggleSlot(slot.id); }}
-                        className="px-4 py-3 rounded-xl font-bold transition-all active:scale-95 bg-[#ffdad6] text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    {slot.alreadyBookedByUser ? (
-                      <div className="flex-1 py-3 rounded-xl font-bold text-center bg-indigo-50 text-indigo-700 border border-indigo-200 cursor-not-allowed text-[14px] flex items-center justify-center gap-1.5">
-                        <span className="material-symbols-outlined text-[16px]">person_check</span>
-                        Booked by You
-                      </div>
-                    ) : slot.isFull || (slot.availableSeats !== undefined && slot.availableSeats <= 0) ? (
-                      <div className="flex-1 py-3 rounded-xl font-bold text-center bg-rose-50 text-rose-700 border border-rose-200 cursor-not-allowed text-[14px]">
-                        Slot Full
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); if (!selectedSlots.includes(slot.id)) toggleSlot(slot.id); }}
-                        className={`flex-1 py-3 rounded-xl font-bold transition-all active:scale-95 ${
-                          selectedSlots.includes(slot.id) 
-                            ? 'bg-[#005438] text-white shadow-md' 
-                            : 'bg-[#dbe1ff] text-[#1a56db] hover:bg-[#1a56db] hover:text-white'
-                        }`}
-                      >
-                        {selectedSlots.includes(slot.id) ? 'Added to Booking' : 'Select Slot'}
-                      </button>
-                    )}
+
+                  <div className="space-y-3">
+                    {steps.map((s) => {
+                      const isDone = s.num < activeStep;
+                      const isCurrent = s.num === activeStep;
+                      return (
+                        <div 
+                          key={s.num}
+                          className={`p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                            isCurrent
+                              ? 'bg-blue-50/80 border-[#1a56db] ring-2 ring-[#1a56db]/20 shadow-sm'
+                              : isDone
+                              ? 'bg-emerald-50/50 border-emerald-200 text-emerald-900'
+                              : 'bg-slate-50/60 border-slate-200 text-slate-400 opacity-70'
+                          }`}
+                        >
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                            isCurrent
+                              ? 'bg-[#1a56db] text-white shadow-md animate-pulse'
+                              : isDone
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-slate-200 text-slate-500'
+                          }`}>
+                            {isDone ? <span className="material-symbols-outlined text-[18px]">check</span> : s.num}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className={`font-semibold text-sm ${isCurrent ? 'text-[#1a56db]' : isDone ? 'text-emerald-900' : 'text-slate-600'}`}>
+                                {s.title}
+                              </p>
+                              {isCurrent && (
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-[#1a56db] text-white rounded-full">
+                                  Current
+                                </span>
+                              )}
+                              {isDone && (
+                                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">
+                                  Completed
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5 truncate">{s.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+                    <span className="material-symbols-outlined text-amber-600 text-[18px] shrink-0 mt-0.5">tips_and_updates</span>
+                    <span>
+                      <strong>Tip:</strong> Click any of the quick-reply buttons inside the chat bubble on the right to navigate seamlessly through each step!
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Right: Integrated AI Assistant (40%) */}
@@ -1081,8 +1191,13 @@ const BookAppointmentPage: React.FC = () => {
                   <p className="text-[12px] text-[#d4dcff]/70">Online & ready to help</p>
                 </div>
               </div>
-              <button className="text-[#d4dcff] hover:rotate-90 transition-transform">
-                <span className="material-symbols-outlined">close</span>
+              <button
+                onClick={handleClearChat}
+                title="Clear chat and restart booking assistant"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-white/10 hover:bg-rose-500/80 active:scale-95 rounded-xl transition-all border border-white/20 shadow-sm group"
+              >
+                <span className="material-symbols-outlined text-[16px] group-hover:rotate-180 transition-transform">restart_alt</span>
+                <span>Clear Chat</span>
               </button>
             </div>
             
@@ -1099,6 +1214,41 @@ const BookAppointmentPage: React.FC = () => {
                   </div>
                   <div className={`p-4 rounded-2xl max-w-[80%] shadow-sm ${msg.sender === 'user' ? 'bg-[#e2e8f8] rounded-tr-none' : 'bg-[#003fb1] text-white rounded-tl-none shadow-lg'}`}>
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    
+                    {/* Interactive Quick Reply Chips */}
+                    {msg.sender === 'ai' && msg.quickReplies && msg.quickReplies.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-white/20 flex flex-wrap gap-2">
+                        {msg.quickReplies.map((reply, rIdx) => (
+                          <button
+                            key={rIdx}
+                            onClick={() => handleSendChatMessage(reply)}
+                            disabled={isChatLoading}
+                            className="px-3 py-1.5 bg-white/95 hover:bg-white text-[#003fb1] hover:text-[#002113] hover:bg-[#6ffbbe] text-xs font-bold rounded-lg shadow-sm transition-all transform hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                          >
+                            <span>{reply}</span>
+                            <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Step 5 Direct Booking & Payment CTA Button */}
+                    {msg.actionType === 'SELECT_SLOT' && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (msg.slotId && !selectedSlots.includes(msg.slotId)) {
+                            setSelectedSlots([msg.slotId]);
+                          }
+                          handleOpenPatientModal();
+                        }}
+                        className="mt-3 w-full py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg flex items-center justify-center gap-2 text-sm transition-all transform hover:scale-[1.02] active:scale-95"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">payments</span>
+                        <span>Proceed to Booking & Payment</span>
+                      </button>
+                    )}
+
                     {msg.actionType === 'CANCEL_APPOINTMENT' && (
                       <div className="mt-3 pt-2 border-t border-white/20 flex items-center gap-1.5 text-xs font-semibold text-rose-200">
                         <span className="material-symbols-outlined text-[15px]">event_busy</span>
@@ -1133,7 +1283,7 @@ const BookAppointmentPage: React.FC = () => {
                               <span className="material-symbols-outlined text-[14px]">
                                 {selectedSlots.includes(msg.slotId) ? 'check_circle' : 'calendar_add_on'}
                               </span>
-                              {selectedSlots.includes(msg.slotId) ? 'Selected in Booking' : 'Select & Book Slot'}
+                              {selectedSlots.includes(msg.slotId) ? 'Selected in Booking' : 'Select Slot'}
                             </button>
                           )}
                           {aiSlot && aiSlot.availableSeats !== undefined && (
@@ -1144,9 +1294,40 @@ const BookAppointmentPage: React.FC = () => {
                         </div>
                       );
                     })()}
+                    {index === chatMessages.length - 1 && smartAiSlots.length > 1 && (
+                      <div className="mt-3 pt-2.5 border-t border-white/20">
+                        <div className="text-[11px] uppercase tracking-wider font-bold text-[#d4dcff]/80 mb-1.5 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[13px]">schedule</span>
+                          Available Time Slots ({smartAiSlots.length}):
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+                          {smartAiSlots.map((slot) => {
+                            const isSelected = selectedSlots.includes(slot.id);
+                            return (
+                              <button
+                                key={slot.id}
+                                onClick={(e) => { e.preventDefault(); toggleSlot(slot.id); }}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 active:scale-95 ${
+                                  isSelected
+                                    ? 'bg-[#10b981] text-white shadow'
+                                    : 'bg-white/90 text-[#003fb1] hover:bg-white hover:shadow-sm'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[13px]">
+                                  {isSelected ? 'check_circle' : 'access_time'}
+                                </span>
+                                <span>{slot.time}</span>
+                                <span className="text-[10px] opacity-75 font-normal">({slot.date})</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
+
               {isChatLoading && (
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-[#1a56db] flex items-center justify-center text-[#d4dcff] flex-shrink-0">
@@ -1172,12 +1353,23 @@ const BookAppointmentPage: React.FC = () => {
                   disabled={isChatLoading}
                 />
                 <button 
-                  onClick={handleSendChatMessage}
+                  onClick={() => handleSendChatMessage()}
                   disabled={isChatLoading || !chatInput.trim()}
                   className="bg-[#1a56db] text-white px-4 py-2 rounded-lg font-bold hover:bg-[#123e9e] transition-all active:scale-95 flex items-center gap-2 disabled:opacity-50"
                 >
                   <span>Send</span>
                   <span className="material-symbols-outlined text-[18px]">send</span>
+                </button>
+              </div>
+              <div className="flex items-center justify-between mt-2 px-1">
+                <span className="text-[11px] text-slate-400">Press Enter to send</span>
+                <button
+                  onClick={handleClearChat}
+                  type="button"
+                  className="text-[11px] font-medium text-slate-400 hover:text-rose-600 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[13px]">delete_sweep</span>
+                  <span>Clear Conversation</span>
                 </button>
               </div>
             </div>
@@ -1580,9 +1772,10 @@ const BookAppointmentPage: React.FC = () => {
                     </>
                   );
                 } else if (uniqueProviders.length === 1) {
+                  const selectedSlotObj = slots.find(s => selectedSlots.includes(s.id));
                   const providerString = uniqueProviders[0];
-                  const pName = providerString?.split(' - ')[0];
-                  const pService = providerString?.split(' - ')[1];
+                  const pName = selectedSlotObj?.providerTitle || (selectedSlotObj?.provider ? selectedSlotObj.provider.split(' at ')[0] : providerString?.split(' - ')[0]);
+                  const pService = selectedSlotObj?.title || selectedSlotObj?.serviceName || providerString?.split(' - ')[1] || "Appointment";
                   
                   // Find the image for this provider from the selected slots
                   const slotWithImage = slots.find(s => selectedSlots.includes(s.id) && s.providerImageUrl);
@@ -1679,9 +1872,7 @@ const BookAppointmentPage: React.FC = () => {
       {/* Patient Details Modal */}
       {/* Patient Details & Payment Modal */}
       {showPatientModal && (() => {
-        const slotsArray = activeTab === 'classic' ? dynamicSlots : [
-          { id: '1', price: 'रू 1,500' }, { id: '2', price: 'रू 1,500' }, { id: '3', price: 'रू 1,500' }, { id: '4', price: 'रू 1,500' }, { id: '5', price: 'रू 1,500' }
-        ];
+        const slotsArray = [...smartAiSlots, ...dynamicSlots];
         const modalTotal = selectedSlots.reduce((sum, id) => {
           const slot = slotsArray.find(s => s.id === id);
           if (slot) {

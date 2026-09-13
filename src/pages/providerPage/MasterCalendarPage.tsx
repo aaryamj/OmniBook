@@ -34,6 +34,8 @@ const getStatusBg = (status: string) => {
   if (status === 'SCHEDULED') return 'bg-primary border-primary';
   if (status === 'CHECKED_IN') return 'bg-primary border-primary';
   if (status === 'COMPLETED') return 'bg-[#006f4b] border-[#005438]';
+  if (status === 'REJECTED' || status === 'DECLINED') return 'bg-[#ef4444] border-[#dc2626]';
+  if (status === 'CANCELLED') return 'bg-[#ef4444] border-[#dc2626]';
   return 'bg-[#737686] border-[#53606c]'; // Default fallback
 };
 
@@ -515,6 +517,9 @@ const MasterCalendarPage: React.FC = () => {
   // Cancel Modal State
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancellingApptId, setCancellingApptId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState('Schedule conflict / Unavailable');
+  const [customCancelNote, setCustomCancelNote] = useState('');
+  const [cancellingSubmitting, setCancellingSubmitting] = useState(false);
 
   const fetchData = () => {
     const token = localStorage.getItem('token');
@@ -672,20 +677,31 @@ const MasterCalendarPage: React.FC = () => {
 
   const openCancelModal = (id: number) => {
     setCancellingApptId(id);
+    setCancelReason('Schedule conflict / Unavailable');
+    setCustomCancelNote('');
     setIsCancelModalOpen(true);
     closePanel();
   };
 
   const confirmCancelAppointment = () => {
     if (!cancellingApptId) return;
+    setCancellingSubmitting(true);
     const token = localStorage.getItem('token');
+    const finalReason = cancelReason === 'Other (Custom note)'
+      ? (customCancelNote.trim() || 'Declined by provider')
+      : (customCancelNote.trim() ? `${cancelReason} - ${customCancelNote.trim()}` : cancelReason);
+
     fetch(`http://localhost:8080/api/v1/provider/appointments/${cancellingApptId}/decline`, {
       method: 'PUT',
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ reason: finalReason })
     })
     .then(res => res.json())
     .then(data => {
-      if (data.success) {
+      if (data.success !== false) {
         fetchData();
         closePanel();
         setIsCancelModalOpen(false);
@@ -693,7 +709,9 @@ const MasterCalendarPage: React.FC = () => {
       } else {
         alert(data.message || 'Failed to cancel');
       }
-    });
+    })
+    .catch(err => alert('Error: ' + err.message))
+    .finally(() => setCancellingSubmitting(false));
   };
 
   return (
@@ -710,7 +728,7 @@ const MasterCalendarPage: React.FC = () => {
         <div className="flex flex-wrap xl:flex-nowrap items-center justify-between mb-8 shrink-0 gap-4">
           {/* Title and Date Navigation */}
           <div className="flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-8">
-            <h1 className="text-[32px] font-bold text-[#151c27] tracking-tight">Calendar</h1>
+            <h1 className="text-[32px] font-bold text-primary tracking-tight">Calendar</h1>
             
             <div className="flex items-center gap-6">
               <div className="flex items-center bg-white border border-[#c3c5d7] rounded-full px-5 py-2 shadow-sm whitespace-nowrap">
@@ -783,8 +801,13 @@ const MasterCalendarPage: React.FC = () => {
                 <span className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest border flex items-center gap-1.5
                   ${selectedPanel.appointmentStatus === 'COMPLETED' ? 'bg-[#e6f4ea] text-[#137333] border-[#ceead6]' : 
                     selectedPanel.appointmentStatus === 'CHECKED_IN' ? 'bg-primary/10 text-primary border-primary/20' :
+                    (selectedPanel.appointmentStatus === 'REJECTED' || selectedPanel.appointmentStatus === 'DECLINED' || selectedPanel.appointmentStatus === 'CANCELLED') ? 'bg-[#fee2e2] text-[#ba1a1a] border-[#fecaca]' :
                     'bg-primary/10 text-primary border-primary/20'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${selectedPanel.appointmentStatus === 'COMPLETED' ? 'bg-[#137333]' : 'bg-primary'}`}></div> 
+                  <div className={`w-1.5 h-1.5 rounded-full ${
+                    selectedPanel.appointmentStatus === 'COMPLETED' ? 'bg-[#137333]' : 
+                    (selectedPanel.appointmentStatus === 'REJECTED' || selectedPanel.appointmentStatus === 'DECLINED' || selectedPanel.appointmentStatus === 'CANCELLED') ? 'bg-[#ba1a1a]' : 
+                    'bg-primary'
+                  }`}></div> 
                   {selectedPanel.appointmentStatus}
                 </span>
               </div>
@@ -840,7 +863,22 @@ const MasterCalendarPage: React.FC = () => {
                 </div>
 
                 {/* Virtual Consultation Controls */}
-                {checkServiceAllowsVideo(selectedPanel) ? (
+                {(selectedPanel.appointmentStatus === 'REJECTED' || selectedPanel.appointmentStatus === 'DECLINED') ? (
+                  <div className="bg-rose-50 rounded-xl p-4 border border-rose-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[20px] text-rose-600">block</span>
+                      <div>
+                        <p className="text-xs font-bold text-rose-900">Appointment Rejected</p>
+                        <p className="text-[11px] text-rose-700">
+                          {selectedPanel.rejectionReason ? `Reason: ${selectedPanel.rejectionReason}` : 'This appointment was rejected and will not take place.'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-200 text-rose-800 rounded-full shrink-0">
+                      Rejected
+                    </span>
+                  </div>
+                ) : checkServiceAllowsVideo(selectedPanel) ? (
                   <div className="bg-blue-50/70 rounded-xl p-4 border border-blue-200/80 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -852,7 +890,7 @@ const MasterCalendarPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      {hasCalendarWrite && selectedPanel.appointmentStatus !== 'COMPLETED' && selectedPanel.appointmentStatus !== 'CANCELLED' && (
+                      {hasCalendarWrite && selectedPanel.appointmentStatus !== 'COMPLETED' && selectedPanel.appointmentStatus !== 'CANCELLED' && selectedPanel.appointmentStatus !== 'REJECTED' && selectedPanel.appointmentStatus !== 'DECLINED' && (
                         <button
                           onClick={() => handleToggleVideo(selectedPanel.id, !!(selectedPanel.videoCallEnabled || selectedPanel.appointmentType === 'VIRTUAL'))}
                           className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 border ${
@@ -869,7 +907,7 @@ const MasterCalendarPage: React.FC = () => {
                       )}
                     </div>
 
-                    {(selectedPanel.videoCallEnabled || selectedPanel.appointmentType === 'VIRTUAL') && selectedPanel.appointmentStatus !== 'CANCELLED' && (
+                    {(selectedPanel.videoCallEnabled || selectedPanel.appointmentType === 'VIRTUAL') && selectedPanel.appointmentStatus !== 'CANCELLED' && selectedPanel.appointmentStatus !== 'REJECTED' && selectedPanel.appointmentStatus !== 'DECLINED' && (
                       <div className="pt-2 border-t border-blue-200/60 flex flex-col gap-2">
                         <button
                           onClick={() => {
@@ -919,7 +957,7 @@ const MasterCalendarPage: React.FC = () => {
                   </div>
                 </div>
 
-                {(selectedPanel.completedByName || selectedPanel.cancelledByName) && (
+                {(selectedPanel.completedByName || selectedPanel.cancelledByName || selectedPanel.rejectedByName) && (
                   <div className="p-4 rounded-xl border bg-slate-50 border-slate-200">
                     <p className="text-[11px] font-bold text-[#53606c] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[16px] text-primary">badge</span> Staff Attribution &amp; Audit
@@ -937,6 +975,14 @@ const MasterCalendarPage: React.FC = () => {
                         <span className="font-semibold text-red-700">Cancelled By:</span> {selectedPanel.cancelledByName} 
                         <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-bold">
                           {selectedPanel.cancelledByRole || 'Staff'}
+                        </span>
+                      </p>
+                    )}
+                    {selectedPanel.rejectedByName && (
+                      <p className="text-xs text-slate-700 mt-1">
+                        <span className="font-semibold text-rose-700">Rejected By:</span> {selectedPanel.rejectedByName} 
+                        <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">
+                          {selectedPanel.rejectedByRole || 'Staff'}
                         </span>
                       </p>
                     )}
@@ -980,7 +1026,7 @@ const MasterCalendarPage: React.FC = () => {
                       Mark Complete
                     </button>
                   )}
-                  {selectedPanel.appointmentStatus !== 'CANCELLED' && selectedPanel.appointmentStatus !== 'COMPLETED' && (
+                  {selectedPanel.appointmentStatus !== 'CANCELLED' && selectedPanel.appointmentStatus !== 'COMPLETED' && selectedPanel.appointmentStatus !== 'REJECTED' && selectedPanel.appointmentStatus !== 'DECLINED' && (
                     <button 
                       className="w-full py-3 rounded-xl text-sm font-bold text-[#ef4444] hover:bg-[#fee2e2] transition flex items-center justify-center gap-2" 
                       onClick={() => openCancelModal(selectedPanel.id)}
@@ -1077,33 +1123,76 @@ const MasterCalendarPage: React.FC = () => {
         </div>
       )}
 
-      {/* CANCEL APPOINTMENT MODAL */}
+      {/* CANCEL / DECLINE APPOINTMENT MODAL (100% REFUND POLICY) */}
       {isCancelModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col p-6 items-center text-center">
-            <div className="w-16 h-16 bg-[#fee2e2] rounded-full flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-[#ef4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col p-6 animate-[fadeIn_0.25s_ease-out]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-rose-600 text-[24px]">block</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[#0f172a]">Decline / Cancel {terms.appointmentSingular}</h2>
+                <p className="text-xs text-[#64748b]">Slot will be released and 100% refund initiated</p>
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-[#0f172a] mb-2">Cancel {terms.appointmentSingular}?</h2>
-            <p className="text-sm text-[#64748b] mb-6">
-              Are you sure you want to cancel this {terms.appointmentSingular.toLowerCase()}? This action cannot be undone and the {terms.customerSingular.toLowerCase()} will be notified.
-            </p>
-            <div className="flex gap-3 w-full">
+
+            {/* 100% Refund Policy Banner */}
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 mb-4">
+              <span className="material-symbols-outlined text-emerald-600 text-[18px] shrink-0 mt-0.5">verified_user</span>
+              <div className="text-xs text-emerald-900 leading-relaxed">
+                <strong className="block mb-0.5">OmniBook 100% Refund Guarantee</strong>
+                Declining this booking immediately initiates a <strong>100% refund</strong> to the {terms.customerSingular.toLowerCase()}. No provider earnings or settlement revenue will be generated.
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Reason for Declining <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="w-full px-3 py-2 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 text-xs text-[#0f172a] font-medium"
+              >
+                <option value="Schedule conflict / Unavailable">Schedule conflict / Unavailable</option>
+                <option value="Service temporarily unavailable">Service temporarily unavailable</option>
+                <option value="Capacity limit reached">Capacity limit reached</option>
+                <option value="Personal emergency">Personal emergency</option>
+                <option value="Specialty or scope mismatch">Specialty or scope mismatch</option>
+                <option value="Other (Custom note)">Other (Custom note)</option>
+              </select>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Optional Note to {terms.customerSingular}
+              </label>
+              <textarea
+                rows={2}
+                placeholder={`Provide reason for the ${terms.customerSingular.toLowerCase()}...`}
+                value={customCancelNote}
+                onChange={(e) => setCustomCancelNote(e.target.value)}
+                className="w-full px-3 py-2 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 text-xs text-[#0f172a]"
+              />
+            </div>
+
+            <div className="flex gap-3 w-full pt-2 border-t border-slate-200">
               <button 
                 type="button" 
                 onClick={() => setIsCancelModalOpen(false)}
-                className="flex-1 py-3 bg-[#f1f5f9] text-[#475569] font-bold rounded-xl hover:bg-[#e2e8f0] transition"
+                className="flex-1 py-2.5 bg-[#f1f5f9] text-[#475569] font-bold rounded-xl hover:bg-[#e2e8f0] text-xs transition"
               >
-                No, Keep it
+                Keep {terms.appointmentSingular}
               </button>
               <button 
                 type="button" 
                 onClick={confirmCancelAppointment}
-                className="flex-1 py-3 bg-[#ef4444] text-white font-bold rounded-xl hover:bg-[#dc2626] shadow-sm transition"
+                disabled={cancellingSubmitting}
+                className="flex-1 py-2.5 bg-[#ef4444] hover:bg-[#dc2626] text-white font-bold rounded-xl shadow-sm text-xs transition disabled:opacity-50 flex items-center justify-center gap-1"
               >
-                Yes, Cancel
+                <span className="material-symbols-outlined text-[16px]">cancel</span>
+                {cancellingSubmitting ? 'Processing 100% Refund...' : 'Decline & 100% Refund'}
               </button>
             </div>
           </div>

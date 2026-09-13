@@ -144,6 +144,15 @@ const PatientsPage: React.FC = () => {
     setIsEditingNotes(false);
   };
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Reset to page 1 on search or filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
   const filteredPatients = patients.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           p.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -151,6 +160,29 @@ const PatientsPage: React.FC = () => {
     const matchesFilter = statusFilter === 'All' || p.status === statusFilter;
     return matchesSearch && matchesFilter;
   });
+
+  const totalEntries = filteredPatients.length;
+  const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalEntries);
+  const paginatedPatients = filteredPatients.slice(startIndex, endIndex);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    let start = Math.max(1, safeCurrentPage - 2);
+    let end = Math.min(totalPages, start + 4);
+    if (end - start < 4) {
+      start = Math.max(1, end - 4);
+    }
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const exportCSV = () => {
     const headers = ['Patient ID', 'Name', 'Email', 'Phone', 'Last Visit', 'Last Visit Reason', 'Total Bookings', 'Status', 'Missed Appointments'];
@@ -187,7 +219,7 @@ const PatientsPage: React.FC = () => {
         {/* Page Header & Controls */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 sm:mb-8 shrink-0 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">{terms.customerSingular} Directory</h1>
+            <h1 className="text-2xl sm:text-[32px] font-bold text-primary tracking-tight">{terms.customerSingular} Directory</h1>
             <p className="text-sm font-medium text-[#53606c] mt-1">Manage your {filteredPatients.length} registered {terms.customerPlural.toLowerCase()} and viewing history.</p>
           </div>
 
@@ -258,7 +290,7 @@ const PatientsPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-[#c3c5d7]/20">
                 
-                {filteredPatients.map((patient) => (
+                {paginatedPatients.map((patient) => (
                   <tr 
                     key={patient.id}
                     className="hover:bg-[#f9f9ff] hover:scale-[1.002] transition-all cursor-pointer relative z-0 hover:z-10 hover:shadow-sm bg-white"
@@ -365,11 +397,39 @@ const PatientsPage: React.FC = () => {
           
           {/* Table Footer / Pagination */}
           <div className="border-t border-[#c3c5d7]/50 bg-[#f9f9ff] p-4 flex flex-wrap items-center justify-between shrink-0 gap-4">
-            <span className="text-sm text-[#53606c] font-medium">Showing {filteredPatients.length > 0 ? 1 : 0} to {filteredPatients.length} of {filteredPatients.length} entries</span>
+            <span className="text-sm text-[#53606c] font-medium">
+              Showing {totalEntries > 0 ? startIndex + 1 : 0} to {endIndex} of {totalEntries} entries
+            </span>
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 border border-[#c3c5d7] rounded-lg text-[#53606c] bg-white hover:bg-[#f9f9ff] disabled:opacity-50 text-sm font-semibold shadow-sm transition" disabled>Previous</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1a56db] text-white font-bold text-sm shadow-sm transition">1</button>
-              <button className="px-3 py-1.5 border border-[#c3c5d7] rounded-lg text-[#53606c] bg-white hover:bg-[#f9f9ff] disabled:opacity-50 text-sm font-semibold shadow-sm transition" disabled>Next</button>
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="px-3 py-1.5 border border-[#c3c5d7] rounded-lg text-[#53606c] bg-white hover:bg-[#f0f3ff] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold shadow-sm transition cursor-pointer"
+              >
+                Previous
+              </button>
+              
+              {getPageNumbers().map(page => (
+                <button 
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold shadow-sm transition cursor-pointer ${
+                    safeCurrentPage === page 
+                      ? 'bg-primary text-on-primary shadow-sm' 
+                      : 'bg-white hover:bg-[#f0f3ff] text-[#53606c] border border-[#c3c5d7]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                className="px-3 py-1.5 border border-[#c3c5d7] rounded-lg text-[#53606c] bg-white hover:bg-[#f0f3ff] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold shadow-sm transition cursor-pointer"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

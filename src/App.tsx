@@ -25,6 +25,7 @@ import RevenueAnalyticsPage from './pages/providerPage/RevenueAnalyticsPage';
 import ProviderSettingPage from './pages/providerPage/ProviderSettingPage';
 import SuperAdminDashboard from './pages/superAdminPage/SuperAdminDashboard';
 import TenantManagement from './pages/superAdminPage/TenantManagement';
+import ClientManagement from './pages/superAdminPage/ClientManagement';
 import SystemKPI from './pages/superAdminPage/SystemKPI';
 import AuditLog from './pages/superAdminPage/AuditLog';
 import Permissions from './pages/superAdminPage/Permissions';
@@ -43,6 +44,9 @@ import ProgressiveProfiling from './pages/adminPage/setup/ProgressiveProfiling';
 import FinancialActivation from './pages/adminPage/setup/FinancialActivation';
 import ProviderIdentitySetup from './pages/providerPage/setup/ProviderIdentitySetup';
 import ProviderServicesSetup from './pages/providerPage/setup/ProviderServicesSetup';
+import SuperAdminSettlements from './pages/superAdminPage/SuperAdminSettlements';
+import AdminSettlementsPage from './pages/adminPage/AdminSettlementsPage';
+import ProviderSettlementsPage from './pages/providerPage/ProviderSettlementsPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 
@@ -76,12 +80,14 @@ function App() {
       <Route path="/industries/education" element={<EducationPage />} />
       <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
       <Route path="/superadmin/tenants" element={<TenantManagement />} />
+      <Route path="/superadmin/clients" element={<ClientManagement />} />
       <Route path="/superadmin/system-kpi" element={<SystemKPI />} />
       <Route path="/superadmin/kpi" element={<SystemKPI />} />
       <Route path="/superadmin/audit-logs" element={<AuditLog />} />
       <Route path="/superadmin/audit" element={<AuditLog />} />
       <Route path="/superadmin/permissions" element={<Permissions />} />
       <Route path="/superadmin/settings" element={<SuperAdminSetting />} />
+      <Route path="/superadmin/settlements" element={<SuperAdminSettlements />} />
       <Route path="/superadmin/emergency-stop" element={<GlobalEmergencyStop />} />
       <Route path="/superadmin/support" element={<SuperAdminSupport />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -90,12 +96,14 @@ function App() {
       <Route path="/admin/manage-providers" element={<ManageProviders />} />
       <Route path="/admin/crm" element={<CRM />} />
       <Route path="/admin/ledger" element={<Ledger />} />
+      <Route path="/admin/settlements" element={<AdminSettlementsPage />} />
       <Route path="/admin/subscription" element={<AdminSubscriptionPage />} />
       <Route path="/admin/settings" element={<AdminSetting />} />
       <Route path="/admin/setup/profiling" element={<ProgressiveProfiling />} />
       <Route path="/admin/setup/financials" element={<FinancialActivation />} />
       <Route path="/provider/setup/identity" element={<ProviderIdentitySetup />} />
       <Route path="/provider/setup/services" element={<ProviderServicesSetup />} />
+      <Route path="/provider/settlements" element={<ProviderSettlementsPage />} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
     </Routes>

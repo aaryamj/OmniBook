@@ -71,9 +71,10 @@ export default function ProviderScheduleModal({ providerId, providerName, onClos
             formattedSchedules.sort((a, b) => daysOrder.indexOf(a.dayOfWeek) - daysOrder.indexOf(b.dayOfWeek));
             
             setSchedules(formattedSchedules);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch provider schedule settings", error);
-            setErrorMessage("Failed to load schedule settings.");
+            const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || "Failed to load schedule settings.";
+            setErrorMessage(msg);
         } finally {
             setLoading(false);
         }

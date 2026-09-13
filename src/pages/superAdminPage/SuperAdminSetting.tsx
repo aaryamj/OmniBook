@@ -420,6 +420,126 @@ export default function SuperAdminSetting() {
     const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
     const [isSavingPlan, setIsSavingPlan] = useState<boolean>(false);
 
+    // ==========================================
+    // Dynamic Pagination States for Settings Tables
+    // ==========================================
+    // 1. Tenant Subscriptions Pagination
+    const [tenantCurrentPage, setTenantCurrentPage] = useState<number>(1);
+    const [tenantPageSize, setTenantPageSize] = useState<number>(10);
+
+    useEffect(() => {
+        setTenantCurrentPage(1);
+    }, [tenantSearchQuery, tenantStatusFilter, tenantPlanFilter, tenantCycleFilter, tenantOrgTypeFilter, tenantSortBy, tenantPageSize]);
+
+    const tenantTotalEntries = filteredTenantSubs.length;
+    const tenantTotalPages = Math.max(1, Math.ceil(tenantTotalEntries / tenantPageSize));
+    const tenantSafeCurrentPage = Math.min(tenantCurrentPage, tenantTotalPages);
+    const tenantStartIndex = tenantTotalEntries === 0 ? 0 : (tenantSafeCurrentPage - 1) * tenantPageSize;
+    const tenantEndIndex = Math.min(tenantStartIndex + tenantPageSize, tenantTotalEntries);
+    const paginatedTenantSubs = filteredTenantSubs.slice(tenantStartIndex, tenantEndIndex);
+
+    const getTenantPageNumbers = () => {
+        if (tenantTotalPages <= 5) {
+            return Array.from({ length: tenantTotalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, tenantSafeCurrentPage - 2);
+        let end = Math.min(tenantTotalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
+    // 2. Emergency Subscription Extensions Pagination
+    const [extCurrentPage, setExtCurrentPage] = useState<number>(1);
+    const [extPageSize, setExtPageSize] = useState<number>(10);
+
+    useEffect(() => {
+        setExtCurrentPage(1);
+    }, [extSearchQuery, extStatusFilter, extPlanFilter, extOrgTypeFilter, extSortBy, extPageSize]);
+
+    const extTotalEntries = filteredExtensionRequests.length;
+    const extTotalPages = Math.max(1, Math.ceil(extTotalEntries / extPageSize));
+    const extSafeCurrentPage = Math.min(extCurrentPage, extTotalPages);
+    const extStartIndex = extTotalEntries === 0 ? 0 : (extSafeCurrentPage - 1) * extPageSize;
+    const extEndIndex = Math.min(extStartIndex + extPageSize, extTotalEntries);
+    const paginatedExtensionRequests = filteredExtensionRequests.slice(extStartIndex, extEndIndex);
+
+    const getExtPageNumbers = () => {
+        if (extTotalPages <= 5) {
+            return Array.from({ length: extTotalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, extSafeCurrentPage - 2);
+        let end = Math.min(extTotalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
+    // 3. Subscription Invoices & Verification Pagination
+    const [invoiceSearchQuery, setInvoiceSearchQuery] = useState<string>('');
+    const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('ALL');
+    const [invoiceCurrentPage, setInvoiceCurrentPage] = useState<number>(1);
+    const [invoicePageSize, setInvoicePageSize] = useState<number>(10);
+
+    const filteredInvoices = useMemo(() => {
+        return (settings.invoices || []).filter(inv => {
+            let statusMatch = true;
+            if (invoiceStatusFilter !== 'ALL') {
+                statusMatch = (inv.status || '').toUpperCase() === invoiceStatusFilter;
+            }
+            let searchMatch = true;
+            if (invoiceSearchQuery.trim()) {
+                const q = invoiceSearchQuery.toLowerCase();
+                searchMatch = Boolean(
+                    (inv.invoiceNumber && inv.invoiceNumber.toLowerCase().includes(q)) ||
+                    (inv.organizationName && inv.organizationName.toLowerCase().includes(q)) ||
+                    (inv.adminEmail && inv.adminEmail.toLowerCase().includes(q)) ||
+                    (inv.planName && inv.planName.toLowerCase().includes(q)) ||
+                    (inv.paymentMethod && inv.paymentMethod.toLowerCase().includes(q)) ||
+                    (inv.status && inv.status.toLowerCase().includes(q))
+                );
+            }
+            return statusMatch && searchMatch;
+        });
+    }, [settings.invoices, invoiceStatusFilter, invoiceSearchQuery]);
+
+    useEffect(() => {
+        setInvoiceCurrentPage(1);
+    }, [invoiceSearchQuery, invoiceStatusFilter, invoicePageSize]);
+
+    const invoiceTotalEntries = filteredInvoices.length;
+    const invoiceTotalPages = Math.max(1, Math.ceil(invoiceTotalEntries / invoicePageSize));
+    const invoiceSafeCurrentPage = Math.min(invoiceCurrentPage, invoiceTotalPages);
+    const invoiceStartIndex = invoiceTotalEntries === 0 ? 0 : (invoiceSafeCurrentPage - 1) * invoicePageSize;
+    const invoiceEndIndex = Math.min(invoiceStartIndex + invoicePageSize, invoiceTotalEntries);
+    const paginatedInvoices = filteredInvoices.slice(invoiceStartIndex, invoiceEndIndex);
+
+    const getInvoicePageNumbers = () => {
+        if (invoiceTotalPages <= 5) {
+            return Array.from({ length: invoiceTotalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, invoiceSafeCurrentPage - 2);
+        let end = Math.min(invoiceTotalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
     // Toast notification state
     const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'info' }>({
         show: false,
@@ -1875,7 +1995,7 @@ export default function SuperAdminSetting() {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                filteredTenantSubs.map(t => {
+                                                paginatedTenantSubs.map(t => {
                                                     const tid = t.id ?? t.tenantId ?? 0;
                                                     const orgName = t.organizationName || t.name || 'Unnamed Organization';
                                                     const orgBadge = getOrgTypeBadge(t.organizationType);
@@ -1918,26 +2038,52 @@ export default function SuperAdminSetting() {
                                                                 <div>Start: {start}</div>
                                                                 <div>Expiry: <strong className="text-on-surface">{expiry}</strong></div>
                                                             </td>
-                                                            <td className="py-4 px-4">
-                                                                <span className={`font-mono text-xs font-bold ${
-                                                                    days === undefined ? 'text-on-surface-variant' : days < 0 ? 'text-rose-600' : days <= 7 ? 'text-amber-600' : 'text-emerald-600'
-                                                                }`}>
-                                                                    {days !== undefined ? `${days} days` : 'N/A'}
-                                                                </span>
+                                                            <td className="py-4 px-4 font-mono-data text-xs font-bold">
+                                                                {days !== undefined && days !== null ? (
+                                                                    days < 0 ? (
+                                                                        <span className="text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                                                                            Expired ({Math.abs(days)}d ago)
+                                                                        </span>
+                                                                    ) : days <= 7 ? (
+                                                                        <span className="text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded animate-pulse">
+                                                                            {days} days remaining
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                                                                            {days} days remaining
+                                                                        </span>
+                                                                    )
+                                                                ) : (
+                                                                    <span className="text-outline italic">Calculating...</span>
+                                                                )}
                                                             </td>
                                                             <td className="py-4 px-4">
-                                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full uppercase ${
-                                                                    status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' :
-                                                                    status === 'EXPIRING_SOON' ? 'bg-amber-100 text-amber-800' :
-                                                                    status === 'SUSPENDED' ? 'bg-red-100 text-red-800' : 'bg-rose-100 text-rose-800'
+                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                    status === 'ACTIVE'
+                                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                                        : status === 'EXPIRING_SOON'
+                                                                        ? 'bg-amber-100 text-amber-800'
+                                                                        : status === 'SUSPENDED'
+                                                                        ? 'bg-red-100 text-red-800'
+                                                                        : 'bg-rose-100 text-rose-800'
                                                                 }`}>
-                                                                    {status}
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                                                        status === 'ACTIVE'
+                                                                            ? 'bg-emerald-500'
+                                                                            : status === 'EXPIRING_SOON'
+                                                                            ? 'bg-amber-500'
+                                                                            : status === 'SUSPENDED'
+                                                                            ? 'bg-red-500'
+                                                                            : 'bg-rose-500'
+                                                                    }`} />
+                                                                    {status === 'ACTIVE'
+                                                                        ? 'Active'
+                                                                        : status === 'EXPIRING_SOON'
+                                                                        ? 'Expiring Soon'
+                                                                        : status === 'SUSPENDED'
+                                                                        ? 'Suspended'
+                                                                        : 'Expired'}
                                                                 </span>
-                                                                {t.lastSuspendedReason && (
-                                                                    <p className="text-[10px] text-rose-700 mt-1 max-w-[120px] truncate" title={t.lastSuspendedReason}>
-                                                                        {t.lastSuspendedReason}
-                                                                    </p>
-                                                                )}
                                                             </td>
                                                             <td className="py-4 px-4 text-right">
                                                                 <div className="flex items-center justify-end gap-1.5">
@@ -1948,12 +2094,13 @@ export default function SuperAdminSetting() {
                                                                             setExtendDays(14);
                                                                             setExtendReason('Emergency Administrative Grace Period');
                                                                         }}
-                                                                        className="p-1.5 hover:bg-blue-50 text-blue-700 rounded-lg border border-blue-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                                                                        title="Direct Administrative Extension"
+                                                                        className="p-1.5 hover:bg-surface-container text-primary rounded-lg border border-outline-variant text-xs font-bold flex items-center gap-1 cursor-pointer"
+                                                                        title="Grant Emergency Extension"
                                                                     >
                                                                         <span className="material-symbols-outlined text-[16px]">more_time</span>
                                                                         Extend
                                                                     </button>
+
                                                                     {status === 'SUSPENDED' ? (
                                                                         <button
                                                                             type="button"
@@ -1986,6 +2133,73 @@ export default function SuperAdminSetting() {
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Tenant Subscriptions Dynamic Pagination Bar */}
+                                    <div className="p-4 border-t border-surface-container bg-surface-container-low flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-xs text-on-surface-variant font-mono-data">
+                                                Showing <span className="font-bold text-primary">{tenantTotalEntries > 0 ? tenantStartIndex + 1 : 0} - {tenantEndIndex}</span> of <span className="font-bold text-primary">{tenantTotalEntries}</span> organizations
+                                                {tenantTotalEntries !== tenantSubs.length && (
+                                                    <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                        (filtered from {tenantSubs.length} total)
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                                <span>Rows:</span>
+                                                <select
+                                                    value={tenantPageSize}
+                                                    onChange={(e) => setTenantPageSize(Number(e.target.value))}
+                                                    className="bg-surface-container-lowest py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary transition cursor-pointer"
+                                                >
+                                                    <option value={5}>5</option>
+                                                    <option value={10}>10</option>
+                                                    <option value={20}>20</option>
+                                                    <option value={50}>50</option>
+                                                    <option value={100}>100</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button 
+                                                type="button"
+                                                onClick={() => setTenantCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={tenantSafeCurrentPage <= 1}
+                                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                aria-label="Previous Page"
+                                            >
+                                                <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                                Previous
+                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                {getTenantPageNumbers().map(page => (
+                                                    <button 
+                                                        key={page}
+                                                        type="button"
+                                                        onClick={() => setTenantCurrentPage(page)}
+                                                        className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                            tenantSafeCurrentPage === page
+                                                                ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                                : 'border border-outline-variant/40 hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setTenantCurrentPage(p => Math.min(tenantTotalPages, p + 1))}
+                                                disabled={tenantSafeCurrentPage >= tenantTotalPages || tenantTotalEntries === 0}
+                                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                aria-label="Next Page"
+                                            >
+                                                Next
+                                                <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -2192,7 +2406,7 @@ export default function SuperAdminSetting() {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                filteredExtensionRequests.map(req => {
+                                                paginatedExtensionRequests.map(req => {
                                                     const orgBadge = getOrgTypeBadge(req.organizationType);
                                                     const orgName = req.organizationName || req.tenantName || 'N/A';
                                                     const planName = req.currentPlan || req.currentPlanTier || 'Starter';
@@ -2213,75 +2427,53 @@ export default function SuperAdminSetting() {
                                                                         </span>
                                                                         <div className="flex items-center gap-2 text-xs text-on-surface-variant font-mono mt-0.5">
                                                                             <span>PAN: {req.registrationNumber || 'N/A'}</span>
-                                                                            {req.phone && (
-                                                                                <>
-                                                                                    <span>•</span>
-                                                                                    <span>{req.phone}</span>
-                                                                                </>
-                                                                            )}
+                                                                            <span>• ID: #{req.tenantId}</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-4 px-4 text-xs">
-                                                                <div className="flex flex-col gap-0.5">
-                                                                    <span className="inline-block px-2 py-0.5 rounded bg-surface-container text-on-surface font-bold text-[11px] uppercase tracking-wider w-fit">
-                                                                        {planName}
+                                                            <td className="py-4 px-4">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-xs text-primary">{planName}</span>
+                                                                    <span className="text-[11px] text-outline font-mono">
+                                                                        {req.currentExpiryDate ? new Date(req.currentExpiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Ongoing'}
                                                                     </span>
-                                                                    <span className="text-on-surface-variant font-mono text-[11px]">
-                                                                        Expiry: {req.currentExpiryDate || req.previousExpiryDate || 'N/A'}
-                                                                    </span>
-                                                                    {req.newExpiryDate && req.status === 'APPROVED' && (
-                                                                        <span className="text-emerald-700 font-mono font-bold text-[10px]">
-                                                                            New: {req.newExpiryDate}
-                                                                        </span>
-                                                                    )}
                                                                 </div>
                                                             </td>
-                                                            <td className="py-4 px-4 font-mono font-bold text-primary">
-                                                                <div className="text-sm">
-                                                                    {req.requestedDays} Days
-                                                                </div>
-                                                                {req.approvedDays ? (
-                                                                    <span className="inline-block mt-0.5 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                                                        Approved: {req.approvedDays}d
+                                                            <td className="py-4 px-4 font-mono-data font-bold text-xs text-amber-700">
+                                                                <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200">
+                                                                    +{req.requestedDays} Days
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-4 px-4">
+                                                                <p className="text-xs text-on-surface max-w-xs font-medium line-clamp-2" title={req.reason}>
+                                                                    "{req.reason}"
+                                                                </p>
+                                                            </td>
+                                                            <td className="py-4 px-4">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-xs font-bold text-primary">{requester}</span>
+                                                                    <span className="text-[10px] text-outline font-mono">
+                                                                        {req.createdAt ? new Date(req.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'Recent'}
                                                                     </span>
-                                                                ) : null}
-                                                            </td>
-                                                            <td className="py-4 px-4 text-xs text-on-surface max-w-xs">
-                                                                <div className="space-y-1">
-                                                                    <p className="bg-surface-container-low p-2 rounded-lg leading-relaxed border border-outline-variant/40 italic">
-                                                                        "{req.reason}"
-                                                                    </p>
-                                                                    {req.adminNotes && (
-                                                                        <p className="text-[11px] text-on-surface-variant bg-amber-50/60 p-1.5 rounded border border-amber-200/50">
-                                                                            <strong className="text-amber-900">Admin Notes:</strong> {req.adminNotes}
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-4 px-4 text-xs text-on-surface-variant">
-                                                                <div className="font-bold text-on-surface">
-                                                                    {requester}
-                                                                </div>
-                                                                {req.requestedByEmail && req.requestedByEmail !== requester && (
-                                                                    <div className="font-mono text-[11px] text-outline truncate max-w-[160px]">
-                                                                        {req.requestedByEmail}
-                                                                    </div>
-                                                                )}
-                                                                <div className="text-[10px] text-outline font-mono mt-0.5">
-                                                                    {req.createdAt ? new Date(req.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
                                                                 </div>
                                                             </td>
                                                             <td className="py-4 px-4">
-                                                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-full uppercase ${
-                                                                    req.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-800' :
-                                                                    req.status === 'REJECTED' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800 animate-pulse'
+                                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                    req.status === 'APPROVED'
+                                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                                        : req.status === 'REJECTED'
+                                                                        ? 'bg-rose-100 text-rose-800'
+                                                                        : 'bg-amber-100 text-amber-800'
                                                                 }`}>
-                                                                    <span className="material-symbols-outlined text-[13px]">
-                                                                        {req.status === 'APPROVED' ? 'check_circle' : req.status === 'REJECTED' ? 'cancel' : 'pending'}
-                                                                    </span>
-                                                                    {req.status}
+                                                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                                                        req.status === 'APPROVED'
+                                                                            ? 'bg-emerald-500'
+                                                                            : req.status === 'REJECTED'
+                                                                            ? 'bg-rose-500'
+                                                                            : 'bg-amber-500'
+                                                                    }`} />
+                                                                    {req.status === 'APPROVED' ? 'Approved' : req.status === 'REJECTED' ? 'Rejected' : 'Pending Review'}
                                                                 </span>
                                                             </td>
                                                             <td className="py-4 px-4 text-right">
@@ -2292,10 +2484,10 @@ export default function SuperAdminSetting() {
                                                                             onClick={() => {
                                                                                 setReviewModalRequest(req);
                                                                                 setReviewApproved(true);
-                                                                                setReviewApprovedDays(req.requestedDays);
+                                                                                setReviewApprovedDays(req.requestedDays || 14);
                                                                                 setReviewNotes('');
                                                                             }}
-                                                                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer shadow-sm transition-all"
+                                                                            className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
                                                                         >
                                                                             <span className="material-symbols-outlined text-[15px]">check</span>
                                                                             Approve
@@ -2332,6 +2524,73 @@ export default function SuperAdminSetting() {
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Emergency Extensions Dynamic Pagination Bar */}
+                                    <div className="p-4 border-t border-surface-container bg-surface-container-low flex flex-wrap items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-xs text-on-surface-variant font-mono-data">
+                                                Showing <span className="font-bold text-primary">{extTotalEntries > 0 ? extStartIndex + 1 : 0} - {extEndIndex}</span> of <span className="font-bold text-primary">{extTotalEntries}</span> requests
+                                                {extTotalEntries !== extensionRequests.length && (
+                                                    <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                        (filtered from {extensionRequests.length} total)
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                                <span>Rows:</span>
+                                                <select
+                                                    value={extPageSize}
+                                                    onChange={(e) => setExtPageSize(Number(e.target.value))}
+                                                    className="bg-surface-container-lowest py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary transition cursor-pointer"
+                                                >
+                                                    <option value={5}>5</option>
+                                                    <option value={10}>10</option>
+                                                    <option value={20}>20</option>
+                                                    <option value={50}>50</option>
+                                                    <option value={100}>100</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <button 
+                                                type="button"
+                                                onClick={() => setExtCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={extSafeCurrentPage <= 1}
+                                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                aria-label="Previous Page"
+                                            >
+                                                <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                                Previous
+                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                {getExtPageNumbers().map(page => (
+                                                    <button 
+                                                        key={page}
+                                                        type="button"
+                                                        onClick={() => setExtCurrentPage(page)}
+                                                        className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                            extSafeCurrentPage === page
+                                                                ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                                : 'border border-outline-variant/40 hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setExtCurrentPage(p => Math.min(extTotalPages, p + 1))}
+                                                disabled={extSafeCurrentPage >= extTotalPages || extTotalEntries === 0}
+                                                className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                aria-label="Next Page"
+                                            >
+                                                Next
+                                                <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -2343,14 +2602,52 @@ export default function SuperAdminSetting() {
                             <div className="space-y-6 animate-in fade-in duration-150">
                                 {/* Invoices Table */}
                                 <section>
-                                    <div className="flex justify-between items-center border-b border-surface-container pb-4 mb-6">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-surface-container pb-4 mb-4 gap-4">
                                         <div>
                                             <h3 className="text-xl font-bold text-primary">Subscription Financial Invoices & Verification</h3>
                                             <p className="text-sm text-on-surface-variant">Click any row to generate official PDF receipt or manage verification status.</p>
                                         </div>
                                     </div>
+
+                                    {/* Search & Status Filters for Invoices */}
+                                    <div className="mb-4 p-3 bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-sm">
+                                        <div className="relative flex-1">
+                                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
+                                                search
+                                            </span>
+                                            <input
+                                                type="text"
+                                                value={invoiceSearchQuery}
+                                                onChange={(e) => setInvoiceSearchQuery(e.target.value)}
+                                                placeholder="Search by invoice #, organization, email, plan..."
+                                                className="w-full pl-9 pr-8 py-1.5 text-xs rounded-lg border border-outline-variant bg-surface-container-low focus:bg-white focus:outline-none focus:border-primary transition-all font-medium"
+                                            />
+                                            {invoiceSearchQuery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setInvoiceSearchQuery('')}
+                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface cursor-pointer"
+                                                >
+                                                    <span className="material-symbols-outlined text-[16px]">close</span>
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={invoiceStatusFilter}
+                                                onChange={(e) => setInvoiceStatusFilter(e.target.value)}
+                                                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-outline-variant bg-surface-container-low hover:bg-surface-container text-on-surface focus:outline-none focus:border-primary cursor-pointer"
+                                            >
+                                                <option value="ALL">All Statuses</option>
+                                                <option value="PAID">Paid</option>
+                                                <option value="REFUNDED">Refunded</option>
+                                                <option value="PENDING">Pending</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     
-                                    <div className="overflow-x-auto border border-outline-variant rounded-xl bg-surface-container-lowest">
+                                    <div className="overflow-x-auto border border-outline-variant rounded-xl bg-surface-container-lowest shadow-sm">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="border-b border-surface-container bg-surface-container-low/50">
@@ -2365,12 +2662,12 @@ export default function SuperAdminSetting() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {(!settings.invoices || settings.invoices.length === 0) ? (
+                                                {filteredInvoices.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={8} className="py-8 text-center text-on-surface-variant">No invoices recorded yet.</td>
+                                                        <td colSpan={8} className="py-8 text-center text-on-surface-variant">No invoices recorded matching filters.</td>
                                                     </tr>
                                                 ) : (
-                                                    settings.invoices.map((inv) => (
+                                                    paginatedInvoices.map((inv) => (
                                                         <tr key={inv.id} className="border-b border-surface-container-low hover:bg-surface-container-low/30 transition-colors">
                                                             <td className="py-4 px-4 font-mono-data font-medium text-primary">{inv.invoiceNumber}</td>
                                                             <td className="py-4 px-4 font-medium text-on-surface">
@@ -2501,6 +2798,73 @@ export default function SuperAdminSetting() {
                                                 )}
                                             </tbody>
                                         </table>
+
+                                        {/* Subscription Financial Invoices Dynamic Pagination Bar */}
+                                        <div className="p-4 border-t border-surface-container bg-surface-container-low flex flex-wrap items-center justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-xs text-on-surface-variant font-mono-data">
+                                                    Showing <span className="font-bold text-primary">{invoiceTotalEntries > 0 ? invoiceStartIndex + 1 : 0} - {invoiceEndIndex}</span> of <span className="font-bold text-primary">{invoiceTotalEntries}</span> invoices
+                                                    {invoiceTotalEntries !== (settings.invoices || []).length && (
+                                                        <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                            (filtered from {(settings.invoices || []).length} total)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                                    <span>Rows:</span>
+                                                    <select
+                                                        value={invoicePageSize}
+                                                        onChange={(e) => setInvoicePageSize(Number(e.target.value))}
+                                                        className="bg-surface-container-lowest py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary transition cursor-pointer"
+                                                    >
+                                                        <option value={5}>5</option>
+                                                        <option value={10}>10</option>
+                                                        <option value={20}>20</option>
+                                                        <option value={50}>50</option>
+                                                        <option value={100}>100</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-1.5">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setInvoiceCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={invoiceSafeCurrentPage <= 1}
+                                                    className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                    aria-label="Previous Page"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                                    Previous
+                                                </button>
+                                                <div className="flex items-center gap-1">
+                                                    {getInvoicePageNumbers().map(page => (
+                                                        <button 
+                                                            key={page}
+                                                            type="button"
+                                                            onClick={() => setInvoiceCurrentPage(page)}
+                                                            className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                                invoiceSafeCurrentPage === page
+                                                                    ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                                    : 'border border-outline-variant/40 hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                            }`}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setInvoiceCurrentPage(p => Math.min(invoiceTotalPages, p + 1))}
+                                                    disabled={invoiceSafeCurrentPage >= invoiceTotalPages || invoiceTotalEntries === 0}
+                                                    className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                                    aria-label="Next Page"
+                                                >
+                                                    Next
+                                                    <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </section>
                             </div>

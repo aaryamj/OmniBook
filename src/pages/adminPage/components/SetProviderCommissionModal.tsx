@@ -203,7 +203,7 @@ export default function SetProviderCommissionModal({
                                     <span className="text-[11px] text-on-surface-variant">share</span>
                                 </div>
                                 <p className="text-[10px] text-on-surface-variant mt-1.5">
-                                    Inherits standard {terms.organizationType} provider share rate.
+                                    Inherits standard {terms.facilityLabel || 'organization'} provider share rate.
                                 </p>
                             </button>
 

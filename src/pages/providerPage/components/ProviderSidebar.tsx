@@ -154,6 +154,14 @@ export default function ProviderSidebar() {
                 </NavLink>
             )}
 
+            <NavLink 
+                to="/provider/settlements" 
+                className={({ isActive }) => `flex items-center gap-2 px-3 py-2.5 text-[13px] font-medium rounded-lg transition-all ${isActive ? 'text-primary bg-primary/10 font-bold' : 'text-on-surface-variant hover:bg-surface-container-high'}`}
+            >
+                <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+                Daily Settlements
+            </NavLink>
+
             <div className="mt-auto flex flex-col gap-1">
                 <NavLink 
                     to="/provider/settings" 

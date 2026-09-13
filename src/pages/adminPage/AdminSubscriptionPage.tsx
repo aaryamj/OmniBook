@@ -86,11 +86,58 @@ export default function AdminSubscriptionPage() {
     const [selectedPlanName, setSelectedPlanName] = useState<string>('PROFESSIONAL');
     const [paymentMethod, setPaymentMethod] = useState<'ESEWA' | 'STRIPE'>('ESEWA');
 
-    // Modals
     const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
     const [extensionDays, setExtensionDays] = useState(7);
     const [extensionReason, setExtensionReason] = useState('');
     const [isSubmittingExtension, setIsSubmittingExtension] = useState(false);
+
+    // Emergency Extension Requests Pagination & Filtering State
+    const [extCurrentPage, setExtCurrentPage] = useState(1);
+    const [extPageSize, setExtPageSize] = useState(5);
+    const [extSearchTerm, setExtSearchTerm] = useState('');
+    const [extStatusFilter, setExtStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
+
+    useEffect(() => {
+        setExtCurrentPage(1);
+    }, [extSearchTerm, extStatusFilter, extPageSize]);
+
+    const filteredExtensionRequests = extensionRequests.filter(req => {
+        const matchesStatus = extStatusFilter === 'ALL' || req.status === extStatusFilter;
+        if (!matchesStatus) return false;
+
+        if (!extSearchTerm.trim()) return true;
+        const term = extSearchTerm.toLowerCase().trim();
+        const reason = (req.reason || '').toLowerCase();
+        const notes = (req.adminNotes || '').toLowerCase();
+        const days = String(req.requestedDays || '');
+        const status = (req.status || '').toLowerCase();
+        const date = req.createdAt ? new Date(req.createdAt).toLocaleDateString().toLowerCase() : '';
+
+        return reason.includes(term) || notes.includes(term) || days.includes(term) || status.includes(term) || date.includes(term);
+    });
+
+    const extTotalEntries = filteredExtensionRequests.length;
+    const extTotalPages = Math.max(1, Math.ceil(extTotalEntries / extPageSize));
+    const safeExtCurrentPage = Math.min(extCurrentPage, extTotalPages);
+    const extStartIndex = extTotalEntries === 0 ? 0 : (safeExtCurrentPage - 1) * extPageSize;
+    const extEndIndex = Math.min(extStartIndex + extPageSize, extTotalEntries);
+    const paginatedExtensionRequests = filteredExtensionRequests.slice(extStartIndex, extEndIndex);
+
+    const getExtPageNumbers = () => {
+        if (extTotalPages <= 5) {
+            return Array.from({ length: extTotalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeExtCurrentPage - 2);
+        let end = Math.min(extTotalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     const [isRenewing, setIsRenewing] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; show: boolean }>({
@@ -695,7 +742,7 @@ export default function AdminSubscriptionPage() {
 
                         {/* SECTION 3: EMERGENCY EXTENSION HISTORY */}
                         <div className="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm space-y-4">
-                            <div className="flex justify-between items-center border-b border-surface-container pb-4">
+                            <div className="flex flex-wrap justify-between items-center border-b border-surface-container pb-4 gap-4">
                                 <div>
                                     <h3 className="text-lg font-bold text-primary">Emergency Extension Requests</h3>
                                     <p className="text-xs text-on-surface-variant">
@@ -709,6 +756,41 @@ export default function AdminSubscriptionPage() {
                                     <span className="material-symbols-outlined text-[16px]">add</span>
                                     New Request
                                 </button>
+                            </div>
+
+                            {/* Search and Status Toolbar */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                                <div className="relative flex-1 min-w-[200px] max-w-sm">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-base pointer-events-none">search</span>
+                                    <input 
+                                        type="text"
+                                        value={extSearchTerm}
+                                        onChange={(e) => setExtSearchTerm(e.target.value)}
+                                        placeholder="Search by justification, days, status, notes..."
+                                        className="w-full pl-8 pr-8 py-1.5 bg-surface-container-low/40 rounded-xl border border-outline-variant text-xs text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
+                                    />
+                                    {extSearchTerm && (
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setExtSearchTerm('')}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary text-xs cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-sm leading-none block">close</span>
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        value={extStatusFilter}
+                                        onChange={(e: any) => setExtStatusFilter(e.target.value)}
+                                        className="bg-surface-container-low/40 py-1.5 px-3 rounded-xl border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                                    >
+                                        <option value="ALL">All Statuses</option>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="APPROVED">Approved</option>
+                                        <option value="REJECTED">Rejected</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto border border-outline-variant rounded-xl bg-surface-container-lowest">
@@ -729,8 +811,14 @@ export default function AdminSubscriptionPage() {
                                                     No emergency extension requests submitted.
                                                 </td>
                                             </tr>
+                                        ) : filteredExtensionRequests.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="py-6 text-center text-xs text-on-surface-variant">
+                                                    No emergency extension requests match your search.
+                                                </td>
+                                            </tr>
                                         ) : (
-                                            extensionRequests.map(req => (
+                                            paginatedExtensionRequests.map(req => (
                                                 <tr key={req.id} className="border-b border-surface-container-low hover:bg-surface-container-low/30 transition-colors">
                                                     <td className="py-3.5 px-4 font-mono font-bold text-primary text-xs">
                                                         {req.requestedDays} Days
@@ -779,6 +867,72 @@ export default function AdminSubscriptionPage() {
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="bg-white px-5 py-3.5 border border-outline-variant rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-sm">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-xs text-on-surface-variant font-mono-data">
+                                        Showing <span className="font-bold text-primary">{extTotalEntries > 0 ? extStartIndex + 1 : 0} - {extEndIndex}</span> of <span className="font-bold text-primary">{extTotalEntries}</span> extension requests
+                                        {extTotalEntries !== extensionRequests.length && (
+                                            <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                (filtered from {extensionRequests.length} total)
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                        <span>Rows:</span>
+                                        <select
+                                            value={extPageSize}
+                                            onChange={(e) => setExtPageSize(Number(e.target.value))}
+                                            className="bg-surface py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setExtCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={safeExtCurrentPage <= 1}
+                                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                        aria-label="Previous Page"
+                                    >
+                                        <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                        Previous
+                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {getExtPageNumbers().map(page => (
+                                            <button 
+                                                key={page}
+                                                type="button"
+                                                onClick={() => setExtCurrentPage(page)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                    safeExtCurrentPage === page
+                                                        ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                        : 'border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setExtCurrentPage(p => Math.min(extTotalPages, p + 1))}
+                                        disabled={safeExtCurrentPage >= extTotalPages || extTotalEntries === 0}
+                                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                        aria-label="Next Page"
+                                    >
+                                        Next
+                                        <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

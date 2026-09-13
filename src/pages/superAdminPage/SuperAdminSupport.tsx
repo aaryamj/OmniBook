@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import './superAdmin.css';
 import Sidebar from './components/Sidebar';
@@ -47,6 +47,64 @@ export default function SuperAdminSupport() {
         csatScore: '98.4%'
     });
     const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    // Search, Status filter, & Dynamic Pagination states
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [statusFilter, setStatusFilter] = useState<string>('ALL');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(10);
+
+    // Reset pagination to first page whenever filters or page size change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeFilter, timeFilter, searchQuery, statusFilter, pageSize]);
+
+    // Filtered tickets based on search query and status filter
+    const filteredTickets = useMemo(() => {
+        return tickets.filter((ticket) => {
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase();
+                const matchNumber = ticket.ticketNumber?.toLowerCase().includes(q);
+                const matchOrg = ticket.organizationName?.toLowerCase().includes(q);
+                const matchAdmin = ticket.adminAccount?.toLowerCase().includes(q);
+                const matchIssue = ticket.issueType?.toLowerCase().includes(q);
+                const matchSubject = ticket.subject?.toLowerCase().includes(q);
+                if (!matchNumber && !matchOrg && !matchAdmin && !matchIssue && !matchSubject) return false;
+            }
+
+            if (statusFilter !== 'ALL') {
+                const s = (ticket.status || '').toLowerCase().replace(/[\s_-]+/g, '');
+                const target = statusFilter.toLowerCase().replace(/[\s_-]+/g, '');
+                if (s !== target) return false;
+            }
+
+            return true;
+        });
+    }, [tickets, searchQuery, statusFilter]);
+
+    // Dynamic Pagination calculations
+    const totalEntries = filteredTickets.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const paginatedTickets = filteredTickets.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     // Ticket Action Modal state (Replaces localhost alert)
     const [selectedTicket, setSelectedTicket] = useState<SupportTicketItem | null>(null);
@@ -314,6 +372,59 @@ export default function SuperAdminSupport() {
                                 </div>
                             </div>
                             
+                            {/* Search & Status Filter Bar */}
+                            <div className="px-6 py-3.5 bg-surface-container-lowest border-b border-outline-variant flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                <div className="relative flex-1">
+                                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">
+                                        search
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search ticket ID, clinic name, admin account, or issue type..."
+                                        className="w-full pl-9 pr-8 py-1.5 text-xs rounded-lg border border-outline-variant bg-white text-primary placeholder:text-outline focus:outline-none focus:border-primary transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-primary text-xs cursor-pointer"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">close</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-on-surface-variant font-medium whitespace-nowrap">Status:</span>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="px-2.5 py-1.5 text-xs rounded-lg border border-outline-variant bg-white text-on-surface font-semibold focus:outline-none focus:border-primary cursor-pointer"
+                                    >
+                                        <option value="ALL">All Statuses</option>
+                                        <option value="OPEN">Open</option>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="URGENT">Urgent / SLA At Risk</option>
+                                        <option value="RESOLVED">Resolved</option>
+                                    </select>
+
+                                    {(searchQuery || statusFilter !== 'ALL') && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearchQuery('');
+                                                setStatusFilter('ALL');
+                                            }}
+                                            className="px-2.5 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors font-semibold cursor-pointer whitespace-nowrap"
+                                        >
+                                            Clear Filters
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            
                             <div className="overflow-x-auto">
                                 <table className="w-full min-w-[700px] text-left">
                                     <thead className="bg-surface-container-low border-b border-outline-variant">
@@ -336,8 +447,8 @@ export default function SuperAdminSupport() {
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ) : tickets.length > 0 ? (
-                                            tickets.map((ticket) => (
+                                        ) : paginatedTickets.length > 0 ? (
+                                            paginatedTickets.map((ticket) => (
                                                 <tr 
                                                     key={ticket.id} 
                                                     className="hover:bg-background transition-colors group cursor-pointer" 
@@ -395,18 +506,78 @@ export default function SuperAdminSupport() {
                                 </table>
                             </div>
                             
-                            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
-                                <span className="text-xs text-on-surface-variant font-medium">
-                                    Showing {tickets.length} active escalations in database ({timeFilter})
-                                </span>
-                                <div className="flex gap-2">
+                            {/* Dynamic Pagination Bar */}
+                            <div className="px-6 py-4 border-t border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                                    <span className="font-mono-data text-mono-data text-on-surface-variant text-xs">
+                                        Showing {totalEntries === 0 ? 0 : startIndex + 1} - {endIndex} of {totalEntries} entries
+                                        {totalEntries !== tickets.length && ` (filtered from ${tickets.length} total)`}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                        <span>Rows:</span>
+                                        <select
+                                            value={pageSize}
+                                            onChange={(e) => setPageSize(Number(e.target.value))}
+                                            className="bg-surface-container-lowest border border-outline-variant rounded px-2 py-1 text-xs text-primary font-bold focus:outline-none focus:border-primary cursor-pointer"
+                                        >
+                                            <option value={5}>5</option>
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                            <option value={100}>100</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
                                     <button 
+                                        type="button"
                                         onClick={() => fetchSupportData(timeFilter, activeFilter)}
-                                        className="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface transition-colors flex items-center gap-1 cursor-pointer"
+                                        className="px-3 py-1.5 border border-outline-variant/40 rounded text-xs hover:bg-surface transition-colors flex items-center gap-1 cursor-pointer text-on-surface-variant hover:text-primary"
+                                        title="Refresh Tickets"
                                     >
                                         <span className="material-symbols-outlined text-[14px]">refresh</span>
                                         <span>Refresh</span>
                                     </button>
+
+                                    <div className="flex items-center gap-1">
+                                        <button 
+                                            type="button"
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={safeCurrentPage <= 1}
+                                            className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                            aria-label="Previous Page"
+                                        >
+                                            <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                            Previous
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {getPageNumbers().map(page => (
+                                                <button 
+                                                    key={page}
+                                                    type="button"
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                        safeCurrentPage === page
+                                                            ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                            : 'border border-outline-variant/40 hover:bg-surface-container-lowest text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                                            className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container-lowest rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                            aria-label="Next Page"
+                                        >
+                                            Next
+                                            <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -434,7 +434,7 @@ const RevenueAnalyticsPage: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">Analytics Overview</h1>
+              <h1 className="text-2xl sm:text-[32px] font-bold text-primary tracking-tight">Analytics Overview</h1>
               {loading && (
                 <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
               )}

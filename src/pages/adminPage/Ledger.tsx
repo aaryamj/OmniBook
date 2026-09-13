@@ -78,6 +78,38 @@ export default function Ledger() {
         return matchesSearch && matchesStatus;
     });
 
+    // --- Pagination State & Dynamic Calculations ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination to page 1 whenever any filter or search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, pageSize]);
+
+    const totalEntries = filteredTransactions.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
     const handleExportCSV = () => {
         const headers = ['TXN ID', 'Date', 'Time', terms.customerSingular, terms.serviceSingular, 'Gateway', 'Amount', 'Account', 'Status'];
         const csvRows = [headers.join(',')];
@@ -157,7 +189,7 @@ export default function Ledger() {
                                 </button>
                                 <button 
                                     onClick={() => setShowSettlementModal(true)}
-                                    className="px-6 py-2 bg-secondary text-primary font-bold font-label-md text-label-md uppercase rounded hover:brightness-110 transition-all flex items-center gap-2 shadow-sm relative overflow-hidden"
+                                    className="px-6 py-2 bg-primary text-on-primary font-bold font-label-md text-label-md uppercase rounded hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 shadow-md shadow-primary/20 relative overflow-hidden cursor-pointer"
                                 >
                                     {isSettling ? (
                                         <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
@@ -319,7 +351,7 @@ export default function Ledger() {
                                                 </td>
                                             </tr>
                                         ) : (
-                                            filteredTransactions.map((txn, index) => (
+                                            paginatedTransactions.map((txn, index) => (
                                             <tr key={index} className="hover:bg-surface-container-lowest transition-colors">
                                                 <td className="px-6 py-4 font-mono-data text-body-md text-primary font-bold">{txn.id}</td>
                                                 <td className="px-6 py-4">
@@ -376,11 +408,68 @@ export default function Ledger() {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-                                <p className="text-label-md text-on-surface-variant">Showing {filteredTransactions.length} of {transactions.length} transactions</p>
-                                <div className="flex gap-2">
-                                    <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container-low transition-colors disabled:opacity-50" disabled>Previous</button>
-                                    <button className="px-3 py-1 border border-outline-variant rounded hover:bg-surface-container-low transition-colors">Next</button>
+                            <div className="bg-white px-6 py-4 border-t border-outline-variant flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="text-xs text-on-surface-variant font-mono-data">
+                                        Showing <span className="font-bold text-primary">{totalEntries > 0 ? startIndex + 1 : 0} - {endIndex}</span> of <span className="font-bold text-primary">{totalEntries}</span> transactions
+                                        {totalEntries !== transactions.length && (
+                                            <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                                (filtered from {transactions.length} total)
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                        <span>Rows:</span>
+                                        <select
+                                            value={pageSize}
+                                            onChange={(e) => setPageSize(Number(e.target.value))}
+                                            className="bg-surface py-1 px-2 rounded border border-outline-variant text-xs text-on-surface font-medium focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition cursor-pointer"
+                                        >
+                                            <option value={10}>10</option>
+                                            <option value={20}>20</option>
+                                            <option value={50}>50</option>
+                                            <option value={100}>100</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={safeCurrentPage <= 1}
+                                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                        aria-label="Previous Page"
+                                    >
+                                        <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
+                                        Previous
+                                    </button>
+                                    <div className="flex items-center gap-1">
+                                        {getPageNumbers().map(page => (
+                                            <button 
+                                                key={page}
+                                                type="button"
+                                                onClick={() => setCurrentPage(page)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded text-xs font-bold transition-all cursor-pointer ${
+                                                    safeCurrentPage === page
+                                                        ? 'bg-primary text-on-primary shadow-sm shadow-primary/30'
+                                                        : 'border border-outline-variant/40 hover:bg-surface-container text-on-surface-variant hover:text-primary hover:border-primary/40'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                                        className="px-3 py-1.5 text-xs font-bold text-on-surface-variant hover:bg-surface-container rounded transition-colors border border-outline-variant/40 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed hover:text-primary cursor-pointer shadow-sm"
+                                        aria-label="Next Page"
+                                    >
+                                        Next
+                                        <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -406,7 +495,7 @@ export default function Ledger() {
                                 <button 
                                     onClick={handleConfirmSettlement}
                                     disabled={isSettling}
-                                    className="px-5 py-2 rounded-lg font-bold bg-secondary text-primary shadow hover:brightness-110 transition-all disabled:opacity-50"
+                                    className="px-5 py-2 rounded-lg font-bold bg-primary text-on-primary shadow-md shadow-primary/20 hover:brightness-110 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     Confirm Settlement
                                 </button>

@@ -71,7 +71,7 @@ export default function AdminSidebar() {
                         </div>
                         <div>
                             <p className="font-label-md text-label-md text-on-primary-container font-semibold opacity-95">
-                                {localStorage.getItem('organizationName') ? `${localStorage.getItem('organizationName')} Console` : 'Admin Console'}
+                                {localStorage.getItem('organizationName') || 'Admin'}
                             </p>
                             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-on-primary-container/10 text-on-primary-container border border-on-primary-container/20">
                                 {terms.facilityLabel}
@@ -123,6 +123,13 @@ export default function AdminSidebar() {
                     >
                         <span className={getNavIconClasses('/admin/ledger')} style={{ fontVariationSettings: isActive('/admin/ledger') ? "'FILL' 1" : "" }}>account_balance_wallet</span>
                         <span className="font-body-md">Ledger</span>
+                    </a>
+                    <a 
+                        className={getNavItemClasses('/admin/settlements')}
+                        onClick={() => navigate('/admin/settlements')}
+                    >
+                        <span className={getNavIconClasses('/admin/settlements')} style={{ fontVariationSettings: isActive('/admin/settlements') ? "'FILL' 1" : "" }}>receipt_long</span>
+                        <span className="font-body-md">Daily Settlements</span>
                     </a>
                     <a 
                         className={getNavItemClasses('/admin/subscription')}

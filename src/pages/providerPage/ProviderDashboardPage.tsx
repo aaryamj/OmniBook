@@ -98,6 +98,7 @@ const ProviderDashboardPage: React.FC = () => {
       .then(tenant => {
         if (tenant?.primaryAccentColor) {
           applyTheme(tenant.primaryAccentColor);
+          localStorage.setItem('primaryAccentColor', tenant.primaryAccentColor);
         }
         if (tenant?.organizationName) {
           setOrgName(tenant.organizationName);
@@ -211,6 +212,13 @@ const ProviderDashboardPage: React.FC = () => {
   // Cancel Modal State
   const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
   const [cancellingApptId, setCancellingApptId] = React.useState<number | null>(null);
+
+  // Decline / Rejection Modal State
+  const [isDeclineModalOpen, setIsDeclineModalOpen] = React.useState(false);
+  const [decliningAppt, setDecliningAppt] = React.useState<any | null>(null);
+  const [declineReason, setDeclineReason] = React.useState('Schedule conflict / Unavailable');
+  const [customDeclineNote, setCustomDeclineNote] = React.useState('');
+  const [declineSubmitting, setDeclineSubmitting] = React.useState(false);
   const [services, setServices] = React.useState<any[]>([]);
 
   // Reschedule Modal State
@@ -406,24 +414,53 @@ const ProviderDashboardPage: React.FC = () => {
     }
   };
 
-  const handleDecline = async (id: number) => {
+  const openDeclineModal = (appt: any) => {
+    setDecliningAppt(appt);
+    setDeclineReason('Schedule conflict / Unavailable');
+    setCustomDeclineNote('');
+    setIsDeclineModalOpen(true);
+  };
+
+  const confirmDeclineAppointment = async () => {
+    if (!decliningAppt) return;
+    setDeclineSubmitting(true);
     const token = localStorage.getItem('token');
+    const finalReason = declineReason === 'Other (Custom note)' 
+      ? (customDeclineNote.trim() || 'Declined by service provider') 
+      : (customDeclineNote.trim() ? `${declineReason} - ${customDeclineNote.trim()}` : declineReason);
+
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/provider/appointments/${id}/decline`, {
+      const response = await fetch(`http://localhost:8080/api/v1/provider/appointments/${decliningAppt.id}/decline`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason: finalReason })
       });
-      if (response.ok) {
-        setNotification({ message: 'Appointment declined.', type: 'success' });
-        setAppointments(prev => prev.map(a => a.id === id ? { ...a, appointmentStatus: 'CANCELLED' } : a));
-        setTimeout(() => setNotification(null), 5000);
+      const data = await response.json();
+      if (response.ok && data.success !== false) {
+        setNotification({ 
+          message: `${terms.appointmentSingular} request declined. 100% refund initiated to ${terms.customerSingular.toLowerCase()}.`, 
+          type: 'success' 
+        });
+        setAppointments(prev => prev.map(a => a.id === decliningAppt.id ? { 
+          ...a, 
+          appointmentStatus: 'REJECTED',
+          refundStatus: 'REFUNDED',
+          refundEligibilityPercentage: 100,
+          rejectionReason: finalReason
+        } : a));
+        setIsDeclineModalOpen(false);
+        setDecliningAppt(null);
+        setTimeout(() => setNotification(null), 6000);
       } else {
-        setNotification({ message: 'Failed to decline appointment.', type: 'error' });
-        setTimeout(() => setNotification(null), 5000);
+        alert(data.message || 'Failed to decline appointment');
       }
-    } catch (e) {
-      setNotification({ message: 'An error occurred.', type: 'error' });
-      setTimeout(() => setNotification(null), 5000);
+    } catch (e: any) {
+      alert('Error declining appointment: ' + (e.message || 'Unknown error'));
+    } finally {
+      setDeclineSubmitting(false);
     }
   };
 
@@ -434,6 +471,9 @@ const ProviderDashboardPage: React.FC = () => {
   const dateString = `${year}-${month}-${day}`;
   const todayAppointments = appointments.filter(a => a.appointmentDate === dateString && a.appointmentStatus !== 'PENDING_APPROVAL');
   const todayRevenue = todayAppointments.reduce((sum, a) => {
+    if (a.appointmentStatus === 'REJECTED') {
+      return sum; // Zero revenue / payout for rejected bookings
+    }
     if (a.appointmentStatus === 'CANCELLED' || a.appointmentStatus === 'NO_SHOW') {
       return sum + (a.settlementAmount || 0);
     }
@@ -829,7 +869,7 @@ const ProviderDashboardPage: React.FC = () => {
         {/* Header Module */}
         <section className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-[32px] text-on-surface font-bold tracking-tight">Operations Dashboard</h1>
+            <h1 className="text-[32px] text-primary font-bold tracking-tight">Operations Dashboard</h1>
             <p className="text-[16px] text-on-surface-variant mt-1">{orgName ? `${orgName} Operations Command` : 'Provider Operational Command'}</p>
           </div>
           <div className="flex gap-4">
@@ -863,14 +903,14 @@ const ProviderDashboardPage: React.FC = () => {
 
         {/* Metrics Grid */}
         <div className={`grid grid-cols-1 ${permissions.analytics.read ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-12`}>
-          <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-[#003fb1]">
+          <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-primary">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-[12px] text-[#53606c] uppercase tracking-wider">Today's Schedule</p>
-                <h2 className="text-[48px] font-bold text-[#003fb1] mt-1 leading-tight">{loading ? '...' : todayAppointments.length}</h2>
+                <h2 className="text-[48px] font-bold text-primary mt-1 leading-tight">{loading ? '...' : todayAppointments.length}</h2>
                 <p className="text-[14px] text-[#434654] mt-1">Slots Booked</p>
               </div>
-              <span className="material-symbols-outlined text-[#1a56db] bg-[#dbe1ff] p-4 rounded-lg">event_available</span>
+              <span className="material-symbols-outlined text-primary bg-primary/10 p-4 rounded-xl">event_available</span>
             </div>
           </div>
 
@@ -936,12 +976,16 @@ const ProviderDashboardPage: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <span className={`px-4 py-1.5 rounded-full text-[12px] font-bold flex items-center gap-2 ${
                           appointment.appointmentStatus === 'CHECKED_IN' ? 'bg-[#10B981]/10 text-[#10B981]' : 
-                          appointment.appointmentStatus === 'COMPLETED' ? 'bg-[#003fb1]/10 text-[#003fb1]' : 
+                          appointment.appointmentStatus === 'COMPLETED' ? 'bg-primary/10 text-primary' : 
                           appointment.appointmentStatus === 'CANCELLED' ? 'bg-[#fee2e2] text-[#ba1a1a]' :
+                          (appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED') ? 'bg-[#fee2e2] text-[#ba1a1a] border border-[#fecaca]' :
                           'bg-[#f0f3ff] text-[#3b4854]'
                         }`}>
                           {appointment.appointmentStatus === 'CHECKED_IN' && (
                             <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+                          )}
+                          {(appointment.appointmentStatus === 'REJECTED' || appointment.appointmentStatus === 'DECLINED') && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#ba1a1a]"></span>
                           )}
                           {appointment.appointmentStatus}
                           {appointment.appointmentStatus === 'CANCELLED' && appointment.settlementAmount !== undefined && appointment.settlementAmount !== null && appointment.settlementAmount > 0 && (
@@ -952,7 +996,7 @@ const ProviderDashboardPage: React.FC = () => {
                         </span>
                         <div className="flex flex-wrap items-center gap-2">
                           {/* Video Consultation Toggle & Launch - only visible if the service has virtual/video enabled */}
-                          {permissions.calendar.write && checkServiceAllowsVideo(appointment) && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'CANCELLED' && (
+                          {permissions.calendar.write && checkServiceAllowsVideo(appointment) && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'CANCELLED' && appointment.appointmentStatus !== 'REJECTED' && appointment.appointmentStatus !== 'DECLINED' && (
                             <button
                               onClick={() => handleToggleVideo(appointment.id, !!(appointment.videoCallEnabled || appointment.appointmentType === 'VIRTUAL'))}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border ${
@@ -969,7 +1013,7 @@ const ProviderDashboardPage: React.FC = () => {
                             </button>
                           )}
 
-                          {checkServiceAllowsVideo(appointment) && (appointment.videoCallEnabled || appointment.appointmentType === 'VIRTUAL') && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'CANCELLED' && (
+                          {checkServiceAllowsVideo(appointment) && (appointment.videoCallEnabled || appointment.appointmentType === 'VIRTUAL') && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'CANCELLED' && appointment.appointmentStatus !== 'REJECTED' && appointment.appointmentStatus !== 'DECLINED' && (
                             <button
                               onClick={() => setActiveVideoAppt(appointment)}
                               className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all animate-in fade-in"
@@ -979,7 +1023,7 @@ const ProviderDashboardPage: React.FC = () => {
                             </button>
                           )}
 
-                          {permissions.calendar.write && (appointment.appointmentStatus === 'CHECKED_IN' || (appointment.appointmentStatus === 'SCHEDULED' && checkServiceAllowsVideo(appointment) && (appointment.appointmentType === 'VIRTUAL' || appointment.videoCallEnabled))) && (
+                          {permissions.calendar.write && (appointment.appointmentStatus === 'CHECKED_IN' || (appointment.appointmentStatus === 'SCHEDULED' && checkServiceAllowsVideo(appointment) && (appointment.appointmentType === 'VIRTUAL' || appointment.videoCallEnabled))) && appointment.appointmentStatus !== 'REJECTED' && appointment.appointmentStatus !== 'DECLINED' && (
                             <button 
                               className="bg-[#006f4b] text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#005438] transition-all"
                               onClick={() => openCompleteModal(appointment.id)}
@@ -988,12 +1032,12 @@ const ProviderDashboardPage: React.FC = () => {
                             </button>
                           )}
                           <button 
-                            className="border border-[#003fb1] text-[#003fb1] px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#e2e8f8] transition-all"
+                            className="border border-primary text-primary px-4 py-2 rounded-lg font-bold text-xs hover:bg-primary/10 transition-all"
                             onClick={() => openDetailsModal(appointment)}
                           >
                             View Details
                           </button>
-                          {permissions.calendar.write && appointment.appointmentStatus !== 'CANCELLED' && appointment.appointmentStatus !== 'COMPLETED' && (
+                          {permissions.calendar.write && appointment.appointmentStatus !== 'CANCELLED' && appointment.appointmentStatus !== 'COMPLETED' && appointment.appointmentStatus !== 'REJECTED' && appointment.appointmentStatus !== 'DECLINED' && (
                             <button 
                               className="border border-[#ef4444] text-[#ef4444] px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#fee2e2] transition-all"
                               onClick={() => openCancelModal(appointment.id)}
@@ -1019,7 +1063,7 @@ const ProviderDashboardPage: React.FC = () => {
                   <span className="material-symbols-outlined text-[#ba1a1a]">pending_actions</span>
                   <h3 className="text-[20px] font-bold text-[#151c27]">Awaiting Approval</h3>
                 </div>
-                <button className="text-[12px] font-bold text-[#003fb1] hover:underline">View All</button>
+                <button className="text-[12px] font-bold text-primary hover:underline">View All</button>
               </div>
               <div className="space-y-4">
                 {pendingAppointments.length === 0 ? (
@@ -1033,16 +1077,16 @@ const ProviderDashboardPage: React.FC = () => {
                           <p className="text-[12px] text-[#53606c]">{app.serviceName}</p>
                           <p className="text-[12px] text-[#53606c] font-medium mt-1">{app.appointmentDate}</p>
                         </div>
-                        <span className="text-[12px] font-bold text-[#003fb1]">{app.appointmentTime?.substring(0,5) || ''}</span>
+                        <span className="text-[12px] font-bold text-primary">{app.appointmentTime?.substring(0,5) || ''}</span>
                       </div>
                       {permissions.calendar.write ? (
                         <div className="flex gap-2 mt-4">
                           <button 
                             onClick={() => handleApprove(app.id)}
-                            className="flex-1 bg-[#003fb1] text-white py-2 rounded-lg font-bold text-xs hover:bg-[#1a56db] transition-colors">Approve</button>
+                            className="flex-1 bg-primary text-on-primary py-2 rounded-lg font-bold text-xs hover:brightness-110 active:scale-95 transition-all">Approve</button>
                           <button 
-                            onClick={() => handleDecline(app.id)}
-                            className="flex-1 border border-[#737686] text-[#53606c] py-2 rounded-lg font-bold text-xs hover:bg-[#dce2f3] transition-colors">Decline</button>
+                            onClick={() => openDeclineModal(app)}
+                            className="flex-1 border border-rose-300 text-rose-700 py-2 rounded-lg font-bold text-xs hover:bg-rose-50 transition-colors">Decline</button>
                         </div>
                       ) : (
                         <div className="mt-3 text-xs text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 flex items-center gap-1.5">
@@ -1123,7 +1167,7 @@ const ProviderDashboardPage: React.FC = () => {
                           <button
                             onClick={() => openDetailsModal(app)}
                             title="View full details"
-                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-[#003fb1]/30 text-[#003fb1] hover:bg-[#003fb1]/10 transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold border border-primary/30 text-primary hover:bg-primary/10 transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <span className="material-symbols-outlined text-[13px]">visibility</span>
                             Details
@@ -1141,7 +1185,7 @@ const ProviderDashboardPage: React.FC = () => {
                               <button
                                 onClick={() => openRescheduleModal(app)}
                                 title={`Reschedule ${terms.appointmentSingular}`}
-                                className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#003fb1] text-white hover:bg-[#1a56db] transition-colors flex items-center gap-1 cursor-pointer"
+                                className="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-primary text-on-primary hover:brightness-110 active:scale-95 transition-colors flex items-center gap-1 cursor-pointer"
                               >
                                 <span className="material-symbols-outlined text-[13px]">calendar_add_on</span>
                                 Reschedule
@@ -1165,7 +1209,7 @@ const ProviderDashboardPage: React.FC = () => {
             </div>
 
             {/* Dynamic Organization Performance & Peak Productivity Card */}
-            <div className="bg-gradient-to-br from-[#1a56db] to-[#003fb1] rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-primary to-primary-container rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[11px] font-bold opacity-80 uppercase tracking-widest">
@@ -1253,8 +1297,19 @@ const ProviderDashboardPage: React.FC = () => {
       {isDetailsModalOpen && selectedAppointment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col animate-[fadeIn_0.3s_ease-out]">
-            <div className="px-6 py-4 bg-gradient-to-r from-[#1a56db] to-[#003fb1] flex justify-between items-center text-white">
-              <h2 className="text-xl font-bold">Appointment Details</h2>
+            <div className="px-6 py-4 bg-gradient-to-r from-primary to-primary-container flex justify-between items-center text-white">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold">Appointment Details</h2>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  selectedAppointment.appointmentStatus === 'CHECKED_IN' ? 'bg-emerald-500 text-white' :
+                  selectedAppointment.appointmentStatus === 'COMPLETED' ? 'bg-blue-200 text-blue-900' :
+                  selectedAppointment.appointmentStatus === 'CANCELLED' ? 'bg-red-500 text-white' :
+                  (selectedAppointment.appointmentStatus === 'REJECTED' || selectedAppointment.appointmentStatus === 'DECLINED') ? 'bg-red-600 text-white shadow-sm' :
+                  'bg-white/20 text-white'
+                }`}>
+                  {selectedAppointment.appointmentStatus}
+                </span>
+              </div>
               <div className="flex gap-4">
                 <button 
                   onClick={downloadPDF} 
@@ -1273,7 +1328,7 @@ const ProviderDashboardPage: React.FC = () => {
               {/* Customer Profile Section */}
               <div className="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-xl">
                 <h4 className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#1a56db]">{modalTerms.customersNavIcon}</span> {modalTerms.customerSingular} Profile
+                  <span className="material-symbols-outlined text-primary">{modalTerms.customersNavIcon}</span> {modalTerms.customerSingular} Profile
                 </h4>
                 <div className="flex items-center gap-4">
                   <img 
@@ -1308,8 +1363,27 @@ const ProviderDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Virtual Consultation & Video Call Controls */}
-              {checkServiceAllowsVideo(selectedAppointment) ? (
+              {/* Rejected Status Notification */}
+              {(selectedAppointment.appointmentStatus === 'REJECTED' || selectedAppointment.appointmentStatus === 'DECLINED') ? (
+                <div className="bg-rose-50 border border-rose-200 p-5 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-md">
+                      <span className="material-symbols-outlined text-[22px]">block</span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-rose-900">Appointment Rejected</h4>
+                      <p className="text-xs text-rose-700">
+                        {selectedAppointment.rejectionReason 
+                          ? `Reason: ${selectedAppointment.rejectionReason}` 
+                          : 'This appointment was rejected and will not take place.'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold px-3 py-1 bg-rose-200 text-rose-800 rounded-full shrink-0">
+                    Rejected
+                  </span>
+                </div>
+              ) : checkServiceAllowsVideo(selectedAppointment) ? (
                 <div className="bg-blue-50/60 border border-blue-200/80 p-5 rounded-2xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -1327,7 +1401,7 @@ const ProviderDashboardPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {permissions.calendar.write && selectedAppointment.appointmentStatus !== 'COMPLETED' && selectedAppointment.appointmentStatus !== 'CANCELLED' && (
+                      {permissions.calendar.write && selectedAppointment.appointmentStatus !== 'COMPLETED' && selectedAppointment.appointmentStatus !== 'CANCELLED' && selectedAppointment.appointmentStatus !== 'REJECTED' && selectedAppointment.appointmentStatus !== 'DECLINED' && (
                         <button
                           onClick={() => handleToggleVideo(selectedAppointment.id, !!(selectedAppointment.videoCallEnabled || selectedAppointment.appointmentType === 'VIRTUAL'))}
                           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
@@ -1343,7 +1417,7 @@ const ProviderDashboardPage: React.FC = () => {
                         </button>
                       )}
 
-                      {(selectedAppointment.videoCallEnabled || selectedAppointment.appointmentType === 'VIRTUAL') && selectedAppointment.appointmentStatus !== 'CANCELLED' && (
+                      {(selectedAppointment.videoCallEnabled || selectedAppointment.appointmentType === 'VIRTUAL') && selectedAppointment.appointmentStatus !== 'CANCELLED' && selectedAppointment.appointmentStatus !== 'REJECTED' && selectedAppointment.appointmentStatus !== 'DECLINED' && (
                         <button
                           onClick={() => {
                             setIsDetailsModalOpen(false);
@@ -1395,7 +1469,7 @@ const ProviderDashboardPage: React.FC = () => {
               {/* Timestamp Timeline Section */}
               <div>
                 <h3 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2 border-b border-[#cbd5e1] pb-2">
-                  <span className="material-symbols-outlined text-[#1a56db]">timeline</span> Lifecycle Timestamps
+                  <span className="material-symbols-outlined text-primary">timeline</span> Lifecycle Timestamps
                 </h3>
                 <div className="relative border-l-2 border-[#cbd5e1] ml-3 mt-4 space-y-6">
                   {[
@@ -1446,6 +1520,15 @@ const ProviderDashboardPage: React.FC = () => {
                       icon: 'cancel', 
                       color: 'bg-red-100 text-red-600', 
                       dot: 'bg-red-600' 
+                    },
+                    { 
+                      label: selectedAppointment.rejectedByName 
+                        ? `Rejected by ${selectedAppointment.rejectedByName} (${formatRole(selectedAppointment.rejectedByRole, modalTerms)})` 
+                        : 'Rejected', 
+                      time: selectedAppointment.rejectedAt, 
+                      icon: 'block', 
+                      color: 'bg-rose-100 text-rose-700', 
+                      dot: 'bg-rose-600' 
                     }
                   ].map((stage, i) => (
                     stage.time && (
@@ -1462,7 +1545,7 @@ const ProviderDashboardPage: React.FC = () => {
                   ))}
                 </div>
 
-                {(selectedAppointment.approvedByName || selectedAppointment.checkedInByName || selectedAppointment.completedByName || selectedAppointment.cancelledByName) && (
+                {(selectedAppointment.approvedByName || selectedAppointment.checkedInByName || selectedAppointment.completedByName || selectedAppointment.cancelledByName || selectedAppointment.rejectedByName) && (
                   <div className="mt-6 p-4 rounded-xl border bg-slate-50 border-slate-200 space-y-2">
                     <h4 className="text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2 flex items-center gap-2">
                       <span className="material-symbols-outlined text-[18px] text-primary">badge</span> Staff Attribution &amp; Audit
@@ -1499,6 +1582,14 @@ const ProviderDashboardPage: React.FC = () => {
                         </span>
                       </p>
                     )}
+                    {selectedAppointment.rejectedByName && (
+                      <p className="text-sm text-slate-700">
+                        <span className="font-semibold text-rose-700">Rejected By:</span> {selectedAppointment.rejectedByName} 
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">
+                          {formatRole(selectedAppointment.rejectedByRole, modalTerms)}
+                        </span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1507,7 +1598,7 @@ const ProviderDashboardPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2 border-b border-[#cbd5e1] pb-2">
-                    <span className="material-symbols-outlined text-[#1a56db]">notes</span> {completeConfig.summaryLabel} &amp; Notes
+                    <span className="material-symbols-outlined text-primary">notes</span> {completeConfig.summaryLabel} &amp; Notes
                   </h3>
                   <div className="space-y-4 text-sm">
                     <div>
@@ -1524,7 +1615,7 @@ const ProviderDashboardPage: React.FC = () => {
                 {selectedAppointment.appointmentStatus === 'COMPLETED' && (
                   <div>
                     <h3 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2 border-b border-[#cbd5e1] pb-2">
-                      <span className="material-symbols-outlined text-[#1a56db]">star_rate</span> {terms.customerSingular} Feedback
+                      <span className="material-symbols-outlined text-primary">star_rate</span> {terms.customerSingular} Feedback
                     </h3>
                     {selectedAppointment.patientRating ? (
                       <div className="bg-[#fffbeb] p-5 rounded-xl border border-[#fef3c7] shadow-sm">
@@ -1659,6 +1750,102 @@ const ProviderDashboardPage: React.FC = () => {
         </div>
       )}
 
+      {/* DECLINE / REJECT APPOINTMENT MODAL (100% REFUND POLICY) */}
+      {isDeclineModalOpen && decliningAppt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-[fadeIn_0.25s_ease-out]">
+            <div className="px-6 py-4 bg-gradient-to-r from-rose-700 to-rose-900 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">block</span>
+                <h3 className="text-base font-bold">Decline {terms.appointmentSingular} Request</h3>
+              </div>
+              <button 
+                onClick={() => { setIsDeclineModalOpen(false); setDecliningAppt(null); }}
+                className="text-white/70 hover:text-white transition p-1 cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col gap-4">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      {terms.customerSingular}
+                    </span>
+                    <span className="text-sm font-bold text-slate-900">{decliningAppt.patientName}</span>
+                    <span className="text-xs text-slate-600 block mt-0.5">{decliningAppt.serviceName || terms.serviceSingular}</span>
+                  </div>
+                  <span className="text-xs font-semibold text-primary px-2 py-0.5 bg-primary/10 rounded-full">
+                    {decliningAppt.appointmentDate} • {decliningAppt.appointmentTime?.substring(0, 5)}
+                  </span>
+                </div>
+              </div>
+
+              {/* 100% Refund Policy Banner */}
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-emerald-600 text-[20px] shrink-0 mt-0.5">verified_user</span>
+                <div className="text-xs text-emerald-900">
+                  <span className="font-bold block mb-0.5">OmniBook 100% Refund Policy</span>
+                  Declining will reject this request, release your calendar slot, and immediately process a <strong>100% full refund</strong> to the {terms.customerSingular.toLowerCase()}. No provider earnings, platform fees, or daily settlement transactions will be generated.
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Reason for Declining <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 text-xs text-[#0f172a] font-medium"
+                >
+                  <option value="Schedule conflict / Unavailable">Schedule conflict / Unavailable</option>
+                  <option value="Service temporarily unavailable">Service temporarily unavailable</option>
+                  <option value="Capacity limit reached">Capacity limit reached</option>
+                  <option value="Personal emergency">Personal emergency</option>
+                  <option value="Specialty or scope mismatch">Specialty or scope mismatch</option>
+                  <option value="Other (Custom note)">Other (Custom note)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Optional Feedback Note to {terms.customerSingular}
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder={`Explain briefly to the ${terms.customerSingular.toLowerCase()} why you cannot accommodate this request...`}
+                  value={customDeclineNote}
+                  onChange={(e) => setCustomDeclineNote(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 text-xs text-[#0f172a]"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-slate-200 mt-1">
+                <button
+                  type="button"
+                  onClick={() => { setIsDeclineModalOpen(false); setDecliningAppt(null); }}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+                >
+                  Keep Request
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeclineAppointment}
+                  disabled={declineSubmitting}
+                  className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined text-[16px]">cancel</span>
+                  {declineSubmitting ? 'Processing 100% Refund...' : 'Decline & 100% Refund'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* NEW APPOINTMENT / WALK-IN MODAL */}
       <NewAppointmentModal
         isOpen={isNewBookingModalOpen}
@@ -1694,7 +1881,7 @@ const ProviderDashboardPage: React.FC = () => {
       {isRescheduleModalOpen && reschedulingAppt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f172a]/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-[fadeIn_0.25s_ease-out]">
-            <div className="px-6 py-4 bg-gradient-to-r from-[#1a56db] to-[#003fb1] flex justify-between items-center text-white">
+            <div className="px-6 py-4 bg-gradient-to-r from-primary to-primary-container flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[20px]">calendar_clock</span>
                 <h3 className="text-lg font-bold">Reschedule {terms.appointmentSingular}</h3>
@@ -1730,7 +1917,7 @@ const ProviderDashboardPage: React.FC = () => {
                   min={todayYMD}
                   value={rescheduleForm.date}
                   onChange={(e) => setRescheduleForm({ ...rescheduleForm, date: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a56db]/50 focus:border-[#1a56db] text-sm text-[#0f172a]"
+                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm text-[#0f172a]"
                 />
               </div>
 
@@ -1743,7 +1930,7 @@ const ProviderDashboardPage: React.FC = () => {
                   required
                   value={rescheduleForm.time}
                   onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a56db]/50 focus:border-[#1a56db] text-sm text-[#0f172a]"
+                  className="w-full px-4 py-2.5 bg-[#f8fafc] border border-[#cbd5e1] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary text-sm text-[#0f172a]"
                 />
               </div>
 
@@ -1758,7 +1945,7 @@ const ProviderDashboardPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={rescheduleSubmitting}
-                  className="flex-1 py-2.5 bg-[#1a56db] hover:bg-[#003fb1] text-white font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-primary hover:brightness-110 active:scale-95 text-on-primary font-bold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   {rescheduleSubmitting ? 'Rescheduling...' : 'Confirm Reschedule'}
                 </button>

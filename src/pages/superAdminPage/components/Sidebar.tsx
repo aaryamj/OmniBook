@@ -82,6 +82,14 @@ export default function Sidebar() {
                         <span className="material-symbols-outlined" style={isActive('/superadmin/tenants') ? { fontVariationSettings: "'FILL' 1" } : {}}>hub</span>
                         Tenant Management
                     </NavLink>
+
+                    <NavLink 
+                        to="/superadmin/clients" 
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md transition-colors duration-200 ${isActive('/superadmin/clients') ? 'text-surface-container-lowest bg-on-primary-fixed-variant border-l-4 border-secondary-container shadow-sm sidebar-active' : 'text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant'}`}
+                    >
+                        <span className="material-symbols-outlined" style={isActive('/superadmin/clients') ? { fontVariationSettings: "'FILL' 1" } : {}}>groups</span>
+                        Client Management
+                    </NavLink>
                     
                     <NavLink 
                         to="/superadmin/system-kpi" 
@@ -89,6 +97,14 @@ export default function Sidebar() {
                     >
                         <span className="material-symbols-outlined" style={isActive('/superadmin/system-kpi') ? { fontVariationSettings: "'FILL' 1" } : {}}>analytics</span>
                         System KPI
+                    </NavLink>
+
+                    <NavLink 
+                        to="/superadmin/settlements" 
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg font-label-md text-label-md transition-colors duration-200 ${isActive('/superadmin/settlements') ? 'text-surface-container-lowest bg-on-primary-fixed-variant border-l-4 border-secondary-container shadow-sm sidebar-active' : 'text-on-tertiary-container hover:text-surface-container-lowest hover:bg-on-primary-fixed-variant'}`}
+                    >
+                        <span className="material-symbols-outlined" style={isActive('/superadmin/settlements') ? { fontVariationSettings: "'FILL' 1" } : {}}>payments</span>
+                        Daily Settlements
                     </NavLink>
                     
                     <NavLink 

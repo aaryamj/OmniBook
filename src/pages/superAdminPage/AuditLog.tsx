@@ -127,16 +127,36 @@ export default function AuditLog() {
         return tabMatch && searchMatch;
     });
 
-    // Pagination logic
-    const itemsPerPage = 5;
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentLogs = filteredLogs.slice(startIndex, startIndex + itemsPerPage);
-    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
-    
-    // When tab changes, reset to page 1
+    // --- Pagination State & Dynamic Calculations ---
+    const [pageSize, setPageSize] = useState(10);
+
+    // Reset pagination to page 1 whenever tab, search, timeFilter, or pageSize changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [activeTab]);
+    }, [activeTab, searchQuery, timeFilter, pageSize]);
+
+    const totalEntries = filteredLogs.length;
+    const totalPages = Math.max(1, Math.ceil(totalEntries / pageSize));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const startIndex = totalEntries === 0 ? 0 : (safeCurrentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalEntries);
+    const currentLogs = filteredLogs.slice(startIndex, endIndex);
+
+    const getPageNumbers = () => {
+        if (totalPages <= 5) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        let start = Math.max(1, safeCurrentPage - 2);
+        let end = Math.min(totalPages, start + 4);
+        if (end - start < 4) {
+            start = Math.max(1, end - 4);
+        }
+        const pages: number[] = [];
+        for (let i = start; i <= end; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
 
     return (
         <div className="superadmin-theme">
@@ -347,35 +367,68 @@ export default function AuditLog() {
                     </div>
                     
                     {/* Pagination */}
-                    <div className="px-6 py-4 bg-surface-container-low flex items-center justify-between border-t border-surface-container">
-                        <span className="font-label-md text-label-md text-on-surface-variant">
-                            Showing {Math.min(startIndex + 1, filteredLogs.length)} to {Math.min(startIndex + itemsPerPage, filteredLogs.length)} of {filteredLogs.length} entries (Total: {totalEvents.toLocaleString()})
-                        </span>
-                        <div className="flex gap-2">
+                    <div className="px-6 py-4 bg-surface-container-low flex flex-wrap items-center justify-between gap-4 border-t border-surface-container">
+                        <div className="flex items-center gap-4">
+                            <div className="font-label-md text-label-md text-on-surface-variant font-mono-data">
+                                Showing <span className="font-bold text-primary">{totalEntries > 0 ? startIndex + 1 : 0} - {endIndex}</span> of <span className="font-bold text-primary">{totalEntries}</span> entries
+                                {totalEntries !== logs.length && (
+                                    <span className="text-[11px] text-on-surface-variant/70 ml-1 font-sans">
+                                        (filtered from {logs.length} total)
+                                    </span>
+                                )}
+                            </div>
+                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant">
+                                <span>Rows:</span>
+                                <select
+                                    value={pageSize}
+                                    onChange={(e) => setPageSize(Number(e.target.value))}
+                                    className="bg-white border border-outline-variant text-xs text-on-surface font-medium rounded py-1 px-2 focus:outline-none focus:border-secondary transition cursor-pointer"
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
                             <button 
+                                type="button"
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                disabled={currentPage === 1}
-                                className="px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md hover:bg-white disabled:opacity-50 transition-colors"
+                                disabled={safeCurrentPage <= 1}
+                                className="px-3 py-1.5 border border-outline-variant rounded-lg text-on-surface-variant font-label-md hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
+                                aria-label="Previous Page"
                             >
+                                <span className="material-symbols-outlined text-sm leading-none">chevron_left</span>
                                 Previous
                             </button>
-                            
-                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(page => (
-                                <button 
-                                    key={page}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`px-4 py-2 border rounded-lg font-label-md transition-colors ${currentPage === page ? 'bg-primary-container text-white border-primary-container' : 'border-outline-variant text-on-surface-variant hover:bg-white'}`}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                            
+                            <div className="flex items-center gap-1">
+                                {getPageNumbers().map(page => (
+                                    <button 
+                                        key={page}
+                                        type="button"
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`min-w-[32px] h-8 px-2 flex items-center justify-center border rounded-lg font-label-md text-xs font-bold transition-colors cursor-pointer ${
+                                            safeCurrentPage === page 
+                                                ? 'bg-primary-container text-white border-primary-container shadow-sm' 
+                                                : 'border-outline-variant text-on-surface-variant hover:bg-white hover:text-primary'
+                                        }`}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+                            </div>
                             <button 
+                                type="button"
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                                className="px-4 py-2 border border-outline-variant rounded-lg text-on-surface-variant font-label-md hover:bg-white disabled:opacity-50 transition-colors"
+                                disabled={safeCurrentPage >= totalPages || totalEntries === 0}
+                                className="px-3 py-1.5 border border-outline-variant rounded-lg text-on-surface-variant font-label-md hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
+                                aria-label="Next Page"
                             >
                                 Next
+                                <span className="material-symbols-outlined text-sm leading-none">chevron_right</span>
                             </button>
                         </div>
                     </div>

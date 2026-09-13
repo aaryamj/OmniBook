@@ -293,7 +293,7 @@ const ServicesManagerPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 shrink-0 gap-4">
               <div>
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl sm:text-[32px] font-bold text-[#151c27] tracking-tight">{terms.servicesNavLabel}</h1>
+                  <h1 className="text-2xl sm:text-[32px] font-bold text-primary tracking-tight">{terms.servicesNavLabel}</h1>
                   {!hasServicesWrite && (
                     <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
                       <span className="material-symbols-outlined text-xs">visibility</span> Read Only

@@ -271,6 +271,55 @@ export default function AdminAppointmentDetailModal({
                             )}
                         </div>
 
+                        {/* Billing & Payment Verification Section */}
+                        <div className="bg-[#f8fafc] border border-[#e2e8f0] p-4 rounded-xl">
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
+                                <h4 className="text-xs font-bold text-[#64748b] uppercase tracking-wider flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-[16px] text-primary">payments</span>
+                                    Billing &amp; Payment Details
+                                </h4>
+                                <span className={`inline-flex items-center gap-1 text-xs font-bold font-mono px-2.5 py-1 rounded-full ${
+                                    (appointment.billingStatus || '').includes('Cash') ? 'bg-emerald-50 text-[#059669] border border-emerald-200' :
+                                    (appointment.billingStatus || '').includes('eSewa') ? 'bg-green-50 text-[#10b981] border border-green-200' :
+                                    (appointment.billingStatus || '').includes('Stripe') ? 'bg-indigo-50 text-[#6366f1] border border-indigo-200' :
+                                    'bg-slate-100 text-slate-600 border border-slate-200'
+                                }`}>
+                                    <span className="material-symbols-outlined text-[14px]">
+                                        {(appointment.billingStatus || '').includes('Cash') ? 'payments' :
+                                         (appointment.billingStatus || '').includes('eSewa') ? 'check_circle' :
+                                         (appointment.billingStatus || '').includes('Stripe') ? 'verified' : 'pending'}
+                                    </span>
+                                    {appointment.billingStatus || (appointment.paymentStatus === 'PAID' || appointment.paymentStatus === 'SUCCESS' ? 'Verified' : 'Pending')}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div>
+                                    <span className="text-gray-500 font-semibold block">Fee / Amount</span>
+                                    <span className="font-bold text-[#151c27] text-sm">
+                                        Rs. {Number(appointment.price || 0).toLocaleString()}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 font-semibold block">Payment Method</span>
+                                    <span className="font-semibold text-slate-800">
+                                        {appointment.paymentMethod || 'N/A'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 font-semibold block">Payment Status</span>
+                                    <span className="font-semibold text-slate-800">
+                                        {appointment.paymentStatus || 'UNPAID'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 font-semibold block">Verification Badge</span>
+                                    <span className="font-mono font-semibold text-slate-800">
+                                        {appointment.billingStatus || 'Pending'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Timestamp Timeline Section */}
                         <div>
                             <h3 className="text-lg font-bold text-[#0f172a] mb-4 flex items-center gap-2 border-b border-[#cbd5e1] pb-2">

@@ -111,6 +111,16 @@ const MyHistoryPage: React.FC = () => {
         reason: 'Appointment missed past grace period'
       });
     }
+    if (detailModalApp.rejectedAt || detailModalApp.appointmentStatus === 'REJECTED' || detailModalApp.appointmentStatus === 'DECLINED' || detailModalApp.rejectedByName) {
+      synthesized.push({
+        id: 'synth-rejected',
+        eventType: 'REJECTED',
+        createdAt: detailModalApp.rejectedAt || detailModalApp.updatedAt || new Date().toISOString(),
+        actorName: detailModalApp.rejectedByName || modalTerms.providerSingular || 'Service Provider',
+        actorRole: detailModalApp.rejectedByRole || 'PROVIDER',
+        reason: detailModalApp.rejectionReason || 'Booking request rejected by service provider (100% refund processed)'
+      });
+    }
     return synthesized.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }, [lifecycleEvents, detailModalApp]);
 
@@ -517,15 +527,24 @@ const MyHistoryPage: React.FC = () => {
     });
   };
 
+  const isAppointmentRejected = (app: any) => {
+    if (!app) return false;
+    const s = (app.appointmentStatus || '').toUpperCase().trim();
+    return s === 'REJECTED' || s === 'DECLINED' || Boolean(app.rejectedAt || app.rejectedByName);
+  };
+
   const filteredAppointments = useMemo(() => {
     return appointments.filter(app => {
       // Filter by Status
+      const isAppRej = isAppointmentRejected(app);
       if (statusFilter === 'upcoming') {
-        if (!['SCHEDULED', 'CHECKED_IN', 'PENDING_APPROVAL'].includes(app.appointmentStatus)) return false;
+        if (!['SCHEDULED', 'CHECKED_IN', 'PENDING_APPROVAL'].includes(app.appointmentStatus) || isAppRej) return false;
       } else if (statusFilter === 'completed') {
         if (app.appointmentStatus !== 'COMPLETED') return false;
       } else if (statusFilter === 'cancelled') {
-        if (app.appointmentStatus !== 'CANCELLED') return false;
+        if (app.appointmentStatus !== 'CANCELLED' || isAppRej) return false;
+      } else if (statusFilter === 'rejected') {
+        if (!isAppRej) return false;
       } else if (statusFilter === 'no_show') {
         if (app.appointmentStatus !== 'NO_SHOW') return false;
       }
@@ -559,19 +578,25 @@ const MyHistoryPage: React.FC = () => {
       groups[key].push(app);
     });
 
-    return Object.keys(groups).map(key => ({
-      monthYear: key,
-      items: groups[key]
+    return Object.entries(groups).map(([monthYear, items]) => ({
+      monthYear,
+      appointments: items
     }));
   }, [filteredAppointments]);
 
-  const getStatusColors = (status: string) => {
-    switch (status) {
+  const getStatusColors = (status: string, app?: any) => {
+    if (isAppointmentRejected(app)) {
+      return 'bg-rose-50 border border-rose-100 text-rose-800';
+    }
+    const s = (status || '').toUpperCase().trim();
+    switch (s) {
       case 'CHECKED_IN':
         return 'bg-emerald-50 border border-emerald-100 text-emerald-800';
       case 'COMPLETED':
         return 'bg-blue-50 border border-blue-100 text-blue-800';
       case 'CANCELLED':
+      case 'REJECTED':
+      case 'DECLINED':
         return 'bg-rose-50 border border-rose-100 text-rose-800';
       case 'NO_SHOW':
         return 'bg-purple-50 border border-purple-100 text-purple-800';
@@ -583,8 +608,17 @@ const MyHistoryPage: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (status: string, app?: any) => {
+    if (isAppointmentRejected(app)) {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-rose-100 text-rose-700 border border-rose-200 shadow-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+          Rejected
+        </span>
+      );
+    }
+    const s = (status || '').toUpperCase().trim();
+    switch (s) {
       case 'CHECKED_IN':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-emerald-100 text-emerald-700">
@@ -604,6 +638,14 @@ const MyHistoryPage: React.FC = () => {
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-rose-100 text-rose-700">
             <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
             Cancelled
+          </span>
+        );
+      case 'REJECTED':
+      case 'DECLINED':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-rose-100 text-rose-700 border border-rose-200 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+            Rejected
           </span>
         );
       case 'NO_SHOW':
@@ -667,6 +709,7 @@ const MyHistoryPage: React.FC = () => {
                         <option value="upcoming">Upcoming</option>
                         <option value="completed">Completed</option>
                         <option value="cancelled">Cancelled</option>
+                        <option value="rejected">Rejected</option>
                         <option value="no_show">No-Show</option>
                     </select>
                     <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#53606c]">expand_more</span>
@@ -705,15 +748,16 @@ const MyHistoryPage: React.FC = () => {
                 </div>
 
                 {/* Appointment Cards */}
-                {group.items.map((app) => {
+                {group.appointments.map((app: any) => {
                   const dateObj = new Date(app.appointmentDate);
                   const shortMonth = dateObj.toLocaleString('en-US', { month: 'short' });
                   const day = dateObj.getDate().toString().padStart(2, '0');
                   const time = app.appointmentTime ? app.appointmentTime.substring(0, 5) : '';
 
-                  const colorClasses = getStatusColors(app.appointmentStatus);
-                  const opacityClass = app.appointmentStatus === 'CANCELLED' ? 'opacity-85' : '';
-                  const isUpcoming = ['SCHEDULED', 'PENDING_APPROVAL', 'CHECKED_IN'].includes(app.appointmentStatus);
+                  const rejected = isAppointmentRejected(app);
+                  const colorClasses = getStatusColors(app.appointmentStatus, app);
+                  const opacityClass = (app.appointmentStatus === 'CANCELLED' || rejected) ? 'opacity-85' : '';
+                  const isUpcoming = ['SCHEDULED', 'PENDING_APPROVAL', 'CHECKED_IN'].includes(app.appointmentStatus) && !rejected;
 
                   return (
                     <div
@@ -731,7 +775,7 @@ const MyHistoryPage: React.FC = () => {
                         {/* Details */}
                         <div className="space-y-2 mt-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            {getStatusBadge(app.appointmentStatus)}
+                            {getStatusBadge(app.appointmentStatus, app)}
                             {app.organizationName && (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
                                 {app.organizationLogo ? (
@@ -748,7 +792,15 @@ const MyHistoryPage: React.FC = () => {
                                 Rescheduled {app.rescheduleCount}x
                               </span>
                             )}
-                            {app.appointmentStatus === 'CANCELLED' && app.refundStatus && (
+                            {rejected && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <span className="material-symbols-outlined text-[13px]">payments</span>
+                                {app.refundAmount && app.refundAmount > 0
+                                  ? `100% Refunded (${app.refundCurrency || 'NPR'} ${app.refundAmount})`
+                                  : '100% Refund Policy (No Charge)'}
+                              </span>
+                            )}
+                            {app.appointmentStatus === 'CANCELLED' && !rejected && app.refundStatus && (
                               <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                                 app.refundStatus === 'REFUNDED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                 app.refundStatus === 'PARTIALLY_REFUNDED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -1256,7 +1308,7 @@ const MyHistoryPage: React.FC = () => {
                       <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-[#003fb1] font-semibold border border-blue-200">
                         {detailModalApp.appointmentType === 'VIRTUAL' ? 'Virtual (Online)' : modalTerms.inFacility}
                       </span>
-                      {getStatusBadge(detailModalApp.appointmentStatus)}
+                      {getStatusBadge(detailModalApp.appointmentStatus, detailModalApp)}
                     </div>
                   </div>
                 </div>
@@ -1287,14 +1339,13 @@ const MyHistoryPage: React.FC = () => {
                   </div>
                   {detailModalApp.paymentMethod === 'STRIPE' ? (
                     <div>
-                      <span className="text-slate-400 block mb-0.5">USD Converted</span>
-                      <span className="font-bold text-emerald-400">${detailModalApp.chargedAmount || 0} USD</span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">@ {detailModalApp.exchangeRate} NPR/$</span>
+                      <span className="text-slate-400 block mb-0.5">Charged (USD)</span>
+                      <span className="font-bold text-emerald-400">${detailModalApp.chargedAmount || (detailModalApp.price / (detailModalApp.exchangeRate || 135)).toFixed(2)} USD</span>
                     </div>
                   ) : (
                     <div>
-                      <span className="text-slate-400 block mb-0.5">Amount Paid</span>
-                      <span className="font-bold text-white">रू {detailModalApp.price || 0} NPR</span>
+                      <span className="text-slate-400 block mb-0.5">Charged (NPR)</span>
+                      <span className="font-bold text-emerald-400">रू {detailModalApp.price || 0} NPR</span>
                     </div>
                   )}
                   <div>
@@ -1326,8 +1377,34 @@ const MyHistoryPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Rejection Details Row if Rejected by Provider */}
+                {isAppointmentRejected(detailModalApp) && (
+                  <div className="p-4 bg-rose-950/60 rounded-xl border border-rose-800 flex flex-col gap-2 text-xs text-rose-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-rose-300 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[18px]">cancel</span>
+                        Request Rejected by {modalTerms.providerSingular || 'Provider'}{detailModalApp.rejectedByName ? ` (${detailModalApp.rejectedByName})` : ''}
+                      </span>
+                      <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full font-bold text-[11px] flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[13px]">verified</span>
+                        100% Full Refund Policy
+                      </span>
+                    </div>
+                    {detailModalApp.rejectionReason && (
+                      <p className="text-slate-300 bg-black/20 p-2.5 rounded-lg border border-rose-900/50">
+                        <strong>Reason:</strong> {detailModalApp.rejectionReason}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center justify-between pt-1 border-t border-rose-900/60 text-[11px] text-slate-300">
+                      <span>Refund Amount: <strong className="text-emerald-400 font-mono">{detailModalApp.refundCurrency || 'NPR'} {detailModalApp.refundAmount || detailModalApp.price}</strong></span>
+                      {detailModalApp.refundTransactionId && <span className="font-mono text-slate-400">Ref: {detailModalApp.refundTransactionId}</span>}
+                      <span className="text-emerald-400 font-semibold">Excluded from Settlement (0 fees)</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Refund Status Row if Cancelled */}
-                {detailModalApp.refundStatus && detailModalApp.appointmentStatus !== 'NO_SHOW' && (
+                {detailModalApp.refundStatus && detailModalApp.appointmentStatus !== 'NO_SHOW' && !isAppointmentRejected(detailModalApp) && (
                   <div className="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-amber-400 text-[18px]">currency_exchange</span>
@@ -1387,6 +1464,10 @@ const MyHistoryPage: React.FC = () => {
                           icon = 'cancel';
                           color = 'bg-red-100 text-red-700';
                           dot = 'bg-red-600';
+                        } else if (ev.eventType === 'REJECTED') {
+                          icon = 'block';
+                          color = 'bg-rose-100 text-rose-700';
+                          dot = 'bg-rose-600';
                         } else if (ev.eventType === 'NO_SHOW') {
                           icon = 'person_off';
                           color = 'bg-purple-100 text-purple-800';
